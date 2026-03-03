@@ -27,7 +27,7 @@ This paper presents a practical solution for automating the conversion of raw ma
 
 ## License
 
-Please refer to the LICENSE file in each subdirectory for specific licensing terms.
+Please refer to the LICENSE file for specific licensing terms.
 
 ## Contact
 
