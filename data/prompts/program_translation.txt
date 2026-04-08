@@ -1,0 +1,137 @@
+Your goal is to translate a production process described in natural language into a DSL program using domain specific language (DSL)
+
+Two views of the DSL specification are provided: the specification for production operations and the specification for production products. The DSL specification of each operation or product consists of multiple patterns, each pattern is an operation execution paradigm or a product flow paradigm.
+
+I will give you a series of processing steps described in natural language for processing a product, and each step includes the machine used for processing, processing time, approximate input and output of the machine, machine parameters, and machine parameter. You need to extract these information in a structured form, and output as an DSL program.
+
+Output every operation of the plan in the form of an operation DSL program and every product of the plan in the form of a product DSL program. Each DSL program is a dictionary. The final plan consists of the program of each step and product and is returned in a JSON block, without any annotation.
+
+This is the format of a product-view DSL program：
+// Each product view DSL program represents the state of the product at that moment.
+{
+    Pred: <Operation>,      // Pred represents the operation that precedes the creation of this product，need to align to the operation name in the operation view DSL program. If the product is in its initial state, return "".
+    FlowUnit: {     // FlowUnit defines the properties of the product being processed.
+        component: ,    // Component represents the actual product or material being processed， need to be the formal name of the component.
+        component_type: ,        // ComponentType describes the type of the component, such as SheetMetal, LathedPart, and so on.
+        UnitArgType: MAT | PROD,    // UnitArgType specifies whether this is a intermediate product (MAT) or a final product (PROD).
+        container: ,    // Container indicates the type of container or storage used for this component. If the product has no container constraints in its current state, return "".
+    },
+    Succ: <Operation>      // Succ represents the operation that follows the creation of this product. If the product is in its final state, return "".
+}
+
+This is the format of an operation-view DSL program：
+// Each operation view DSL program represents a sequence of operations that alters the state of the product.
+{
+    Operation: ,    // Operation
+    Precond: {      // Precondition. Dict. NOT list
+        SlotArgNum: ,   // Number of arguments for the precondition
+        SlotArg:        // SlotArg represents the input product or material required for this operation
+    },
+    Execution: { // Dict. NOT list
+        machine: ,   // Execution device for the operation
+        duration: ,  // Duration of the operation. The extracted time is only a number such as "10" and "45", and there is no unit of measurement for "seconds", "minutes" and "hours"
+        parameters: {       // dict of execution arguments - values
+            ArgKey: ArgValues  
+        }
+    },
+    Postcond: {     // Postcondition. Dict. NOT list
+        EmitArgNum: ,    // Number of arguments for the postcondition
+        EmitArg:        // EmitArg represents the output product or material resulting from the operation
+    }
+}
+
+The input format is:
+{
+    "part_name": "xxx",
+    "steps": [
+        "description1", 
+        "description2", 
+        ...
+    ]
+}
+
+Example input:
+{
+    "part_name": "xxx",
+    "steps": [
+        "Cut the sheet metal into a specific shape using a laser cutting machine. The machine has a processing time of 10 minutes, and the input is a sheet metal. The output is a sheet metal.",
+        "Bend the sheet metal into a specific shape using a shaper. The machine has a processing time of 5 minutes, and the input is a sheet metal. The output is a sheet metal."
+    ]
+}
+
+Example output:
+{
+    "operation-view programs": [
+        {
+            Operation: "Cutting",
+            Precond: {
+                SlotArgNum: 1,
+                SlotArg: ["SheetMetal"]
+            },
+            Execution: { // Dict. NOT list
+                machine: "laser cutter",
+                duration: 10,
+                parameters: {}
+            },
+            Postcond: {
+                EmitArgNum: 1,
+                EmitArg: ["SheetMetal"]
+            },
+        },
+        {
+            Operation: "Shaping",
+            Precond: {
+                SlotArgNum: 1,
+                SlotArg: ["SheetMetal"]
+            },
+            Execution: {
+                machine: "shaper",
+                duration: 5,
+                parameters: {}
+            },
+            Postcond: {
+                EmitArgNum: 1,
+                EmitArg: ["SheetMetal"]
+            },
+        }
+    ],
+    "production-view programs": [
+        {
+            Pred: "Cutting",
+            FlowUnit: {
+                component: "SheetMetal",
+                component_type: "SheetMetal",
+                UnitArgType: "PROD",
+                container: ""
+            },
+            Succ: "Shaping",
+        }
+    ]
+}
+
+
+Attention:
+Ensure that every step and product has the appropriate details and parameters required for manufacturing and quality control.
+The steps may not be linear, and the current product may not be used until several steps later, so use RefName appropriately.
+An operation may have multiple inputs, which means that there will be multiple production programs before the operation program. Consider this carefully.
+
+You can choose to instantiate the following DSL specifications to construct the DSL program:
+
+Operation-view DSL specification:
+---OPERATION_DSL---
+
+Product-view DSL specification:
+---PRODUCTION_DSL---
+
+Possible product dependency structures are:
+---EM_STRUCTURE---
+
+For example, [2, 1] indicates that there is a structure in which a postcondition with 2 operations can be used as a precondition for an operation
+
+
+The input is:
+---ORDER---
+
+Please answer the JSON string strictly according to the output format. DO NOT wrap it with code blocks Markdown syntax because I will parse your answer string directly into json. DO NOT output other content. 
+
+Your DSL program:

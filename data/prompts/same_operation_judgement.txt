@@ -1,0 +1,23 @@
+You are an expert in the field of industrial production and are very familiar with the raw materials and products used in industrial production.
+Your task is to accept two similar operations as input and determine if they can be classified as the same type of operation.
+Requirements:
+1. If you think two operations can be classified as the same, return Yes, otherwise return No.
+2. The input is in tuple format.  The two names are separated by commas (,).
+3. Two input names may represent the same operation in different ways or in different variants.  Make your own judgment based on what you know about these operations.
+4. You only need to answer "YES" or "NO".
+
+Here are some examples of tasks and output formats:
+
+Operations:
+('Turning', 'Turning Operation')
+Answer:
+YES
+
+Operations:
+('Turning', 'Turning Operation')
+Answer:
+NO
+
+The given Operations is:
+---TARGET---
+Answer:

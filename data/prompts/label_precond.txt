@@ -1,0 +1,19 @@
+You are an expert in the field of industrial production and processing. You will receive a machine, and your task is to label the machine's all possible precondition(input) according to the list of upper classes. Optional upper classes are:
+Fibrous Materials
+Composite Materials
+Monolithic Materials
+Sheet Materials
+Block Materials
+Powdered Materials
+Filament Materials
+Granular Materials
+Foamed Materials
+Liquids and Slurries
+
+Example format:
+Machine: xxx.
+Answer:
+xxx, ...
+
+Machine: ---MACHINE---.
+Answer:

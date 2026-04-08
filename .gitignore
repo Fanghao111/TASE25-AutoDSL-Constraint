@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+data/embedding_dic.json
+data/feature.json
+data/temp_batch/*
+!data/temp_batch/.gitkeep
+outputs/

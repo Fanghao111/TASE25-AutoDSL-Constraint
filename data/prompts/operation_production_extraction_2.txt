@@ -1,0 +1,60 @@
+Your task is to extract operation verb and component from a step in fully structural manufactured experimental route sheet.
+
+Requirements:
+From the given operation list and component list, select the one that best matches the current manufacturing procedure
+
+Here are some examples of the output format.
+
+The step in route sheet:
+{
+    "machine": "Bandsaw",
+    "duration": "32",
+    "precondition": [
+        {
+            "component": "Metal bar",
+            "component_type": "MetalBar",
+            "container": "ConveyorBelt"
+        }
+    ],
+    "postcondition": [
+        {
+            "component": "Lathed part",
+            "component_type": "LathedPart",
+            "container": "ConveyorBelt"
+        }
+    ],
+    "operation": "Sawing",
+    "parameters": {
+        "Saw speed": "700 RPM",
+        "Blade type": "High Carbon",
+        "Cutting width": "3 mm"
+    }
+},
+Answer:
+{
+    "operation": "Shaping",
+    "component": "Shaped gear"
+}
+
+Procedure:
+Following this, a Vertical Milling Machine mills the lathed part for 154 minutes at 1000 RPM with an end mill tool and a depth of cut of 3 mm, producing a milled part on the conveyor belt.
+Answer:
+{
+    "operation": "Milling",
+    "component": "Milled part"
+}
+
+
+The operation list is:
+---OPERATION_LIST---
+
+The component list is:
+---COMPONENT_LIST---
+
+You can only extract the operation from the operation list I gave you. And you can only extract components from the component list that I gave you.
+
+Please answer the JSON string strictly according to the output format. DO NOT wrap it with code blocks Markdown syntax because I will parse your answer string directly into json. DO NOT output other content.
+
+The given experimental Procedure is:
+---SENTENCES---
+Answer:

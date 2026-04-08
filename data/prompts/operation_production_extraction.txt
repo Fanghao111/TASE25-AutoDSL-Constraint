@@ -1,0 +1,37 @@
+Your task is to extract operation verb and component from a manufactured experimental program.
+
+Requirements:
+From the given operation list and component list, select the one that best matches the current manufacturing procedure
+
+Here are some examples of the output format.
+
+Procedure:
+Subsequently, the Broached component is shaped into a Shaped gear using a Gear Shaper for 192 minutes. The Gear Shaping operation involves creating a spur Gear type with 36 teeth, at a Shaping speed of 500 RPM. The output is a Shaped gear on a ConveyorBelt.
+Answer:
+{
+    "operation": "Shaping",
+    "component": "Shaped gear"
+}
+
+Procedure:
+Following this, a Vertical Milling Machine mills the lathed part for 154 minutes at 1000 RPM with an end mill tool and a depth of cut of 3 mm, producing a milled part on the conveyor belt.
+Answer:
+{
+    "operation": "Milling",
+    "component": "Milled part"
+}
+
+
+The operation list is:
+---OPERATION_LIST---
+
+The component list is:
+---COMPONENT_LIST---
+
+You can only extract the operation from the operation list I gave you. And you can only extract components from the component list that I gave you.
+
+Please answer the JSON string strictly according to the output format. DO NOT wrap it with code blocks Markdown syntax because I will parse your answer string directly into json. DO NOT output other content.
+
+The given experimental Procedure is:
+---SENTENCES---
+Answer:

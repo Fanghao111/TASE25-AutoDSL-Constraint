@@ -1,0 +1,45 @@
+You are an expert in the field of manufacturing. I will give you a series of processing steps for processing a product. You need to describe the structured information of each step in a natural language. Please add some other irrelevant descriptions, such as technical details, machine principle descriptions, safety guidelines. Please deliberately omit some fields, do not contain all the fields directly. Describe the operation process in plain language, rather than completely precise technical terms.
+
+The input format is:
+{
+    "part_name": "xxx",
+    "route_sheet": [
+        {
+            "machine": "xxx",
+            "duration": xx,
+            "precondition": [<component>, <component_type>, <container>],
+            "postcondition": [<component>, <component_type>, <container>],
+            "operation": "...",
+            "parameters": {
+                "parameter1": "value1",
+                ...
+            }
+        },
+        {
+            "machine": "xxx",
+            "duration": xx,
+            "precondition": [<component>, <component_type>, <container>],
+            "postcondition": [<component>, <component_type>, <container>],
+            "operation": "..."
+            "parameters": {
+                "parameter1": "value1",
+                ...
+            }
+        },
+        ...
+    ]
+}
+
+The format of your answer should be:
+{
+    "part_name": "xxx",
+    "steps_num": xx, // the number of steps
+    "steps": ["description1", "description2", ...]
+}
+
+Each step description corresponds exactly to each item in the route_sheet. Please answer the JSON string strictly according to the output format. DO NOT wrap it with code blocks Markdown syntax because I will parse your answer string directly into json. DO NOT output other content.
+
+Now my input is:
+---STRUCTURED---
+
+Answer:

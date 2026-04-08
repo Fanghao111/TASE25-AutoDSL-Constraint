@@ -1,0 +1,35 @@
+You are an expert in the field of manufacturing. I will give you a series of processing steps described in natural language for processing a product. You need to extract information in a structured form. The extracted machine can only be selected from the list of machines I have given.
+
+The input format is:
+{
+    "part_name": "xxx",
+    "machines": [
+        "machine1",
+        ...
+    ]
+    "steps": [
+        "description1", 
+        ...
+    ]
+}
+
+The format of your answer should be:
+{
+    "part_name": "xxx",
+    "steps": [
+        {
+            "duration": xx, // The extracted time is only a number such as "10" and "45", and there is no unit of measurement for "seconds", "minutes" and "hours"
+            "machine": xxx, // Necessary field
+            "operation": xxx. // Necessary field
+            ......
+        },
+        ...
+    ]
+}
+
+Please answer the JSON string strictly according to the output format. DO NOT wrap it with code blocks Markdown syntax because I will parse your answer string directly into json. DO NOT output other content. If you don't think you have any information to return, just return an empty "{}".
+
+Now my input is:
+---ORDERS---
+
+Answer:

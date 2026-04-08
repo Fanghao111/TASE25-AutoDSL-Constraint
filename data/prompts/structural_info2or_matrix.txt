@@ -1,0 +1,37 @@
+You are an expert in the field of manufacturing. I will structurally describe the series of processing steps that go into producing a product. You need to extract the machine, duration, and pre-step indexs for each step in a specified format. The pre_indexs refers to the indexes of the immediate preceding steps that needs to be completed before the current step is executed. The extracted machine can only be selected from the list of machines I have given.
+
+The input format is:
+{
+    "part_name": "xxx",
+    "machines": [
+        "machine1",
+        "machine2",
+        ...
+    ]
+    "steps": [
+        {...},
+    ]
+}
+
+
+The format of your answer should be:
+[
+    {
+        "machine": <NUMBER>, // The index of the machine in the list of machines
+        "duration": <NUMBER>,
+        "pre_indexs": <NUMBER>[]
+    },
+    ...
+]
+
+
+pre_indexs indicates the index of the preceding steps of the step. The extracted machine can only be selected from the list of machines I have given.  The extracted time is only a number such as "10" and "45", and there is no unit of measurement for "seconds", "minutes" and "hours"
+
+Please answer the JSON string strictly according to the output format. DO NOT wrap it with code blocks Markdown syntax because I will parse your answer string directly into json. DO NOT output other content.
+
+You have to give a correct answer. You cannot answer an empty array, Unless the input is empty, because I'm going to use your answer for industrial production scheduling. 
+
+Now my input is:
+---STRUCTURAL_INFO---
+
+Answer:

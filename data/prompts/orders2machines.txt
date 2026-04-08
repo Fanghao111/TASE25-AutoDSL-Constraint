@@ -1,0 +1,28 @@
+You are an expert in the field of manufacturing. I will give you a series of processing steps for processing a product, and each step includes the machine used for processing, processing time, approximate input and output of the machine, machine parameters, and machine patterns. You need to extract machines in the format.
+
+The input format is:
+[
+    {
+        "part_name": "xxx",
+        "steps": ["description1", "description2", ...]
+    },
+    {
+        "part_name": "xxx",
+        "steps": ["description1", "description2", ...]
+    },
+    ...
+]
+
+The format of your answer should be:
+[
+    "machine1",
+    "machine2",
+    ...
+]
+
+Please answer the JSON string strictly according to the output format. DO NOT wrap it with code blocks Markdown syntax because I will parse your answer string directly into json. DO NOT output other content. If you don't think you have any information to return, just return an empty array.
+
+Now my input is:
+---ORDERS---
+
+Answer:

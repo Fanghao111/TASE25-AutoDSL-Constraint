@@ -1,0 +1,65 @@
+You are an expert in the field of manufacturing. I will describe in structural description a series of processing steps for the product of processing some products, consisting of several jobs, each containing several steps. Accordingly, I will also give you an abbreviated production sequence on each machine, with each item in the production sequence as a four-element array of the form [start, job_id, step_id, duration].
+
+The processing steps structural description is:
+[
+    {
+        "part_name": "xxx",
+        "steps": [
+            ...,
+        ]
+    },
+    ...
+]
+
+The abbreviated production sequence format is:
+{
+    <machine_index>: [
+        [0, 0, 0, 10], // [start, job_id, step_id, duration]
+        [10, 1, 0, 20],
+        ...
+    ],
+    <machine_index>: [
+        [0, 0, 0, 10],
+        ...
+    ],
+    ...
+}
+
+You need to refer to both the processing steps described in natural language and this abbreviated production sequence to generate a detailed production plan. If you don't think you have any information to return, just return an empty array.
+
+The format of your answer should be:
+[
+    {
+        "machine": <machine>,
+        "production_sequence": [
+            {
+                "start": 0, // Necessary field
+                "end": 128, // Necessary field
+                "job_id": 9, // Necessary field
+                "task_id": 0, // Necessary field
+                "operation": "sawing",
+                "speed": "Medium", // Optional field
+                ... // Optional field
+            },
+            ...
+        ]
+    },
+    ...
+]
+
+The extracted machine can only be selected from the list of machines I have given. The "start" "end" time is only a number such as "10" and "45", and there is no unit of measurement for "seconds", "minutes" and "hours"
+
+Please answer the JSON string strictly according to the output format. DO NOT wrap it with code blocks Markdown syntax because I will parse your answer string directly into json. DO NOT output other content.
+
+You must answer a production plan, you cannot answer an empty production plan or an empty array.
+
+Now the processing steps described in structural description is:
+---STRUCTURAL_INFO---
+
+The abbreviated production sequence format is:
+---ASSIGNED_JOBS---
+
+The list of machines is:
+---MACHINES---
+
+Answer:

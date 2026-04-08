@@ -1,0 +1,27 @@
+You are an expert at extracting operation verb from manufacturing protocols. Your task is to extract operation verbs from the following manufacturing procedure.
+Requirements:
+1. The operation verb should be a meaningful action verb in the sentence, playing a central role and having practical significance in this step of the experimental procedure.
+2. Every operation is single verb. Return the verb in the base form and in uppercase.
+3. If there are multiple operation verbs in the given procedure, separating with a comma. Don't output any other information.
+4. If there is no operation to extract, use NONE instead.
+
+Here are some examples of the output format.
+
+Procedure:
+The Broaching Machine performs Broaching on the Lathed part, taking 21 units of time to produce a Broached component. The machine uses a Round broach type with a Medium feed rate and a depth of cut of 5mm.
+Answer:
+BROACHING
+
+Procedure:
+Feed the broached component on a conveyor belt into a Drill Press. Conduct drilling operations for 122 minutes with a hole diameter of 10 mm and a tolerance of 0.01 mm to produce a finished part with holes.
+Answer:
+DRILLING
+
+Procedure:
+The machine operates with a shear angle of 5 degrees.
+Answer:
+NONE
+
+The given experimental Procedure is:
+---SENTENCES---
+Answer:

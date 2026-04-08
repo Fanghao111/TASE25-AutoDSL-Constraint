@@ -12,6 +12,14 @@ Advanced Planning and Scheduling (APS) systems have become indispensable for mod
 
 This paper presents a practical solution for automating the conversion of raw manufacturing information into job scheduling specifications, addressing a common challenge in implementing APS systems. The proposed architecture can process diverse manufacturing documentation formats, from semi-structured route sheets to natural language instructions, while ensuring reliability through domain-specific representations. Manufacturing practitioners can use this system to reduce the manual effort in specifying digitalized constraints for production, particularly beneficial for facilities with frequent requirement changes or small-batch, multi-variety production. The system’s ability to automatically adapt to different manufacturing scenarios makes it accessible without requiring extensive programming expertise, offering a practical balance between automation and accuracy in production planning.
 
+
+## Repository Structure
+
+- `main.py`: entry script for preprocessing, AutoDSL construction, baselines, DSL pipeline execution, and evaluation.
+- `src/`: core implementation of preprocessing, DSL design, experiments, and evaluation.
+- `data/`: released scheduling inputs, intermediate structured data, and prompt templates used by the pipeline.
+- `utils/`: shared utility functions used across the pipeline.
+
 ## Citation
 
 ```
@@ -32,4 +40,3 @@ Please refer to the LICENSE file for specific licensing terms.
 ## Contact
 
 For questions or issues, please open an issue on GitHub or contact the authors.
-
