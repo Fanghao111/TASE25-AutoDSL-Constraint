@@ -56,14 +56,14 @@ class DSLPipeline:
         self.route_sheets = []
         self.or_matrix = []
         self.machines = []
-        self.operation_translation_prompt = read_txt("data/prompts/operation_translation.txt")
-        self.production_translation_prompt = read_txt("data/prompts/production_translation.txt")
-        self.operation_extraction_prompt = read_txt("data/prompts/operation_extraction.txt")
-        self.component_extraction_prompt = read_txt("data/prompts/component_extraction.txt")
+        self.operation_translation_prompt = read_txt("src/prompts/operation_translation.txt")
+        self.production_translation_prompt = read_txt("src/prompts/production_translation.txt")
+        self.operation_extraction_prompt = read_txt("src/prompts/operation_extraction.txt")
+        self.component_extraction_prompt = read_txt("src/prompts/component_extraction.txt")
 
-        self.operation_production_extraction_prompt = read_txt("data/prompts/operation_production_extraction.txt")
-        self.program_translation_prompt = read_txt("data/prompts/program_translation.txt")
-        self.program_translation_prompt_2 = read_txt("data/prompts/program_translation_2.txt")
+        self.operation_production_extraction_prompt = read_txt("src/prompts/operation_production_extraction.txt")
+        self.program_translation_prompt = read_txt("src/prompts/program_translation.txt")
+        self.program_translation_prompt_2 = read_txt("src/prompts/program_translation_2.txt")
 
         self.assigned_jobs = [] # OR-Tools solve result
         self.solver = None # OR-Tools solve result

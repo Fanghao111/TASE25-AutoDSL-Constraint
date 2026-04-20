@@ -18,7 +18,7 @@ class RouteSheet:
         self.route_sheet_store_path = route_sheet_store_path
         self.batch_input_path = "data/temp_batch/batch_input.jsonl"
         self.batch_output_path = "data/temp_batch/batch_output.jsonl"
-        self.prompt = read_txt("data/prompts/route_sheet_prompt.txt")
+        self.prompt = read_txt("src/prompts/route_sheet_prompt.txt")
         self.sys_prompt = "You are an expert in the field of manufacturing"
         self.batch_size = 1500
 

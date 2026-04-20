@@ -23,11 +23,11 @@ class Baseline_2:
         self.machines = []
         self.or_matrix = []
         self.production_plan = []
-        self.generate_synthetic_data_prompt_path = "data/prompts/generate_synthetic_data.txt"
-        self.orders2machines_prompt = read_txt("data/prompts/orders2machines.txt")
-        self.orders2or_matrix_prompt = read_txt("data/prompts/orders2or_matrix.txt")
-        self.orders2production_plan_prompt = read_txt("data/prompts/orders2production_plan.txt")
-        self.orders_simplify_prompt = read_txt("data/prompts/orders_simplify.txt")
+        self.generate_synthetic_data_prompt_path = "src/prompts/generate_synthetic_data.txt"
+        self.orders2machines_prompt = read_txt("src/prompts/orders2machines.txt")
+        self.orders2or_matrix_prompt = read_txt("src/prompts/orders2or_matrix.txt")
+        self.orders2production_plan_prompt = read_txt("src/prompts/orders2production_plan.txt")
+        self.orders_simplify_prompt = read_txt("src/prompts/orders_simplify.txt")
         self.batch_input_path = "data/temp_batch/batch_input_baseline2.jsonl"
         self.batch_output_path = "data/temp_batch/batch_output_baseline2.jsonl"
         self.assigned_jobs = [] # OR-Tools solve result

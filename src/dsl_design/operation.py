@@ -524,7 +524,7 @@ class Operation:
         return embedding.squeeze().numpy()
 
     def __same_operation_judge(self, operation_1, operation_2):
-        prompt = read_txt("data/prompts/same_operation_judgement.txt")
+        prompt = read_txt("src/prompts/same_operation_judgement.txt")
         pair = (operation_1, operation_2)
         prompt = prompt.replace("---TARGET---", str(pair))
         result = self.__chatgpt_function(prompt)

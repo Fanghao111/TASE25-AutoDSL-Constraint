@@ -16,8 +16,8 @@ This paper presents a practical solution for automating the conversion of raw ma
 ## Repository Structure
 
 - `main.py`: entry script for preprocessing, AutoDSL construction, baselines, DSL pipeline execution, and evaluation.
-- `src/`: core implementation of preprocessing, DSL design, experiments, and evaluation.
-- `data/`: released scheduling inputs, intermediate structured data, and prompt templates used by the pipeline.
+- `src/`: core implementation of preprocessing, DSL design, experiments, evaluation, and prompt templates used by the pipeline.
+- `data/`: released scheduling inputs and intermediate structured data.
 - `utils/`: shared utility functions used across the pipeline.
 
 ## Quick Start
