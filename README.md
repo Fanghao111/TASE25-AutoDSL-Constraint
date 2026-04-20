@@ -2,7 +2,7 @@
 
 [![T-ASE](https://img.shields.io/badge/IEEE%20T--ASE-2025-blue)](https://doi.org/10.1109/TASE.2025.3596540)
 
-This is the official resource repository for IEEE T-ASE [paper](https://doi.org/10.1109/TASE.2025.3596540) Automated Constraint Specification for Job Scheduling by Regulating Generative Model with Domain-Specific Representation.
+This is the official resource repository for IEEE T-ASE [paper](https://doi.org/10.1109/TASE.2025.3596540) Automated Constraint Specification for Job Scheduling by Regulating Generative Model with Domain-Specific Representation. This paper has received the **2025 IEEE T-ASE Best Paper Award**, the journal's top annual paper honor.
 
 ## Overview
 
