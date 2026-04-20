@@ -20,6 +20,46 @@ This paper presents a practical solution for automating the conversion of raw ma
 - `data/`: released scheduling inputs, intermediate structured data, and prompt templates used by the pipeline.
 - `utils/`: shared utility functions used across the pipeline.
 
+## Quick Start
+
+### Setup
+
+```bash
+cd archive
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Minimal Run Path
+
+On the released data in this archive, the following deterministic stages can be executed directly:
+
+```bash
+python main.py --mode preprocess
+python main.py --mode autodsl_operation
+python main.py --mode autodsl_production
+python main.py --mode groundtruth
+```
+
+These commands write derived artifacts under `data/` and `outputs/`.
+
+After the corresponding method outputs are available, evaluation can be run with:
+
+```bash
+python main.py --mode evaluation --evaluation_type CPE
+python main.py --mode evaluation --evaluation_type CAE
+python main.py --mode evaluation --evaluation_type CSE-1
+python main.py --mode evaluation --evaluation_type CSE-2
+python main.py --mode evaluation --evaluation_type SGE
+```
+
+### Reproducibility Notes
+
+- LLM-based stages additionally require an `OPENAI_API_KEY`.
+- `baseline`, `baseline_2`, and `dsl_pipeline` depend on intermediate artifacts under `outputs/` when resumed from partially generated results.
+- `autodsl_operation` loads `allenai/scibert_scivocab_uncased`, which may trigger a model download on first use.
+
 ## Citation
 
 ```

@@ -23,6 +23,14 @@ def read_txt(file_path):
         data = file.read()
     return data
 
+def read_released_prompt(file_path):
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(
+            f"Missing prompt asset: {file_path}. "
+            "Please provide the required prompt asset or the generated intermediate data before rerunning this stage."
+        )
+    return read_txt(file_path)
+
 def write_txt(file_path, data):
     _ensure_parent_dir(file_path)
     with open(file_path, 'w') as file:

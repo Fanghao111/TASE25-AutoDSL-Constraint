@@ -12,7 +12,7 @@ import json
 from tqdm import tqdm
 from openai import OpenAI
 from collections import defaultdict, Counter
-from utils.util import read_json, write_json, read_txt, write_txt
+from utils.util import read_json, write_json, read_txt, read_released_prompt, write_txt
 from src.experiment.schedule import schedule
 from src.experiment.groundtruth import GroundTruth
 
@@ -23,7 +23,7 @@ class Baseline_2:
         self.machines = []
         self.or_matrix = []
         self.production_plan = []
-        self.generate_synthetic_data_prompt = read_txt("data/prompts/generate_synthetic_data.txt")
+        self.generate_synthetic_data_prompt_path = "data/prompts/generate_synthetic_data.txt"
         self.orders2machines_prompt = read_txt("data/prompts/orders2machines.txt")
         self.orders2or_matrix_prompt = read_txt("data/prompts/orders2or_matrix.txt")
         self.orders2production_plan_prompt = read_txt("data/prompts/orders2production_plan.txt")
@@ -43,6 +43,8 @@ class Baseline_2:
         self.groundtruth = GroundTruth(self.instance_description)
         self.load_data()
         if self.experiment_type == "CPE_CAE_CSE-2":
+            if len(self.orders) == 0:
+                self.structured2orders()
             self.orders2machines()
             self.orders2or_matrix()
             self.or_matrix2JSP_result()
@@ -82,8 +84,9 @@ class Baseline_2:
     # with LLM
     def structured2orders(self):
         print("structured2orders ing...")
+        prompt_template = read_released_prompt(self.generate_synthetic_data_prompt_path)
         for structured in tqdm(self.structured_route_sheet):
-            prompt = self.generate_synthetic_data_prompt.replace("---STRUCTURED---", json.dumps(structured))
+            prompt = prompt_template.replace("---STRUCTURED---", json.dumps(structured))
             result = self.__chatgpt_function(prompt)
             try:
                 clean_result = json.loads(result)
@@ -304,4 +307,3 @@ class Baseline_2:
         if os.path.exists(self.batch_output_path):
             with open(self.batch_output_path, 'w') as file:
                 file.write('')
-

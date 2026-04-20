@@ -1,8 +1,4 @@
-from src.preprocess.dependence_graph_traversal import JSSPDependencyGraph, SyntheticDependencyGraph
 from concurrent.futures import ThreadPoolExecutor, as_completed
-# from src.preprocess.arrange import Arrange
-# from src.preprocess.arrange2 import Arrange2
-from src.preprocess.arrange3 import Arrange3
 from src.preprocess.RouteSheet import RouteSheet
 from src.dsl_design.feature import Feature
 from src.dsl_design.operation import Operation
@@ -10,16 +6,14 @@ from src.dsl_design.production import Production
 from src.experiment.baseline import Baseline
 from src.experiment.baseline2 import Baseline_2
 from src.experiment.dsl_pipeline import DSLPipeline
+from src.experiment.groundtruth import GroundTruth
 from src.evaluation.evaluation import Evaluation
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-import random
 from tqdm import tqdm
-from utils.util import read_json, write_json, read_txt, write_txt, seed_set
+from utils.util import read_json, write_json, seed_set
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--mode', default='evaluation', choices=['preprocess', 'autodsl_operation', 'autodsl_production', 'baseline', 'baseline_2', 'dsl_pipeline', 'evaluation'])
+parser.add_argument('--mode', default='evaluation', choices=['preprocess', 'autodsl_operation', 'autodsl_production', 'groundtruth', 'baseline', 'baseline_2', 'dsl_pipeline', 'evaluation'])
 parser.add_argument('--type', default='CPE_CAE_CSE-2', choices=['CPE_CAE_CSE-2', 'CSE-1', 'SGE', 'DAE'])
 parser.add_argument('--evaluation_type', default='CPE', choices=['CPE', 'CAE', 'CSE-1', 'CSE-2', 'SGE', 'DAE'])
 parser.add_argument('--seed', type=int, default=42)
@@ -134,6 +128,18 @@ if __name__ == '__main__':
         write_json("outputs/AutoDSL/total_production_dsl.json", total_production_dsl)
         write_json("outputs/AutoDSL/EM_results.json", total_EM_results)
 
+    elif args.mode == "groundtruth":
+        route_sheet_all = read_json("data/route_sheet_reduce.json")
+        route_sheet_choosed = [route_sheet for route_sheet in route_sheet_all if route_sheet[0]["instance_description"] in legal_instance_description_list]
+
+        for route_sheet in tqdm(route_sheet_choosed):
+            instance_description = route_sheet[0]["instance_description"]
+            groundtruth = GroundTruth(instance_description)
+            groundtruth.get_grounded_route_sheet()
+            groundtruth.get_grounded_or_matrix()
+            groundtruth.get_grounded_assigned_jobs()
+            groundtruth.get_grounded_production_plan()
+
     elif args.mode == "baseline":
         route_sheet_all = read_json("data/route_sheet_reduce.json")
         route_sheet_choosed = [route_sheet for route_sheet in route_sheet_all if route_sheet[0]["instance_description"] in legal_instance_description_list]
@@ -183,41 +189,6 @@ if __name__ == '__main__':
     elif args.mode == "evaluation":
         evaluation = Evaluation()
         evaluation.evaluate(experiment_type=args.evaluation_type)
-    
+
     else:
-        raise ValueError("Invalid mode. Please choose from preprocess, autodsl, baseline, dsl_pipeline, evaluate.")
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    # machines_data_path = "data/machines.json"
-    # traversal_store_path = "data/synthetic_traversal.json"
-    # graph_store_path = "data/synthetic_graph.json"
-    # synthetic_dependency_graph = SyntheticDependencyGraph(machines_data_path, traversal_store_path, graph_store_path)
-    # synthetic_dependency_graph.traversal()
-    # synthetic_dependency_graph.construct_graph()
-    # print("dependency_num: ", synthetic_dependency_graph.dependency_num)
-    
-
-    # raw_data_path = "data/jssp_data.txt"
-    # jssp_data_path = "data/jssp_data.json"
-    # jssp_graph_store_path = "data/jssp_graph.json"
-    # jssp_dependency_graph = JSSPDependencyGraph(raw_data_path, jssp_data_path, jssp_graph_store_path)
-    # jssp_dependency_graph.statistics()
-
-    # synthetic_graph_path = "data/synthetic_graph.json"
-    # jssp_graph_path = "data/jssp_graph.json"
-    # arrange_store_path = "data/arrange.json"
-    # arrange_apply_path = "data/jssp_graph_arrange"
-    # arrange = Arrange3(synthetic_graph_path, jssp_graph_path, arrange_store_path, arrange_apply_path)
-    # arrange.arrange()
-    # # arrange.statistics()
-
-    
+        raise ValueError("Invalid mode. Please choose from preprocess, autodsl_operation, autodsl_production, groundtruth, baseline, baseline_2, dsl_pipeline, evaluation.")

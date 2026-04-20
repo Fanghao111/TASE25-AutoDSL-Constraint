@@ -56,7 +56,6 @@ class DSLPipeline:
         self.route_sheets = []
         self.or_matrix = []
         self.machines = []
-        self.generate_synthetic_data_prompt = read_txt("data/prompts/generate_synthetic_data.txt")
         self.operation_translation_prompt = read_txt("data/prompts/operation_translation.txt")
         self.production_translation_prompt = read_txt("data/prompts/production_translation.txt")
         self.operation_extraction_prompt = read_txt("data/prompts/operation_extraction.txt")
@@ -90,6 +89,11 @@ class DSLPipeline:
         self.groundtruth = GroundTruth(self.instance_description)
         self.load_data()
         if self.experiment_type == "CPE_CAE_CSE-2":
+            if len(self.orders) == 0:
+                raise RuntimeError(
+                    f"Missing intermediate synthetic orders at {self.dump_dir_path}orders.json. "
+                    "Please provide the intermediate orders before running dsl_pipeline."
+                )
             self.orders2dsl_program()
             self.dsl_program2or_matrix()
             self.dsl_program2route_sheets()
@@ -1151,4 +1155,3 @@ class DSLPipeline:
 
     def store_embedding_dic(self):
         write_json("data/embedding_dic.json", self.embedding_dic)
-
