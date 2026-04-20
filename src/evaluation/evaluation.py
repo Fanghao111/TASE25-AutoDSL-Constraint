@@ -1,7 +1,5 @@
 from src.preprocess.dependence_graph_traversal import JSSPDependencyGraph, SyntheticDependencyGraph
 from concurrent.futures import ThreadPoolExecutor, as_completed
-# from src.preprocess.arrange import Arrange
-# from src.preprocess.arrange2 import Arrange2
 from src.preprocess.arrange3 import Arrange3
 from src.preprocess.RouteSheet import RouteSheet
 from src.dsl_design.feature import Feature
@@ -21,7 +19,6 @@ from rouge_score import rouge_scorer
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import os
 import json
-# from sentence_transformers import SentenceTransformer
 
 
 class Evaluation:
@@ -31,24 +28,23 @@ class Evaluation:
         self.scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
         self.result_path = "outputs/"
         self.groundtruth_dir_path = self.result_path + self.mode[3]
-        # self.model = SentenceTransformer('all-MiniLM-L6-v2')
 
     def evaluate(self, experiment_type: str):
-        '''
+        """
         experiment_type: str, CPE | CAE | CSE-1 | CSE-2 | SGE
         CPE:
             - Input: NL description
             - Output: production plan
-            - Methods: ROUGE-L、BLEU
+            - Methods: ROUGE-L, BLEU
         CAE:
             - Input: NL description
             - Output: fully structural route sheet
-            - Methods: BLEU、ROUGE-L
+            - Methods: BLEU, ROUGE-L
         CSE-1:
             - Input: groundtruth fully structural route sheet
             - Output: or matirx
-            - Methods: 
-                - Constraint-Level Accuracy: 评估约束一致性
+            - Methods:
+                - Constraint-Level Accuracy: evaluate constraint consistency
                 - Compiler Error Rate
                 - Runtime Error Rate
         CSE-2:
@@ -60,8 +56,7 @@ class Evaluation:
             - Output: production plan
             - Methods: BLEU, ROUGE-L
         DAE:
-
-        '''
+        """
         if experiment_type == "CPE":
             baseline_dir_path = self.result_path + self.mode[0] + self.suffix[0]
             baseline2_dir_path = self.result_path + self.mode[1] + self.suffix[0]
@@ -76,7 +71,7 @@ class Evaluation:
             dsl_rouge = {"Precision": [], "Recall": [], "F1": []}
             
 
-            # 获取子文件夹列表（假设子文件夹名一致）
+            # List subfolders, assuming aligned names across methods.
             subfolders = os.listdir(baseline_dir_path)
 
             for subfolder in tqdm(subfolders):
@@ -86,18 +81,18 @@ class Evaluation:
                 ground_truth_path = os.path.join(self.groundtruth_dir_path, subfolder, "production_plan.json")
 
                 if all(os.path.exists(path) for path in [baseline_path, baseline2_path, dsl_pipeline_path, ground_truth_path]):
-                    # 读取 JSON 内容
+                    # Read JSON content.
                     baseline_content = json.dumps(read_json(baseline_path))
                     baseline2_content = json.dumps(read_json(baseline2_path))
                     dsl_pipeline_content = json.dumps(read_json(dsl_pipeline_path))
                     ground_truth_content = json.dumps(read_json(ground_truth_path))
 
-                    # 计算 BLEU 分数
+                    # Compute BLEU scores.
                     baseline_bleu.append(self.__bleu_score(ground_truth_content, baseline_content))
                     baseline2_bleu.append(self.__bleu_score(ground_truth_content, baseline2_content))
                     dsl_bleu.append(self.__bleu_score(ground_truth_content, dsl_pipeline_content))
 
-                    # 计算 ROUGE 分数
+                    # Compute ROUGE scores.
                     baseline_rouge_precision, baseline_rouge_recall, baseline_rouge_F1 = self.__rouge_score(ground_truth_content, baseline_content)
                     baseline2_rouge_precision, baseline2_rouge_recall, baseline2_rouge_F1 = self.__rouge_score(ground_truth_content, baseline2_content)
                     dsl_rouge_precision, dsl_rouge_recall, dsl_rouge_F1 = self.__rouge_score(ground_truth_content, dsl_pipeline_content)
@@ -141,7 +136,7 @@ class Evaluation:
             dsl_rouge = {"Precision": [], "Recall": [], "F1": []}
             
 
-            # 获取子文件夹列表（假设子文件夹名一致）
+            # List subfolders, assuming aligned names across methods.
             subfolders = os.listdir(baseline_dir_path)
 
             for subfolder in tqdm(subfolders):
@@ -150,16 +145,16 @@ class Evaluation:
                 ground_truth_path = os.path.join(self.groundtruth_dir_path, subfolder, "route_sheets.json")
 
                 if all(os.path.exists(path) for path in [baseline_path, dsl_pipeline_path, ground_truth_path]):
-                    # 读取 JSON 内容
+                    # Read JSON content.
                     baseline_content = json.dumps(read_json(baseline_path))
                     dsl_pipeline_content = json.dumps(read_json(dsl_pipeline_path))
                     ground_truth_content = json.dumps(read_json(ground_truth_path))
 
-                    # 计算 BLEU 分数
+                    # Compute BLEU scores.
                     baseline_bleu.append(self.__bleu_score(ground_truth_content, baseline_content))
                     dsl_bleu.append(self.__bleu_score(ground_truth_content, dsl_pipeline_content))
 
-                    # 计算 ROUGE 分数
+                    # Compute ROUGE scores.
                     baseline_rouge_precision, baseline_rouge_recall, baseline_rouge_F1 = self.__rouge_score(ground_truth_content, baseline_content)
                     dsl_rouge_precision, dsl_rouge_recall, dsl_rouge_F1 = self.__rouge_score(ground_truth_content, dsl_pipeline_content)
 
@@ -193,7 +188,7 @@ class Evaluation:
 
             baseline_result = {"accuracy_rate": [], "compile_err_rate": [], "runtime_err_rate": []}
             dsl_result = {"accuracy_rate": [], "compile_err_rate": [], "runtime_err_rate": []}
-            # 获取子文件夹列表（假设子文件夹名一致）
+            # List subfolders, assuming aligned names across methods.
             subfolders = os.listdir(baseline_dir_path)
 
             for subfolder in tqdm(subfolders):
@@ -209,7 +204,7 @@ class Evaluation:
                 ground_truth_route_sheet = os.path.join(os.path.join(self.groundtruth_dir_path, subfolder, "route_sheets.json"))
 
                 if all(os.path.exists(path) for path in [baseline_path, dsl_pipeline_path, ground_truth_path, baseline_route_sheet, dsl_pipeline_operation_programs_path, dsl_pipeline_production_programs_path, ground_truth_route_sheet]):
-                    # 读取 JSON 内容
+                    # Read JSON content.
                     baseline_content = read_json(baseline_path)
                     baseline_route_sheet_content = read_json(baseline_route_sheet)
                     baseline_machines_content = read_json(baseline_machines)
@@ -223,20 +218,13 @@ class Evaluation:
 
                     baseline_resource_constraints = self.__get_baseline_recourse_constraint_CSE_1(baseline_content, baseline_machines_content, baseline_route_sheet_content)
                     baseline_precedence_constraints = self.__get_baseline_precedence_constraint_CSE_1(baseline_content, baseline_route_sheet_content, baseline_machines_content)
-                    # print("baseline_resource_constraints: ", baseline_resource_constraints)
-                    # print("baseline_precedence_constraints: ", baseline_precedence_constraints)
 
                     dsl_resource_constraints = self.__get_DSL_recourse_constraint_CSE(dsl_pipeline_operation_programs_content)
                     dsl_precedence_constraints = self.__get_DSL_precedence_constraint_CSE(dsl_pipeline_production_programs_content)
-                    # print("dsl_resource_constraints: ", dsl_resource_constraints)
-                    # print("dsl_precedence_constraints: ", dsl_precedence_constraints)
 
                     ground_truth_resource_constraints = self.__get_groundtruth_recourse_constraint(ground_truth_route_sheet_content)
                     ground_truth_operation_precedence_constraints = self.__get_groundtruth_operation_precedence_constraint(ground_truth_content, ground_truth_route_sheet_content)
                     ground_truth_machine_precedence_constraints = self.__get_groundtruth_machine_precedence_constraint(ground_truth_content, ground_truth_route_sheet_content)
-                    # print("ground_truth_resource_constraints: ", ground_truth_resource_constraints)
-                    # print("ground_truth_operation_precedence_constraints: ", ground_truth_operation_precedence_constraints)
-                    # print("ground_truth_machine_precedence_constraints: ", ground_truth_machine_precedence_constraints)
 
                     baseline_result["accuracy_rate"].append(
                         self.__iou(baseline_resource_constraints + baseline_precedence_constraints,  
@@ -269,7 +257,7 @@ class Evaluation:
             baseline_result = {"accuracy_rate": [], "runtime_err_rate": []}
             baseline2_result = {"accuracy_rate": [], "runtime_err_rate": []}
             dsl_result = {"accuracy_rate": [], "runtime_err_rate": []}
-            # 获取子文件夹列表（假设子文件夹名一致）
+            # List subfolders, assuming aligned names across methods.
             subfolders = os.listdir(baseline_dir_path)
 
             for subfolder in tqdm(subfolders):
@@ -288,7 +276,7 @@ class Evaluation:
                 ground_truth_route_sheet = os.path.join(os.path.join(self.groundtruth_dir_path, subfolder, "route_sheets.json"))
 
                 if all(os.path.exists(path) for path in [baseline_path, dsl_pipeline_path, ground_truth_path, baseline_route_sheet, dsl_pipeline_operation_programs_path, dsl_pipeline_production_programs_path, ground_truth_route_sheet]):
-                    # 读取 JSON 内容
+                    # Read JSON content.
                     baseline_content = read_json(baseline_path)
                     baseline_route_sheet_content = read_json(baseline_route_sheet)
                     baseline_machines_content = read_json(baseline_machines)
@@ -362,7 +350,7 @@ class Evaluation:
             dsl_rouge = {"Precision": [], "Recall": [], "F1": []}
             
 
-            # 获取子文件夹列表（假设子文件夹名一致）
+            # List subfolders, assuming aligned names across methods.
             subfolders = os.listdir(baseline_dir_path)
 
             for subfolder in tqdm(subfolders):
@@ -372,18 +360,18 @@ class Evaluation:
                 ground_truth_path = os.path.join(self.groundtruth_dir_path, subfolder, "production_plan.json")
 
                 if all(os.path.exists(path) for path in [baseline_path, baseline2_path, dsl_pipeline_path, ground_truth_path]):
-                    # 读取 JSON 内容
+                    # Read JSON content.
                     baseline_content = json.dumps(read_json(baseline_path))
                     baseline2_content = json.dumps(read_json(baseline2_path))
                     dsl_pipeline_content = json.dumps(read_json(dsl_pipeline_path))
                     ground_truth_content = json.dumps(read_json(ground_truth_path))
 
-                    # 计算 BLEU 分数
+                    # Compute BLEU scores.
                     baseline_bleu.append(self.__bleu_score(ground_truth_content, baseline_content))
                     baseline2_bleu.append(self.__bleu_score(ground_truth_content, baseline2_content))
                     dsl_bleu.append(self.__bleu_score(ground_truth_content, dsl_pipeline_content))
 
-                    # 计算 ROUGE 分数
+                    # Compute ROUGE scores.
                     baseline_rouge_precision, baseline_rouge_recall, baseline_rouge_F1 = self.__rouge_score(ground_truth_content, baseline_content)
                     baseline2_rouge_precision, baseline2_rouge_recall, baseline2_rouge_F1 = self.__rouge_score(ground_truth_content, baseline2_content)
                     dsl_rouge_precision, dsl_rouge_recall, dsl_rouge_F1 = self.__rouge_score(ground_truth_content, dsl_pipeline_content)
@@ -525,7 +513,7 @@ class Evaluation:
         # reference: groundtruth
         reference_json = json.loads(reference)
         candidate_json = json.loads(candidate)
-        # 现将 reference_json 和 candidate_json 扁平化
+        # Flatten both structures before comparison.
         reference_json = self.flatten_structure(reference_json)
         candidate_json = self.flatten_structure(candidate_json)
         X = len(candidate_json)
@@ -565,7 +553,7 @@ class Evaluation:
         # reference: groundtruth
         reference_json = json.loads(reference)
         candidate_json = json.loads(candidate)
-        # 现将 reference_json 和 candidate_json 扁平化
+        # Flatten both structures before comparison.
         reference_json = self.flatten_structure(reference_json)
         candidate_json = self.flatten_structure(candidate_json)
         X = len(candidate_json)
@@ -596,30 +584,30 @@ class Evaluation:
 
     def flatten_structure(self, data, parent_key='', sep='.'):
         """
-        扁平化嵌套的字典和列表。
-        
-        :param data: 要扁平化的结构，可以是 list 或 dict
-        :param parent_key: 父级键，用于递归过程中构造新的键
-        :param sep: 键之间的分隔符
-        :return: 扁平化后的字典
+        Flatten nested dictionaries and lists.
+
+        :param data: Structure to flatten, either a list or a dict
+        :param parent_key: Parent key used to build recursive key paths
+        :param sep: Separator between key segments
+        :return: Flattened dictionary
         """
         items = []
         if isinstance(data, dict):
             for k, v in data.items():
                 new_key = f"{parent_key}{sep}{k}" if parent_key else k
-                if isinstance(v, (dict, list)):  # 如果值是字典或列表，递归调用
+                if isinstance(v, (dict, list)):  # Recurse on nested dicts and lists.
                     items.extend(self.flatten_structure(v, new_key, sep=sep).items())
-                else:  # 其他情况直接添加
+                else:  # Append scalar values directly.
                     items.append((new_key, v))
         elif isinstance(data, list):
             for i, item in enumerate(data):
                 new_key = f"{parent_key}[{i}]"
-                if isinstance(item, (dict, list)):  # 如果元素是字典或列表，递归调用
+                if isinstance(item, (dict, list)):  # Recurse on nested dicts and lists.
                     items.extend(self.flatten_structure(item, new_key, sep=sep).items())
-                else:  # 其他情况直接添加
+                else:  # Append scalar values directly.
                     items.append((new_key, item))
         else:
-            items.append((parent_key, data))  # 处理单个值
+            items.append((parent_key, data))  # Handle a single scalar value.
         return dict(items)
 
     def __get_word_vector(self, text):
@@ -827,18 +815,18 @@ class Evaluation:
 
     def __iou(self, list1, list2):
 
-        # 将嵌套列表转换为元组
+        # Convert nested lists to tuples so they become hashable.
         set1 = set(tuple(item) if isinstance(item, list) else item for item in list1)
         set2 = set(tuple(item) if isinstance(item, list) else item for item in list2)
         
-        # 计算交集和并集
+        # Compute intersection and union.
         intersection = set1 & set2
         union = set1 | set2
         
-        # 避免分母为 0 的情况
+        # Avoid division by zero.
         if not union:
             return 0.0
         
-        # 计算 IoU
+        # Compute IoU.
         iou = len(intersection) / len(union)
         return iou

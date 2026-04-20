@@ -22,13 +22,9 @@ class Arrange3:
         conflict_jssp_num = 0
         for jssp_graph in tqdm(self.jssp_graphs):
             jssp_dependency_pairs = self.__get_dependency_pairs(jssp_graph["dependence_graph"])
-            # 匹配
-            # print("synthetic_dependency_pairs: ", self.synthetic_dependency_pairs)
-            # print("jssp_dependency_pairs: ", jssp_dependency_pairs)
             mapping, matches, conflict = self.__find_best_mapping_3(self.synthetic_dependency_pairs, jssp_dependency_pairs)
             if conflict > 0:
                 conflict_jssp_num += 1
-            # make it JSON serializable
             if mapping == None:
                 mapping = 'None'
             self.arrange_result.append({
@@ -45,14 +41,13 @@ class Arrange3:
         for i in range(len(matrix)):
             for j in range(len(matrix[i])):
                 if matrix[i][j] == 1:
-                    pairs.append((i, j))# 即 j 依赖 i
+                    pairs.append((i, j))  # j depends on i
         return pairs
 
     def __find_best_mapping(self, A, B):
         GA = self.__build_graph(A)
         GB = self.__build_graph(B)
         
-        # 这里我们尝试找到最大公共子图
         GM = nx.algorithms.isomorphism.DiGraphMatcher(GA, GB)
         best_mapping = None
         max_matches = -1
@@ -75,7 +70,7 @@ class Arrange3:
     def __find_best_mapping_3(self, A, B):
         from collections import defaultdict
         new_B = B.copy()
-        # 提取所有唯一的节点
+        # Collect all unique nodes.
         nodes_A = set()
         for src, dst in A:
             nodes_A.add(src)
@@ -86,29 +81,28 @@ class Arrange3:
             nodes_B.add(src)
             nodes_B.add(dst)
 
-        # 统计 A 中每个节点的入度和出度
+        # Count in-degrees and out-degrees for nodes in A.
         in_degree_A = defaultdict(int)
         out_degree_A = defaultdict(int)
         for src, dst in A:
             out_degree_A[src] += 1
             in_degree_A[dst] += 1
 
-        # 统计 B 中每个节点的入度和出度
+        # Count in-degrees and out-degrees for nodes in B.
         in_degree_B = defaultdict(int)
         out_degree_B = defaultdict(int)
         for src, dst in B:
             out_degree_B[src] += 1
             in_degree_B[dst] += 1
 
-        # 为 B 的节点找到 A 中度数最接近的节点
+        # Match each node in B to the closest-degree node in A.
         mapping = {}
         used_A = set()
 
-        # 为了提高映射效果，可以按 B 节点的总度数（入度 + 出度）降序排序
+        # Prefer high-degree nodes first to stabilize the mapping.
         sorted_b_nodes = sorted(
             nodes_B, 
             key=lambda b: (out_degree_B[b] + in_degree_B[b]), 
-            # key=lambda b: (in_degree_B[b]), 
             reverse=True
         )
 
@@ -118,14 +112,13 @@ class Arrange3:
                 key=lambda a_node: abs(out_degree_A[a_node] - out_degree_B[b_node]) + abs(in_degree_A[a_node] - in_degree_B[b_node])
             )
             if candidates:
-                # 选择度数差异最小的 A 节点进行映射，并检查是否存在相反的依赖关系，如果存在，则选择下一个 A 节点
+                # Pick the closest-degree node while avoiding reversed dependencies.
                 for a_node in candidates:
                     current_match = a_node
                     mapping[b_node] = current_match
                     flag = True
                     for src, dst in B:
                         if (mapping.get(dst), mapping.get(src)) in A:
-                            # 删除该映射
                             mapping[b_node] = None
                             flag = False
                             break
@@ -134,7 +127,6 @@ class Arrange3:
                         break
                             
             else:
-                # 如果没有可用的 A 节点（理论上不会发生，因为 A 的节点 >= B 的节点）
                 mapping[b_node] = None
 
         
@@ -146,13 +138,10 @@ class Arrange3:
         for src, dst in B:
             if (mapping.get(dst), mapping.get(src)) in A:
                 conflict += 1
-        # if conflict > 0:
-        #     print("conflict: ", conflict, "\n")
         return mapping, matches, conflict
 
     def __find_best_mapping_4(self, A, B):
-        # 将 B 随机打乱，然后 A 和 B 的每一项逐项映射，映射完后检查是否存在与 A 中相反的依赖关系，若存在，则重新映射
-        # 重复这个过程直到找到最佳映射
+        # Randomize B and keep the best mapping found over repeated trials.
         best_mapping = None
         best_matches = 0
         for _ in range(1000):
@@ -164,4 +153,3 @@ class Arrange3:
                 best_mapping = mapping
                 best_matches = matches
         return best_mapping, best_matches
-

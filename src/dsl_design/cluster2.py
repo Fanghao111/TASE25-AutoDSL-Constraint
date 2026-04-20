@@ -5,22 +5,21 @@ from scipy.stats import multivariate_normal
 import scipy.linalg
 import scipy.special
 from tqdm import tqdm, trange
-# import pymc as pm
 import matplotlib.pyplot as plt
 
 class GaussianMixtureModel:
     def __init__(self, D=2, num_components=3, s0=5.0, ss=0.65):  
-        self.num_components = num_components  # GMM中高斯成分的数量
-        self.D = D  # 数据的维度
+        self.num_components = num_components  # Number of Gaussian components in the GMM.
+        self.D = D  # Data dimensionality.
         self.components = []
 
-        # 初始化每个高斯成分
+        # Initialize each Gaussian component.
         for _ in range(num_components):
             component = {
-                'weight': 1.0 / num_components,  # 初始权重相等
-                'mean': np.zeros(shape=(D, 1)),  # 初始均值为零向量
-                'covariance': np.eye(D),  # 初始协方差矩阵为单位矩阵
-                'cholesky': np.eye(D),  # 初始Cholesky分解
+                'weight': 1.0 / num_components,  # Start with uniform weights.
+                'mean': np.zeros(shape=(D, 1)),  # Start from the zero mean.
+                'covariance': np.eye(D),  # Start from the identity covariance.
+                'cholesky': np.eye(D),  # Initial Cholesky factor.
                 's0': s0,
                 'ss': ss,
                 'rr': 1.0 / (s0**2/ss**2),
@@ -60,8 +59,7 @@ class GaussianMixtureModel:
             lp = self.__z(dd, nn + 1, rr + 1, vv + 1, self.__cholupdate(cc, x), xx + x) \
                 - self.__z(dd, nn, rr, vv, cc, xx)
             log_probs.append(lp)
-        # print("log_probs: ", log_probs)
-        # 加权求和每个成分的log概率
+        # Compute the weighted sum of component log-probabilities.
         total_log_prob = np.log(sum(component['weight'] * np.exp(lp) for component, lp in zip(self.components, log_probs)))
         return total_log_prob
 
@@ -128,11 +126,7 @@ class MultivariateNormal:
         rr = self.rr
         vv = self.vv
         cc = self.cc
-        # print(cc)
         xx = self.xx
-        # print("self.__cholupdate(cc,x),xx+x): ", self.__cholupdate(cc,x),xx+x)
-        # print(self.__z(dd,nn+1,rr+1,vv+1,self.__cholupdate(cc,x),xx+x))
-        # print(self.__z(dd, nn, rr, vv ,cc ,xx))
         lp = self.__z(dd,nn+1,rr+1,vv+1,self.__cholupdate(cc,x),xx+x) \
              - self.__z(dd, nn, rr, vv ,cc ,xx)
         return lp
@@ -163,38 +157,34 @@ class MultivariateNormal:
 
     def __z(self, dd, nn, rr, vv, cc, xx):
         # Log predictive distribution
-        # print("self.__cholupdate(cc, xx / np.sqrt(rr),'-'): ", self.__cholupdate(cc, xx / np.sqrt(rr),'-'))
         values = (vv - np.arange(0, dd, 1)) / 2
-        # print(vv, np.arange(0, dd, 1), values)
         valid_values = values[values > 0]
 
         zz = - nn*dd/2*np.log(np.pi) - dd/2*np.log(rr) - \
              vv*np.sum(np.log(np.diag(self.__cholupdate(cc, xx / np.sqrt(rr),'-')))) \
              + np.sum(scipy.special.loggamma(values))
-        # print(vv*np.sum(np.log(np.diag(self.__cholupdate(cc, xx / np.sqrt(rr),'-')))))
-        # print(np.sum(scipy.special.loggamma(values)))
         
         return zz
 
 class Multinomial:
     def __init__(self, D=2, alpha=1.0):
-        self.D = D  # 事件的种类数
-        self.alpha = np.full(D, alpha)  # Dirichlet 先验参数（平滑参数）
-        self.counts = np.zeros(D)  # 每个事件的计数
-        self.total_count = 0  # 总计数
+        self.D = D  # Number of event types.
+        self.alpha = np.full(D, alpha)  # Dirichlet prior parameters for smoothing.
+        self.counts = np.zeros(D)  # Event counts.
+        self.total_count = 0  # Total count.
 
     def add_point(self, x):
-        """增加一个数据点（即增加一个事件的计数）"""
+        """Add one data point by increasing the event counts."""
         self.counts += x
         self.total_count += np.sum(x)
 
     def del_point(self, x):
-        """删除一个数据点（即减少一个事件的计数）"""
+        """Remove one data point by decreasing the event counts."""
         self.counts -= x
         self.total_count -= np.sum(x)
 
     def logpredictive(self, x):
-        """计算给定新数据点的对数预测概率"""
+        """Compute the log predictive probability for a new data point."""
         log_pred = scipy.special.loggamma(self.alpha + self.counts + x).sum() \
                  - scipy.special.loggamma(self.alpha + self.counts).sum() \
                  + scipy.special.loggamma(self.alpha.sum() + self.total_count) \
@@ -208,35 +198,35 @@ class PymcMultivariateNormal:
 
     def fitting(self):
         with pm.Model() as model:
-            # 先验分布: N 维正态分布的均值
+            # Prior over the mean of an N-dimensional Gaussian.
             mu = pm.Normal('mu', mu=np.zeros(self.D), sigma=np.ones(self.D)*10, shape=self.D)
             
-            # 使用 LKJ Cholesky 先验定义 N 维协方差矩阵
+            # Define the N-dimensional covariance matrix with an LKJ Cholesky prior.
             chol, corr, stds = pm.LKJCholeskyCov('chol', n=self.D, eta=2, sd_dist=pm.Exponential.dist(1.0), compute_corr=True)
             cov = pm.Deterministic('cov', chol @ chol.T)
             
-            # 似然函数: 根据观测数据的分布
+            # Likelihood under the observed multivariate normal samples.
             likelihood = pm.MvNormal('likelihood', mu=mu, chol=chol, observed=self.data)
             
-            # 进行后验采样
+            # Draw posterior samples.
             trace = pm.sample(2000, return_inferencedata=True)
 
         self.trace = trace
 
     def predict(self, x):
-        # 计算新点的概率
+        # Estimate the probability of a new point.
         with pm.Model() as model:
             ppc = pm.sample_posterior_predictive(self.trace, var_names=["mu", "cov"], samples=1000)
 
-        # 提取后验分布中的参数
+        # Extract posterior parameter estimates.
         mu_samples = ppc.posterior_predictive['mu'].mean(axis=0)
         cov_samples = ppc.posterior_predictive['cov'].mean(axis=0)
 
-        # 计算新点的概率密度
+        # Compute the probability density of the new point.
         from scipy.stats import multivariate_normal
         probability_density = multivariate_normal.pdf(x, mean=mu_samples, cov=cov_samples)
 
-        print("新点的概率密度:", probability_density)
+        print("Probability density of the new point:", probability_density)
 
     def del_point(self, x):
         index = np.where(np.all(self.data == x, axis=1))
@@ -252,8 +242,6 @@ def DPMM(X, Model=MultivariateNormal, K=2, z_init=None, alpha=1.0, max_iters=200
     for i in range(len(X)):
         X[i] = np.array(X[i])
     X = np.array(X)
-    # print("X: ", X)
-    # print("X shape: ", X.shape)
     N = len(X)
     D = X.shape[1]
 
@@ -288,19 +276,12 @@ def DPMM(X, Model=MultivariateNormal, K=2, z_init=None, alpha=1.0, max_iters=200
                 del n_points_cluster[z_i]
                 del clusters[z_i]
                 z[z > z_i] -= 1
-            # print("n_points_cluster: ", n_points_cluster)
             prob = np.log(np.array(n_points_cluster + [alpha]))
-            # print("prob: ", prob)
             for j in range(len(clusters)):
-                # print("clusters[j].logpredictive(x_i): ", clusters[j].logpredictive(x_i))
                 prob[j] = prob[j] + clusters[j].logpredictive(x_i)
-                # print(prob[j])
             prob[-1] = prob[-1] + dummy_dist.logpredictive(x_i)
-            # print(prob, np.max(prob))
             prob = np.exp(prob - np.max(prob)) # ổn định tính toán số
-            # print("prob: ", prob)
             prob = tuple(p/sum(prob) for p in prob)
-            # print("prob: ", prob)
             
             current_dist = stats.rv_discrete(values=(list(range(len(prob))), prob))
             z_new = current_dist.rvs(size=1)
@@ -321,8 +302,6 @@ def DPMM_2(X, Model=PymcMultivariateNormal, K=1, z_init=None, alpha=1.0, max_ite
     for i in range(len(X)):
         X[i] = np.array(X[i])
     X = np.array(X)
-    # print("X: ", X)
-    # print("X shape: ", X.shape)
     N = len(X)
     D = X.shape[1]
 
@@ -353,17 +332,13 @@ def DPMM_2(X, Model=PymcMultivariateNormal, K=1, z_init=None, alpha=1.0, max_ite
                 del n_points_cluster[z_i]
                 del clusters[z_i]
                 z[z > z_i] -= 1
-            # print("n_points_cluster: ", n_points_cluster)
             prob = np.log(np.array(n_points_cluster + [alpha]))
-            # print("prob: ", prob)
             for j in range(len(clusters)):
                 print("clusters[j].logpredictive(x_i): ", clusters[j].predict(x_i))
                 prob[j] = prob[j] + clusters[j].predict(x_i)
             prob[-1] = prob[-1] + dummy_dist.predict(x_i)
             prob = np.exp(prob - np.max(prob)) # ổn định tính toán số
-            # print("prob: ", prob)
             prob = tuple(p/sum(prob) for p in prob)
-            # print("prob: ", prob)
 
             current_dist = stats.rv_discrete(values=(list(range(len(prob))), prob))
             z_new = current_dist.rvs(size=1)
@@ -406,23 +381,6 @@ def generate_data_two(num_clusters=4, points_per_cluster=40):
     return np.concatenate(data)
 
 def generate_data_3():
-    # 生成只含有0、1的五维数据
+    # Generate six-dimensional binary data containing only 0s and 1s.
     data = np.random.randint(0, 2, (100, 6))
     return data
-
-# np.random.seed(11)
-
-# X = generate_data_3()
-
-# print("X shape: ", X.shape)
-# print("X: ", X)
-
-# np.random.seed(7)
-# z = DPMM(X, Model=MultivariateNormal, max_iters=200, alpha=2.0)
-
-# print("z: ", z)
-
-# plt.style.use('bmh')
-# for c in np.unique(z['label']):
-#     plt.scatter(X[z['label'] == c, 0], X[z['label'] == c, 1], label=f'Cluster {c}')
-# plt.show()

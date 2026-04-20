@@ -49,7 +49,7 @@ class Poisson_Distribution:
 class N_Poisson_Distribution:
     def __init__(self, dim, **kwargs):
         self.dim = dim
-        self.poisson_dist = [Poisson_Distribution(1) for _ in range(dim)]  # 默认 λ = 1
+        self.poisson_dist = [Poisson_Distribution(1) for _ in range(dim)]  # Default λ = 1.
         self.data_point = []
         self.N = 0
     
@@ -63,7 +63,7 @@ class N_Poisson_Distribution:
         self.N = len(data_point)
 
         for i in range(self.dim):
-            lambda_ = np.mean(data_point[:, i])  # 对于泊松分布，λ 是平均值
+            lambda_ = np.mean(data_point[:, i])  # For Poisson, λ is the sample mean.
             self.poisson_dist[i].lambda_ = lambda_
 
 class Multinomial_Distribution:
@@ -90,8 +90,8 @@ class Gaussian_Mixture_Distribution:
         self.dim = dim
         self.n_components = n_components
         self.means = np.zeros((n_components, dim))
-        self.covariances = np.array([np.eye(dim)] * n_components)  # 初始化为单位矩阵
-        self.weights = np.ones(n_components) / n_components  # 初始化为均匀分布
+        self.covariances = np.array([np.eye(dim)] * n_components)  # Initialize as identity matrices.
+        self.weights = np.ones(n_components) / n_components  # Initialize with uniform weights.
     
     def probability(self, x):
         probs = np.array([self.weights[k] * multivariate_normal.pdf(x, self.means[k], self.covariances[k])
@@ -102,9 +102,6 @@ class Gaussian_Mixture_Distribution:
         self.data_point = data_point
         self.N = len(data_point)
 
-        # 可以使用 K-means 或者 EM 算法来初始化均值、协方差和权重
-        # 这里为简化仅使用数据的均值和协方差初始化
-        
         from sklearn.cluster import KMeans
         
         kmeans = KMeans(n_clusters=self.n_components).fit(data_point)

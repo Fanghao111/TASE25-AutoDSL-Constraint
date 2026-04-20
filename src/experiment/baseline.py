@@ -1,7 +1,7 @@
 # NL description -> fully structural route sheet (with LLM)
 # fully structural route sheet -> JSP solver formatted matrix (with LLM)
-# JSP solver formatted matrix -> JSP solver 的结果
-# fully structural route sheet + JSP solver 的结果 -> production plans
+# JSP solver formatted matrix -> JSP solver output
+# fully structural route sheet + JSP solver output -> production plans
 
 from __future__ import annotations
 import random 
@@ -73,21 +73,20 @@ class Baseline:
             self.JSP_result2production_plan()
 
         elif self.experiment_type == "CSE-1":
-            # input: groundtruth fully structural route sheet
-            # output: OR matrix
+            # Input: ground-truth fully structured route sheet.
+            # Output: OR matrix.
             self.structural_info = read_json(self.dump_dir_path + "route_sheets.json")
             self.structural_info2or_matrix()
             self.or_matrix2JSP_result()
             self.JSP_result2production_plan()
 
         elif self.experiment_type == "SGE":
-            # input: JSP solver result
-            # output: Production plan
+            # Input: JSP solver result.
+            # Output: production plan.
             self.assigned_jobs = read_json("outputs/GroundTruth/" + self.instance_description + "/" + "assigned_jobs.json")
             self.JSP_result2production_plan()
 
         elif self.experiment_type == "DAE":
-            # 
             pass
 
     # with LLM
@@ -126,10 +125,8 @@ class Baseline:
         print("orders2structural_info ing...")
         self.structural_info = []
 
-        # 清空之前的批量输入文件内容
         self.__empty_jsonl_contents()
 
-        # 准备批量调用的输入
         for index, order in enumerate(self.orders):
             order_copy = copy.deepcopy(order)
             order_copy["machines"] = self.machines
@@ -138,14 +135,11 @@ class Baseline:
             user_content = prompt
             self.__gpt_batch_store(sys_content, user_content, str(index))
 
-        # 调用批量接口
         batch_obj = self.__gpt_batch_call()
 
-        # 获取批量结果
         batch_id = batch_obj.id
         results = self.__get_batch_result(batch_id)
 
-        # 解析结果并保存
         for result in results:
             try:
                 clean_result = json.loads(result)
@@ -154,7 +148,6 @@ class Baseline:
                 clean_result = {}
             self.structural_info.append(clean_result)
 
-        # 写入最终的结构化信息
         write_json(self.dump_dir_path + "structural_info.json", self.structural_info)
 
     # with LLM
@@ -212,11 +205,6 @@ class Baseline:
         else:
             self.assigned_jobs = assigned_jobs
             self.solver = solver
-            # print(f"Optimal Schedule Length: {solver.objective_value}")
-            # print("\nStatistics")
-            # print(f"  - conflicts: {solver.num_conflicts}")
-            # print(f"  - branches : {solver.num_branches}")
-            # print(f"  - wall time: {solver.wall_time}s")
         write_json(self.dump_dir_path + "assigned_jobs.json", self.assigned_jobs)
         write_txt(self.dump_dir_path + "err_rate.txt", str(err_rate))
 
@@ -290,7 +278,6 @@ class Baseline:
         prompt_unit["body"]["messages"][1]["content"] = user_content
         prompt_unit["custom_id"] = index
         with open(self.batch_input_path, 'a') as file:
-            # 将字典转换为JSON字符串并追加到文件
             json_line = json.dumps(prompt_unit)
             file.write(json_line + '\n')
 
@@ -346,7 +333,6 @@ class Baseline:
                         # Parsing the JSON string into a dict and appending to the list of results
                         json_object = json.loads(line.strip())
                         results.append(json_object)
-                # print("results: ", results)
                 for r in results:
                     result = r["response"]["body"]["choices"][0]["message"]["content"]
                     results_return.append(result)
@@ -364,7 +350,6 @@ class Baseline:
                 print("Batch cancelling")
                 return []
             else:
-                # print("Batch status: ", batch.status)
                 time.sleep(1)
 
     def __empty_jsonl_contents(self):

@@ -1,6 +1,6 @@
 # NL description -> JSP solver formatted matrix  (with LLM)
-# JSP solver formatted matrix -> JSP solver 的结果
-# NL description + JSP solver 的结果 -> production plans (with LLM)
+# JSP solver formatted matrix -> JSP solver output
+# NL description + JSP solver output -> production plans (with LLM)
 
 from __future__ import annotations
 import random 
@@ -51,20 +51,19 @@ class Baseline_2:
             self.JSP_result2production_plan()
 
         elif self.experiment_type == "CSE-1":
-            # input: groundtruth fully structural route sheet
-            # output: OR matrix
+            # Input: ground-truth fully structured route sheet.
+            # Output: OR matrix.
             print("No support for CSE-1")
             pass
 
         elif self.experiment_type == "SGE":
-            # input: JSP solver result
-            # output: Production plan
+            # Input: JSP solver result.
+            # Output: production plan.
             self.assigned_jobs = read_json("outputs/GroundTruth/" + self.instance_description + "/" + "assigned_jobs.json")
             self.JSP_result2production_plan()
             pass
 
         elif self.experiment_type == "DAE":
-            # 
             pass
 
     def load_data(self):
@@ -168,15 +167,10 @@ class Baseline_2:
         else:
             self.assigned_jobs = assigned_jobs
             self.solver = solver
-            # print(f"Optimal Schedule Length: {solver.objective_value}")
-            # print("\nStatistics")
-            # print(f"  - conflicts: {solver.num_conflicts}")
-            # print(f"  - branches : {solver.num_branches}")
-            # print(f"  - wall time: {solver.wall_time}s")
         write_json(self.dump_dir_path + "assigned_jobs.json", self.assigned_jobs)
         write_txt(self.dump_dir_path + "err_rate.txt", str(err_rate))
 
-    # with LLM. NL description + JSP solver 的结果 -> production plans
+    # with LLM. NL description + JSP solver output -> production plans.
     def JSP_result2production_plan(self):
         print("JSP_result2production_plan ing...")
         
@@ -186,7 +180,6 @@ class Baseline_2:
         fields_to_keep = [str(i) for i in range(10)]
         orders2production_plan_prompt = self.orders2production_plan_prompt.replace("---ORDERS---", simplified_orders_string).replace("---ASSIGNED_JOBS---", json.dumps({key: self.assigned_jobs[key] for key in fields_to_keep if key in self.assigned_jobs})).replace("---MACHINES---", json.dumps(self.machines))
         write_txt(self.dump_dir_path + "orders2production_plan_prompt.txt", orders2production_plan_prompt)
-        # return
         result = self.__chatgpt_function(orders2production_plan_prompt)
         if result == "":
             print("Error: Empty result")
@@ -226,7 +219,6 @@ class Baseline_2:
         prompt_unit["body"]["messages"][1]["content"] = user_content
         prompt_unit["custom_id"] = index
         with open(self.batch_input_path, 'a') as file:
-            # 将字典转换为JSON字符串并追加到文件
             json_line = json.dumps(prompt_unit)
             file.write(json_line + '\n')
 
@@ -279,7 +271,6 @@ class Baseline_2:
                         # Parsing the JSON string into a dict and appending to the list of results
                         json_object = json.loads(line.strip())
                         results.append(json_object)
-                # print("results: ", results)
                 for r in results:
                     result = r["response"]["body"]["choices"][0]["message"]["content"]
                     results_return.append(result)
@@ -297,7 +288,6 @@ class Baseline_2:
                 print("Batch cancelling")
                 return []
             else:
-                # print("Batch status: ", batch.status)
                 time.sleep(3)
 
     def __empty_jsonl_contents(self):

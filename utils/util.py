@@ -73,10 +73,10 @@ def store_dsl(feature_data_path, dsl_store_path):
                 patterns[int(hierarchy["label-1"])]["Precond"].append(hierarchy["hierarchy-1"]["input_flow_units"])
             if "output_flow_units" in hierarchy["hierarchy-1"] and "label-1" in hierarchy:
                 patterns[int(hierarchy["label-1"])]["Postcond"].append(hierarchy["hierarchy-1"]["output_flow_units"])
-        for pattern in patterns:
-            dsl[opcode].append(pattern)
+    for pattern in patterns:
+        dsl[opcode].append(pattern)
     write_json(dsl_store_path, dsl)
-    # 在同一个 label-1 下，整合 label-2
+    # Merge label-2 patterns within the same label-1 group.
     for opcode in feature_data:
         new_patterns = []
         for label_1, pattern in enumerate(dsl[opcode]):
@@ -101,7 +101,6 @@ def store_dsl(feature_data_path, dsl_store_path):
                 if "label-1" in hierarchy and int(hierarchy["label-1"]) == label_1 and "label-2" in hierarchy:
                     print("hierarchy[hierarchy-2]:", hierarchy["hierarchy-2"])
                     current_label_1_patterns[int(hierarchy["label-2"])]["Device"].append(hierarchy["hierarchy-2"])
-            # 对 new_patterns 去重
             new_patterns.extend(current_label_1_patterns)
         dsl[opcode] = new_patterns
     write_json(dsl_store_path.split(".")[0] + "2.json", dsl)

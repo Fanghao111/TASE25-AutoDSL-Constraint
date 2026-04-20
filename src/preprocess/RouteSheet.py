@@ -51,7 +51,6 @@ class RouteSheet:
             for i in range(0, len(jobs_data_batch)):
                 job = jobs_data_batch[i]
                 prompt = self.prompt.replace("---STEPS---", str(job))
-                # print("prompt: ", prompt)
                 self.__gpt_batch_store(self.sys_prompt, prompt, str(i))
                 
             print("Batch stored")
@@ -61,7 +60,6 @@ class RouteSheet:
             print("Results received")
             print("jobs_data_batch len: ", len(jobs_data_batch))
             print("results len: ", len(results))
-            # print("results: ", results)
             for result in results:
                 try:
                     clean_result = json.loads(result)
@@ -69,8 +67,7 @@ class RouteSheet:
                     print("Error json loads")
                     clean_result = result
                 batch_route_sheet.append(clean_result)
-            # break
-            # 增量更新
+            # Incrementally update the stored route sheets.
             route_sheet = batch_route_sheet
             if os.path.exists(self.route_sheet_store_path):
                 old_route_sheet = read_json(self.route_sheet_store_path)
@@ -82,7 +79,7 @@ class RouteSheet:
         result = []
         jssp_len = []
         for jssp in self.jssp_data:
-            jssp_len.append(len(jssp["data"])) # 该 domain 下的jobs num
+            jssp_len.append(len(jssp["data"]))  # Number of jobs in this domain.
         for i in range(len(jssp_len)):
             result.append([])
             for j in range(jssp_len[i]):
@@ -97,7 +94,7 @@ class RouteSheet:
                     result[i].append({
                         "instance_description": self.jssp_data[i]["description"]
                     })
-        # 去除 result 末尾多余的空数组
+        # Remove trailing empty domain buckets.
         while len(result) > 0 and len(result[-1]) == 0:
             result.pop()
         write_json(self.route_sheet_reduce_path, result)
@@ -123,7 +120,6 @@ class RouteSheet:
         prompt_unit["body"]["messages"][1]["content"] = user_content
         prompt_unit["custom_id"] = index
         with open(self.batch_input_path, 'a') as file:
-            # 将字典转换为JSON字符串并追加到文件
             json_line = json.dumps(prompt_unit)
             file.write(json_line + '\n')
 
@@ -176,7 +172,6 @@ class RouteSheet:
                         # Parsing the JSON string into a dict and appending to the list of results
                         json_object = json.loads(line.strip())
                         results.append(json_object)
-                # print("results: ", results)
                 for r in results:
                     result = r["response"]["body"]["choices"][0]["message"]["content"]
                     results_return.append(result)
@@ -194,7 +189,6 @@ class RouteSheet:
                 print("Batch cancelling")
                 return []
             else:
-                # print("Batch status: ", batch.status)
                 time.sleep(3)
 
     def __empty_jsonl_contents(self):

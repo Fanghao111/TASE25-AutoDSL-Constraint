@@ -36,7 +36,7 @@ legal_instance_description_list = [
 if __name__ == '__main__':
     seed_set(args.seed)
     if args.mode == "preprocess":
-        # 最后的结果: data/route_sheet.json，data/route_sheet_reduce.json，完全结构化
+        # Final outputs: data/route_sheet.json and data/route_sheet_reduce.json.
         route_sheet = RouteSheet(
             machines_data_path="data/machines.json", 
             jssp_data_path="data/jssp_data.json", 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
         # route_sheet.create_route_sheet()
         route_sheet.route_sheet_reduce()
     elif args.mode == "autodsl_operation":
-        # 最后的结果：outputs/EM_results.json, outputs/operation_dsl.json, outputs/production_dsl.json
+        # Final outputs: operation DSLs, features, and likelihood traces.
         route_sheet_all = read_json("data/route_sheet_reduce.json")
         total_feature = []
         total_operation_dsl = []
@@ -72,13 +72,10 @@ if __name__ == '__main__':
                 operation.analyse(opcode)
                 return opcode
 
-            # 使用 ThreadPoolExecutor 并行化处理
             with ThreadPoolExecutor() as executor:
                 futures = [executor.submit(process_opcode, opcode) for opcode in feature.feature_data]
-                
-                # 使用 tqdm 来显示进度
                 for future in tqdm(as_completed(futures), total=len(futures), desc="Abstraction"):
-                    future.result()  # 获取结果，确保异常被捕获
+                    future.result()
 
             operation.dsl_regular()
 
@@ -96,14 +93,13 @@ if __name__ == '__main__':
         write_json("outputs/AutoDSL/total_operation_dsl.json", total_operation_dsl)
 
     elif args.mode == "autodsl_production":
-        # 最后的结果：outputs/production_dsl.json
+        # Final outputs: production DSLs and EM statistics.
         total_EM_results = []
         route_sheet_all = read_json("data/route_sheet_reduce.json")
         total_production_dsl = []
         total_EM_updates = []
         
         for i, domain_data in enumerate(route_sheet_all):
-            # 如果 domain_data["instance_description"] 不等于 instance ta71 ~ instance ta80，则跳过
             if(domain_data[0]["instance_description"] not in legal_instance_description_list):
                 continue
             print("start process: ", domain_data[0]["instance_description"])

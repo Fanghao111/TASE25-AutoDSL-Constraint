@@ -24,24 +24,19 @@
 #   Output: Grounded production plan (represented in programs of the corresponding DSL with detailed execution configurations)
 
 from __future__ import annotations
-import random 
 import copy
 import openai
 import os
 import time
 import json
 import spacy
-# import torch
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
-# import gensim
 from openai import OpenAI
-# from torch.nn import functional as F
 import numpy as np
-from collections import defaultdict, Counter
 from utils.util import read_json, write_json, read_txt, write_txt
 from src.experiment.schedule import schedule
 from nltk.stem import WordNetLemmatizer
-from transformers import AutoTokenizer, AutoModel, logging
 from src.experiment.groundtruth import GroundTruth
 
 class DSLPipeline:
@@ -73,9 +68,6 @@ class DSLPipeline:
 
         self.lemmatizer = WordNetLemmatizer()
         self.nlp = spacy.load("en_core_web_trf")
-        # self.word2vec_model = gensim.models.KeyedVectors.load_word2vec_format("data/GoogleNews-vectors-negative300.bin.gz", binary=True)
-        # self.tokenizer = AutoTokenizer.from_pretrained("allenai/scibert_scivocab_uncased")
-        # self.model = AutoModel.from_pretrained("allenai/scibert_scivocab_uncased")
 
         self.embedding_dic = {}
         self.sys_content = "You are an expert in the field of manufacturing"
@@ -101,21 +93,20 @@ class DSLPipeline:
             self.JSP_result2production_plan()
 
         elif self.experiment_type == "CSE-1":
-            # input: groundtruth fully structural route sheet
-            # output: OR matrix
+            # Input: ground-truth fully structured route sheet.
+            # Output: OR matrix.
             self.route_sheets2dsl_program()
             self.dsl_program2or_matrix()
             self.or_matrix2JSP_result()
             self.JSP_result2production_plan()
 
         elif self.experiment_type == "SGE":
-            # input: JSP solver result
-            # output: Production plan
+            # Input: JSP solver result.
+            # Output: production plan.
             self.assigned_jobs = read_json("outputs/GroundTruth/" + self.instance_description + "/" + "assigned_jobs.json")
             self.JSP_result2production_plan()
 
         elif self.experiment_type == "DAE":
-            # 
             pass
 
     def load_data(self):
@@ -135,57 +126,6 @@ class DSLPipeline:
             self.assigned_jobs = read_json(self.dump_dir_path + "assigned_jobs.json")
         if os.path.exists("data/embedding_dic.json"):
             self.embedding_dic = read_json("data/embedding_dic.json")
-
-    # def orders2dsl_program_no_batch(self):
-    #     print("orders2dsl_program ing...")
-    #     self.operation_programs = []
-    #     self.production_programs = []
-    #     for order in tqdm(self.orders):
-    #         oper_repr, prod_repr = {}, {}
-    #         operations = []
-    #         order_copy = copy.deepcopy(order)
-    #         # operation translation
-    #         for sentence in order_copy.get("steps", []):
-    #             operations.extend(self.__operation_extraction(sentence))
-    #         for operation in tqdm(operations):
-    #             opcodes = self.__similarity_opcode(operation)
-    #             print(f"operation: {operation}, opcode: {opcodes}")
-    #             if "NONE" not in opcodes:
-    #                 for opcode in opcodes:
-    #                     oper_repr[opcode] = self.operation_dsl[opcode]
-    #         operation_translation_prompt = self.operation_translation_prompt.replace("---OPERATION_DSL---", json.dumps(oper_repr)).replace("---ORDER---", json.dumps(order_copy))
-    #         result = self.__chatgpt_function(operation_translation_prompt)
-    #         try:
-    #             clean_result = json.loads(result)
-    #         except:
-    #             print("Error json loads")
-    #             clean_result = []
-    #         self.operation_programs.append(clean_result)
-    #         # time.sleep(2)
-
-
-    #         # production translation
-    #         flowunits = []
-    #         for sentence in order_copy["steps"]:
-    #             flowunits.extend(self.__component_extraction(sentence))
-    #         for flowunit in tqdm(flowunits):
-    #             components = self.__similarity_component(flowunit)
-    #             print(f"flowunit: {flowunit}, component: {components}")
-    #             if "NONE" not in components:
-    #                 for component in components:
-    #                     prod_repr[component] = self.production_dsl[component]
-    #         operation_list = [ele["Operation"] for ele in clean_result]
-    #         production_translation_prompt = self.production_translation_prompt.replace("---PRODUCTION_DSL---", json.dumps(prod_repr)).replace("---EM_STRUCTURE---", json.dumps(self.EM_structure)).replace("---ORDER---", json.dumps(order_copy)).replace("---OPERATION_LIST---", json.dumps(operation_list))
-    #         result = self.__chatgpt_function(production_translation_prompt)
-    #         try:
-    #             clean_result = json.loads(result)
-    #         except:
-    #             print("Error json loads")
-    #             clean_result = []
-    #         self.production_programs.append(clean_result)
-    #         # time.sleep(2)
-    #     write_json(self.dump_dir_path + "operation_programs.json", self.operation_programs)
-    #     write_json(self.dump_dir_path + "production_programs.json", self.production_programs)
 
     def orders2dsl_program_old(self):
         print("orders2dsl_program ing...")
@@ -509,12 +449,12 @@ class DSLPipeline:
         operation_list = list(self.operation_dsl.keys())
         production_list = list(self.production_dsl.keys())
 
-        # 处理单个订单的函数
+        # Process a single order.
         def process_single_order(order):
             order_copy = copy.deepcopy(order)
             oper_repr, prod_repr = {}, {}
 
-            # 并行处理所有步骤（sentence）
+            # Process all steps in parallel.
             sentences = order_copy.get("steps", [])
             extraction_prompts = [
                 self.operation_production_extraction_prompt
@@ -524,11 +464,11 @@ class DSLPipeline:
                 for sentence in sentences
             ]
 
-            # 并行执行所有提取请求
-            with concurrent.futures.ThreadPoolExecutor() as inner_executor:
+            # Execute extraction requests in parallel.
+            with ThreadPoolExecutor() as inner_executor:
                 extraction_results = list(inner_executor.map(self.__chatgpt_function, extraction_prompts))
 
-            # 合并提取结果
+            # Merge extraction results.
             for result in extraction_results:
                 try:
                     clean_result = json.loads(result)
@@ -539,7 +479,7 @@ class DSLPipeline:
                 if clean_result.get("component", "") in production_list:
                     prod_repr[clean_result["component"]] = self.production_dsl[clean_result["component"]]
 
-            # 生成并执行翻译请求
+            # Generate and execute the translation request.
             translation_prompt = self.program_translation_prompt\
                 .replace("---OPERATION_DSL---", json.dumps(oper_repr))\
                 .replace("---PRODUCTION_DSL---", json.dumps(prod_repr))\
@@ -557,21 +497,21 @@ class DSLPipeline:
                 clean_result.get("production-view programs", [])
             )
 
-        # 并行处理所有订单
-        with concurrent.futures.ThreadPoolExecutor() as outer_executor:
-            # 保持订单顺序，使用map确保结果顺序与输入一致
+        # Process all orders in parallel.
+        with ThreadPoolExecutor() as outer_executor:
+            # Keep the output order aligned with the input order.
             results = list(tqdm(
                 outer_executor.map(process_single_order, self.orders),
                 total=len(self.orders),
                 desc="Processing Orders"
             ))
 
-        # 收集结果
+        # Collect results.
         for op_prog, prod_prog in results:
             self.operation_programs.append(op_prog)
             self.production_programs.append(prod_prog)
 
-        # 写入文件
+        # Write results to disk.
         write_json(self.dump_dir_path + "operation_programs.json", self.operation_programs)
         write_json(self.dump_dir_path + "production_programs.json", self.production_programs)   
 
@@ -599,7 +539,7 @@ class DSLPipeline:
                     current_production_list.append(component["component_type"])
                 for component in step["postcondition"]:
                     current_production_list.append(component["component_type"])
-            # 去重
+            # Deduplicate items.
             current_operation_list = list(set(current_operation_list))
             current_production_list = list(set(current_production_list))
             total_operation_list.append(current_operation_list)
@@ -680,7 +620,7 @@ class DSLPipeline:
                     current_production_list.append(component["component_type"])
                 for component in step["postcondition"]:
                     current_production_list.append(component["component_type"])
-            # 去重
+            # Deduplicate items.
             current_operation_list = list(set(current_operation_list))
             current_production_list = list(set(current_production_list))
             total_operation_list.append(current_operation_list)
@@ -750,16 +690,15 @@ class DSLPipeline:
                     operation2machine_dict[operation] = [machine]
                 else:
                     operation2machine_dict[operation].append(machine)
-        # 要小写
-        # self.machines = list(set(operation2machine_dict.values()))
+        # Normalize machine names to lowercase.
         self.machines = list(set([machine.lower() for machine_list in operation2machine_dict.values() for machine in machine_list]))
         for i in range(len(operation_programs)):
-            # 第 i 个 job
+            # Build the i-th job row.
             row = []
             operation_program = operation_programs[i]
             production_program = production_programs[i]
             for j in range(len(operation_programs[i])):
-                ele = [] # machine, duration, pre_indexes
+                ele = []  # machine, duration, pre_indexes
                 try:
                     ele.append(operation_program[j]["Execution"]["machine"])
                 except:
@@ -769,7 +708,6 @@ class DSLPipeline:
                 except:
                     ele.append(0)
                 pre_indexes = []
-                # print("production_program: ", production_program)
                 for production_unit in production_program:
                     pred = production_unit.get("Pred", "")
                     succ = production_unit.get("Succ", "")
@@ -779,7 +717,7 @@ class DSLPipeline:
                                 pre_indexes.append(row.index(ele_2))
                 ele.append(pre_indexes)
                 row.append(ele)
-            # 将 row 的机器用 self.machines 的索引代替
+            # Replace machine names with their indices in self.machines.
             for ele in row:
                 self.total_num += 1
                 try:
@@ -791,7 +729,6 @@ class DSLPipeline:
             print("row: ", row, "\n")
             self.or_matrix.append(row)
         write_json(self.dump_dir_path + "or_matrix.json", self.or_matrix)
-        # write_json(self.dump_dir_path + "compile_err_rate.json", self.compile_error_num/len(self.total_num))
         
     def or_matrix2JSP_result(self):
         print("or_matrix2JSP_result ing...")
@@ -804,11 +741,6 @@ class DSLPipeline:
         else:
             self.assigned_jobs = assigned_jobs
             self.solver = solver
-            # print(f"Optimal Schedule Length: {solver.objective_value}")
-            # print("\nStatistics")
-            # print(f"  - conflicts: {solver.num_conflicts}")
-            # print(f"  - branches : {solver.num_branches}")
-            # print(f"  - wall time: {solver.wall_time}s")
         write_json(self.dump_dir_path + "assigned_jobs.json", self.assigned_jobs)
         write_txt(self.dump_dir_path + "err_rate.txt", str(err_rate))
 
@@ -907,27 +839,8 @@ class DSLPipeline:
                     operation2machine_dict[operation] = [machine]
                 else:
                     operation2machine_dict[operation].append(machine)
-        # 要小写
-        # self.machines = list(set(operation2machine_dict.values()))
+        # Normalize machine names to lowercase.
         self.machines = list(set([machine.lower() for machine_list in operation2machine_dict.values() for machine in machine_list]))
-
-    # def __chatgpt_function(self, content, gpt_model="gpt-4o"):
-    #     while True:
-    #         try:
-    #             client = OpenAI(
-    #                 api_key=os.environ.get("OPENAI_API_KEY"),
-    #             )
-    #             chat_completion = client.chat.completions.create(
-    #                 messages=[
-    #                     {"role": "user", "content": content}
-    #                 ],
-    #                 model=gpt_model,
-    #                 max_tokens=15000
-    #             )
-    #             return chat_completion.choices[0].message.content
-    #         except openai.APIError as error:
-    #             print("error: ", error)
-    #             continue
 
     def __chatgpt_function(self, content, gpt_model="deepseek-chat"):
         while True:
@@ -963,10 +876,10 @@ class DSLPipeline:
         return EM_structure
 
     def __cosine_similarity(self, vec1, vec2):
-        # 确保向量是 numpy 数组
+        # Ensure vectors are NumPy arrays.
         vec1 = np.array(vec1)
         vec2 = np.array(vec2)
-        # 计算余弦相似度
+        # Compute cosine similarity.
         dot_product = np.dot(vec1, vec2)
         norm_vec1 = np.linalg.norm(vec1)
         norm_vec2 = np.linalg.norm(vec2)
@@ -1047,14 +960,14 @@ class DSLPipeline:
         prompt_unit["body"]["messages"][1]["content"] = user_content
         prompt_unit["custom_id"] = index
         with open(self.batch_input_path, 'a') as file:
-            # 将字典转换为JSON字符串并追加到文件
+            # Append the request as one JSONL line.
             json_line = json.dumps(prompt_unit)
             file.write(json_line + '\n')
 
     def __gpt_batch_call(self):
         client = OpenAI(
             api_key=os.getenv("OPENAI_API_KEY"),
-            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"  # 百炼服务的base_url
+            base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"  # DashScope compatible API endpoint.
         )
         while(True):
             try:
@@ -1108,7 +1021,6 @@ class DSLPipeline:
                         # Parsing the JSON string into a dict and appending to the list of results
                         json_object = json.loads(line.strip())
                         results.append(json_object)
-                # print("results: ", results)
                 for r in results:
                     result = r["response"]["body"]["choices"][0]["message"]["content"]
                     results_return.append(result)
@@ -1126,7 +1038,6 @@ class DSLPipeline:
                 print("Batch cancelling")
                 return []
             else:
-                # print("Batch status: ", batch.status)
                 time.sleep(1)
 
     def __empty_jsonl_contents(self):
@@ -1138,17 +1049,16 @@ class DSLPipeline:
                 file.write('')
 
     def __run_in_parallel(self, func, N, max_workers=8, has_feedback=False):
-        # 使用 ThreadPoolExecutor 并设置最大并行数
+        # Run tasks with a bounded thread pool.
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # 使用 trange 控制进度条
             futures = []
             for _ in trange(N, total=N):
-                futures.append(executor.submit(func, has_feedback=has_feedback))  # 提交任务到线程池
-                if len(futures) >= max_workers:  # 如果当前并发数达到了最大并行数
-                    for future in as_completed(futures):  # 等待已完成的任务
-                        futures.remove(future)  # 从 futures 中移除已完成的任务
+                futures.append(executor.submit(func, has_feedback=has_feedback))
+                if len(futures) >= max_workers:
+                    for future in as_completed(futures):
+                        futures.remove(future)
 
-            # 等待剩余任务完成
+            # Wait for the remaining tasks to finish.
             for future in as_completed(futures):
                 future.result()
 

@@ -15,7 +15,7 @@ class SyntheticDependencyGraph:
         self.path_length_counts = defaultdict(int)
     
     def traversal(self):
-        # 将每台机器的 pattern 作为节点进行依赖关系的构建
+        # Build dependencies using each machine pattern as a graph node.
         for machine_data in self.machines_data:
             machine_name = machine_data['machine']
             for pattern in machine_data['patterns']:
@@ -23,7 +23,7 @@ class SyntheticDependencyGraph:
                 postcondition = pattern['postconditions']
                 configuration = pattern['configuration']
                 
-                # 保存机器和对应的 pattern 信息
+                # Store the machine together with its pattern metadata.
                 if precondition not in self.pre2post:
                     self.pre2post[precondition] = []
                 self.pre2post[precondition].append({
@@ -32,27 +32,27 @@ class SyntheticDependencyGraph:
                     'configuration': configuration
                 })
 
-        # 深度优先遍历依赖图，寻找所有路径
+        # Traverse the dependency graph with DFS to enumerate all paths.
         def find_paths(start_condition, path=[]):
-            # 如果当前条件没有依赖项，返回当前路径
+            # Return the current path when the condition has no outgoing edge.
             if start_condition not in self.pre2post:
                 return [path]
             
             paths = []
             for dep in self.pre2post[start_condition]:
-                # 构建当前的路径信息
+                # Build the current path item.
                 current_machine = dep['machine']
                 postcondition = dep['postcondition']
                 configuration = dep['configuration']
                 
-                # 构建路径描述
+                # Describe the current transition.
                 path_description = {
                     'machine': current_machine,
                     'precondition': start_condition,
                     'postcondition': postcondition,
                     'configuration': configuration
                 }
-                # 递归寻找后续路径
+                # Recursively extend downstream paths.
                 new_paths = find_paths(postcondition, path + [path_description])
                 paths.extend(new_paths)
             
@@ -64,22 +64,22 @@ class SyntheticDependencyGraph:
                 paths_from_start = find_paths(start_condition)
                 self.all_paths.extend(paths_from_start)
 
-        # 统计路径总数和路径长度分布
+        # Count total paths and the path-length distribution.
         path_lengths = [len(path) for path in self.all_paths]
         self.path_length_counts = defaultdict(int)
 
         for length in path_lengths:
             self.path_length_counts[length] += 1
 
-        # 打印统计指标
-        print(f"总路径数: {len(self.all_paths)}")
-        print("路径长度分布:")
+        # Print summary statistics.
+        print(f"Total number of paths: {len(self.all_paths)}")
+        print("Path length distribution:")
         for length, count in sorted(self.path_length_counts.items()):
-            print(f"长度 {length}: {count} 条路径")
+            print(f"Length {length}: {count} paths")
         write_json(self.traversal_store_path, self.all_paths)
         
     def show_path_distribution(self):
-        # 绘制路径长度分布的条形图
+        # Plot the path-length distribution.
         plt.figure(figsize=(8, 6))
         plt.bar(self.path_length_counts.keys(), self.path_length_counts.values(), color='skyblue')
         plt.xlabel('path length')
@@ -89,10 +89,10 @@ class SyntheticDependencyGraph:
         plt.show()
 
     def construct_graph(self):
-        '''
-        对20种机器构造依赖图，邻接矩阵表示
-        dependence_graph[i][j] == 1 表示 j 依赖于 i，即 j 紧跟着 i 之后
-        '''
+        """
+        Construct the 20-machine dependency graph as an adjacency matrix.
+        dependence_graph[i][j] == 1 means machine j depends on machine i.
+        """
         graph = [[0 for _ in range(20)] for _ in range(20)]
         machines_list = []
         for machine_data in self.machines_data:
@@ -122,7 +122,7 @@ class JSSPDependencyGraph:
         self.data = read_txt(raw_data_path)
         self.jssp_data_path = jssp_data_path
         self.store_path = store_path
-        self.dependence_graphs = [] # 依赖图，邻接矩阵表示的有向图，[i][j] == 1 表示 i 依赖于 j，[i][j] == 0 表示不存在依赖关系
+        self.dependence_graphs = []  # Directed dependency graphs stored as adjacency matrices.
 
     def preprocess(self):
         raw_data = self.data.split(' +++++++++++++++++++++++++++++')[1:]
@@ -131,7 +131,6 @@ class JSSPDependencyGraph:
             data = data.strip()
         for i in range(0, len(raw_data), 2):
             description = raw_data[i].strip()
-            # print("description:", description)
             jssp_data = raw_data[i+1].split('\n')[1:]
             jobs_num = jssp_data[1].split()[0].strip()
             machines_num = jssp_data[1].split()[1].strip()
@@ -160,11 +159,11 @@ class JSSPDependencyGraph:
         write_json(self.jssp_data_path, result)
 
     def construct_graph(self):
-        '''
-        1. 对一个 job，先尝试在线性依赖的条件下向依赖图中添加依赖关系
-        2. 检查是否有相对执行序不单调的机器对，一旦发现两台机器之间的相对执行序不单调，则删除这两台机器之间的依赖关系
-        3. 重复上述过程知道遍历完所有 job（边遍历边检查）
-        '''
+        """
+        1. For each job, first add dependencies under the linear execution order.
+        2. Remove a dependency if a machine pair shows inconsistent relative order.
+        3. Repeat the process while traversing all jobs.
+        """
         jssp_data = read_json(self.jssp_data_path)
         for data in jssp_data:
             graph = dict()
@@ -172,9 +171,9 @@ class JSSPDependencyGraph:
             graph["machines_num"] = data["machines_num"]
             graph["jobs_num"] = data["jobs_num"]
             dependence_graph = [[0 for _ in range(data["machines_num"])] for _ in range(data["machines_num"])]
-            # dependence_graph[i][j] == 1 表示 j 依赖于 i，即 j 紧跟着 i 之后
+            # dependence_graph[i][j] == 1 means machine j depends on machine i.
             pre_order_graph = [[0 for _ in range(data["machines_num"])] for _ in range(data["machines_num"])]
-            # pre_order_graph[i][j] == 1 表示 i 在 j 之前执行
+            # pre_order_graph[i][j] == 1 means machine i is executed before machine j.
             for job in data["data"]:
                 for i in range(len(job["steps"]) - 1):
                     current_machine = int(job["steps"][i]["machine"])
@@ -182,12 +181,12 @@ class JSSPDependencyGraph:
                     if pre_order_graph[current_machine - 1][next_machine - 1] == 0:
                         dependence_graph[current_machine - 1][next_machine - 1] = 1
                         pre_order_graph[current_machine - 1][next_machine - 1] = 1
-                        # 递归 pre_order_graph
+                        # Propagate transitive precedence relations.
                         for j in range(data["machines_num"]):
                             if pre_order_graph[j][current_machine - 1] == 1:
                                 pre_order_graph[j][next_machine - 1] = 1
                     else:
-                        # 如果相对执行序不单调，删除依赖关系
+                        # Remove the dependency when the relative order is inconsistent.
                         dependence_graph[next_machine - 1][current_machine - 1] = 0
                         dependence_graph[current_machine - 1][next_machine - 1] = 0
             graph["dependence_graph"] = dependence_graph
@@ -196,52 +195,48 @@ class JSSPDependencyGraph:
         write_json(self.store_path, self.dependence_graphs)
 
     def dependence_graph_visualization(self, jssp_index):
-        '''
-        依赖图可视化
-        '''
+        """Visualize a dependency graph."""
         dependence_graphs_matrix = read_json(self.store_path)
         description = dependence_graphs_matrix[jssp_index]["description"]
         dependence_graph = dependence_graphs_matrix[jssp_index]["dependence_graph"]
         print("dependence_graph:", dependence_graph)
-        colors = ['#FFFFFF', '#90b5da']  # 白色对应 0，#FF8247 对应 1
+        colors = ['#FFFFFF', '#90b5da']  # White for 0 and blue for 1.
         cmap = mcolors.ListedColormap(colors)
-        bounds = [0, 0.5, 1]  # 确保 0 和 1 的值分别对应到两种颜色
+        bounds = [0, 0.5, 1]  # Map 0 and 1 to distinct colors.
         norm = mcolors.BoundaryNorm(bounds, cmap.N)
 
-        # 绘制热力图
+        # Draw the heatmap.
         plt.figure(figsize=(8, 6))
         plt.imshow(dependence_graph, cmap=cmap, norm=norm)
         plt.xlabel('X')
         plt.ylabel('Y')
         plt.title(f'Dependence graph of {description}. \nGraph[y][x] == 1 means x depends on y.')
-        plt.colorbar()  # 显示颜色条
+        plt.colorbar()  # Show the color bar.
         plt.show()
 
     def pre_order_graph_visualization(self, jssp_index):
-        '''
-        相对执行序图可视化
-        '''
+        """Visualize a precedence-order graph."""
         dependence_graphs_matrix = read_json(self.store_path)
         description = dependence_graphs_matrix[jssp_index]["description"]
         pre_order_graph = dependence_graphs_matrix[jssp_index]["pre_order_graph"]
         print("pre_order_graph:", pre_order_graph)
-        # 权重为 1 用浅橙色绘制，为 0 时用白色绘制。坐标轴要说明机器的编号。pre_order_graph[i][j] == 1 表示 i 在 j 之前执行
-        colors = ['#FFFFFF', '#90b5da']  # 白色对应 0，#FF8247 对应 1
+        # pre_order_graph[i][j] == 1 means machine i is executed before machine j.
+        colors = ['#FFFFFF', '#90b5da']  # White for 0 and blue for 1.
         cmap = mcolors.ListedColormap(colors)
-        bounds = [0, 0.5, 1]  # 确保 0 和 1 的值分别对应到两种颜色
+        bounds = [0, 0.5, 1]  # Map 0 and 1 to distinct colors.
         norm = mcolors.BoundaryNorm(bounds, cmap.N)
 
-        # 绘制热力图
+        # Draw the heatmap.
         plt.figure(figsize=(8, 6))
         plt.imshow(pre_order_graph, cmap=cmap, norm=norm)
         plt.xlabel('X')
         plt.ylabel('Y')
         plt.title(f'Pre-order graph of {description}. \nGraph[y][x] == 1 means y is executed before x.')
-        plt.colorbar()  # 显示颜色条
+        plt.colorbar()  # Show the color bar.
         plt.show()
 
     def statistics(self):
-        # 统计每个 jssp_problem 下依赖关系的数目，绘制依赖数目分布的条形图，横轴为依赖关系数目，纵轴为依赖关系为给定数量的 jssp_problem 的数量
+        # Plot the distribution of dependency counts across JSSP instances.
         statistic = []
         max_matrix = 0
         dependence_graphs_matrix = read_json(self.store_path)
@@ -262,4 +257,3 @@ class JSSPDependencyGraph:
         plt.title('Distribution of number of dependencies')
         plt.show()
         
-

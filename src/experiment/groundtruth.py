@@ -32,14 +32,12 @@ class GroundTruth:
 
     def get_grounded_or_matrix(self):
         if len(self.or_matrix) == 0:
-            pre_indexes_all = []  # 存储所有 route_sheet 的依赖关系
+            pre_indexes_all = []  # Store dependencies for every route sheet.
             
             for route_sheet_data in self.route_sheets:
-                # 存储当前 route_sheet 的依赖关系
                 pre_indexes_job = []
                 
                 for i, step in enumerate(route_sheet_data.get("route_sheet", [])):
-                    # 当前步骤的依赖
                     pre_indexes = []
                     current_precondition_types = {pre["component_type"] for pre in step["precondition"]}
                     
@@ -47,14 +45,12 @@ class GroundTruth:
                         previous_step = route_sheet_data["route_sheet"][j]
                         previous_postcondition_types = {post["component_type"] for post in previous_step["postcondition"]}
                         
-                        # 检查当前步骤是否依赖于之前的步骤
+                        # Record a dependency when a precondition is produced earlier.
                         if current_precondition_types & previous_postcondition_types:
                             pre_indexes.append(j)
                     
-                    # 存储当前步骤的依赖关系
                     pre_indexes_job.append(pre_indexes)
                 
-                # 存储当前 route_sheet 的所有步骤依赖
                 pre_indexes_all.append(pre_indexes_job)
             
             jssp_mapped_all = read_json("data/jssp_mapped.json")
@@ -63,7 +59,7 @@ class GroundTruth:
             for i, job in enumerate(jssp_mapped["data"]):
                 row = []
                 for j, step in enumerate(job["steps"]):
-                    ele = [] # machine, duration, pre_indexes
+                    ele = []  # machine, duration, pre_indexes
                     ele.append(step["machine"])
                     ele.append(step["time"])
                     pre_indexes = []
@@ -130,4 +126,3 @@ class GroundTruth:
             self.assigned_jobs = read_json(self.dump_dir_path + "assigned_jobs.json")
         if os.path.exists(self.dump_dir_path + "production_plan.json"):
             self.production_plan = read_json(self.dump_dir_path + "production_plan.json")
-

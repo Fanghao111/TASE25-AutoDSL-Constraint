@@ -1,21 +1,16 @@
 from __future__ import annotations
-import random 
 import copy
-import pandas as pd
 import torch
 import openai
 import os
-import time
 from openai import OpenAI
 from collections import defaultdict, Counter
 from torch.nn import functional as F
 from src.dsl_design.cluster import DPMM
-from src.dsl_design.cluster2 import DPMM as DPMM2
 from src.dsl_design.feature import Feature
 from utils.distribution import N_Gaussian_Distribution
 from transformers import AutoTokenizer, AutoModel
-from sklearn.metrics.pairwise import cosine_similarity
-from utils.util import read_json, write_json, read_txt
+from utils.util import write_json, read_txt
 
 class Operation:
     def __init__(self, feature:Feature, operation_dsl_path):
@@ -23,9 +18,7 @@ class Operation:
         self.name_mapping = {"precondition": "Precond", "postcondition": "Postcond"}
         self.operation_dsl_path = operation_dsl_path
         self.operation_dsl_tree = {}
-        # self.operation_dsl_tree_corpora = {}
         self.operation_dsl = {}
-        # self.curve = pd.DataFrame()
         self.curve = {}
         self.tokenizer = AutoTokenizer.from_pretrained('allenai/scibert_scivocab_uncased', clean_up_tokenization_spaces=True)
         self.model = AutoModel.from_pretrained('allenai/scibert_scivocab_uncased')
@@ -35,7 +28,6 @@ class Operation:
             return
         
         result = DPMM.cluster(value_list, N_Gaussian_Distribution, len(value_list[0]), iter_times=iter_times, alpha=alpha, regular=regular)
-        # result = DPMM2(X=value_list)
         if hierarchy == 1:
             self.curve[opcode] = [float(num) for num in result["log_likelihood_list"].split()]
         
@@ -59,34 +51,16 @@ class Operation:
 
     def dsl_regular(self):
         operation_dsl = self.operation_dsl
-        # 对 operation_dsl 的 operation 进行同义词合并，将含义相近的 operation 下的 pattern 合并到一个 operation 中。同时对 pattern 内的 parameters 的 value 进行合并，例如 400 mm 和 400 MM 将视为同一个，仅保留其中一个。
-        # added_operation_dsl = {}
-        # for operation, patterns in operation_dsl.items():
-        #     for added_operation, added_patterns in added_operation_dsl.items():
-        #         # 判断 operation 与 added_operation 是否同义词：
-        #         if operation == added_operation:
-        #             added_patterns.extend(copy.deepcopy(patterns))
-        #             break
-        #         operation_embedding = self.__get_embedding(operation).reshape(1, -1)
-        #         added_operation_embedding = self.__get_embedding(added_operation).reshape(1, -1)
-        #         if cosine_similarity(operation_embedding, added_operation_embedding) > 0.9:
-        #             result = self.__same_operation_judge(operation, added_operation)
-        #             if result == "YES" or result == "YES.":
-        #                 added_patterns.extend(copy.deepcopy(patterns))
-        #                 break
-        #     else:
-        #         added_operation_dsl[operation] = copy.deepcopy(patterns)
         added_operation_dsl = copy.deepcopy(operation_dsl)
         for added_operation, added_patterns in added_operation_dsl.items():
-            # 对 added_patterns 的 parameters 的 value 进行合并
+            # Merge parameter values inside each pattern.
             for pattern in added_patterns:
                 for execution in pattern["pattern"]["Execution"]:
                     for argkey, argvalues in execution["parameters"].items():
-                        new_argvalues = self.__sorted_unique(argvalues)
                         execution["parameters"][argkey] = self.__sorted_unique(argvalues)
         for added_operation, added_patterns in added_operation_dsl.items():
             most_machine_count = {}
-            # 统计当前 patterns 中出现次数最多的 most_machine，仅保留出现 most_machine 的 patterns，且 Execution 数组中也只保留出现 most_machine 的项
+            # Keep only the most frequent machine type within the current pattern group.
             for pattern in added_patterns:
                 for execution in pattern["pattern"]["Execution"]:
                     machine = execution["machine"]
@@ -94,22 +68,22 @@ class Operation:
             most_machine = max(most_machine_count, key=most_machine_count.get)
             for pattern in added_patterns:
                 pattern["pattern"]["Execution"] = [execution for execution in pattern["pattern"]["Execution"] if execution["machine"] == most_machine]
-            # 删除 added_patterns 中的空 pattern
+            # Drop patterns whose execution list becomes empty.
             added_patterns = [pattern for pattern in added_patterns if pattern["pattern"]["Execution"]]
         self.operation_dsl = added_operation_dsl
 
-    # 将聚类结果构建为层次聚类树
+    # Build a hierarchical tree from the clustering results.
     def __hierarchy_tree_construction(self, opcode):
         feature_data = self.feature.feature_data.get(opcode, [])
         
         tree = {}
         for sentence in feature_data:
-            # label
+            # Cluster labels.
             l1 = sentence.get("label-1")
             l2 = sentence.get("label-2")
             l3 = sentence.get("label-3")
 
-            # feature
+            # Features at each hierarchy.
             h1 = sentence.get("hierarchy-1", {})
             h2 = sentence.get("hierarchy-2", {})
             h3 = sentence.get("hierarchy-3", {})
@@ -129,12 +103,6 @@ class Operation:
                 tree[l1]["child"].append(l2)
                 tree[l1][l2]["pattern"]["machine"].append(h2)
 
-            # if l3:
-            #     tree[l1][l2]["child"].append(l3)
-            #     for key, value in h3.items():
-            #         tree[l1][l2][l3]["pattern"].setdefault(key, []).append(value)
-            #     tree[l1][l2][l3]["examples"].append(sentence["sentence"])
-
             if l3:
                 tree[l1][l2]["child"].append(l3)
                 for device, argkeys in h2.items():
@@ -143,11 +111,10 @@ class Operation:
         
         tree = {label: tree[label] for label in sorted(tree)}
         self.operation_dsl_tree[opcode] = tree
-        # self.operation_dsl_tree_corpora[opcode] = copy.deepcopy(tree)
         
         return tree
 
-    # 对层次聚类树中的各层 pattern 进行抽象与合并
+    # Abstract and merge patterns at each hierarchy of the tree.
     def __dsl_tree_abstraction(self, opcode):
         tree = self.operation_dsl_tree[opcode]
         for _, feature1 in tree.items():
@@ -161,7 +128,7 @@ class Operation:
                         if label3.isdigit():
                             feature3["pattern"] = self.__pattern_abstraction(feature3["pattern"], hierarchy=3)
 
-    # 对单组 pattern 的抽象与合并
+    # Abstract and merge a single pattern group.
     def __pattern_abstraction(self, pattern, hierarchy):
         abstract_pattern = {}
         if hierarchy == 1:
@@ -173,12 +140,12 @@ class Operation:
 
                 pattern_dict = defaultdict(int)
                 
-                # 统计同一类中不同的 pattern 计数
+                # Count distinct patterns within the same cluster.
                 for feature in pattern[key]:
                     pattern_tuple = tuple(sorted(Counter(feature).items()))
                     pattern_dict[pattern_tuple] += 1
                 
-                # 选择出现次数最多的 pattern
+                # Select the most frequent pattern.
                 most_common_pattern = max(pattern_dict, key=pattern_dict.get)
 
                 arg_name = "SlotArg" if key == "Precond" else "EmitArg"
@@ -207,7 +174,7 @@ class Operation:
         
         return abstract_pattern
 
-    # 提取层次聚类树的所有叶子结点特征的 pattern 组合，生成标准的 DSL instruction
+    # Generate standard DSL instructions from leaf-level pattern combinations.
     def __dsl_construction(self, opcode):
         opcode_feature = []
 
@@ -260,7 +227,7 @@ class Operation:
                 }
             node_pattern = node.get("pattern", {})
             
-            # 合并当前节点的 pattern
+            # Merge the current node pattern into the ancestor pattern.
             if any(cond in node_pattern for cond in ["Precond", "Postcond"]):
                 ancestor_pattern["Precond"].extend(node_pattern.get("Precond", []))
                 ancestor_pattern["Postcond"].extend(node_pattern.get("Postcond", [])) 
@@ -272,17 +239,16 @@ class Operation:
             else:
                 ancestor_pattern["Execution"]["parameters"] = node_pattern
             
-            # 如果有子节点，递归处理每个子节点
+            # Recurse through child nodes when they exist.
             leaf_patterns = []
             has_child = False
             for label, child_node in node.items():
                 if label.isdigit():
                     has_child = True
-                    # 递归
                     child_patterns = combine_patterns(tree, child_node, copy.deepcopy(ancestor_pattern))
                     leaf_patterns.extend(child_patterns)
 
-            # 如果是叶子节点
+            # Emit the accumulated pattern at leaf nodes.
             if not has_child:
                 leaf_patterns.append({
                     "pattern": copy.deepcopy(ancestor_pattern),
@@ -293,7 +259,7 @@ class Operation:
         opcode_feature = []
         tree = copy.deepcopy(self.operation_dsl_tree[opcode])
         for label, feature in tree.items():
-            if label.isdigit(): # 遍历第一层
+            if label.isdigit():  # Iterate over the first hierarchy.
                 leaf_patterns = combine_patterns(tree, feature)
                 opcode_feature.extend(leaf_patterns)
 
@@ -301,7 +267,7 @@ class Operation:
 
         return opcode_feature
 
-    # 根据聚类树生成 dsl （句子特征堆砌罗列），合并第二第三层的 pattern，每个第一层的 cluster 对应一个 pattern
+    # Build DSL patterns from the clustering tree by merging lower hierarchy patterns.
     def __dsl_construction_3(self, opcode):
         def combine_patterns(node):
             pattern = {
@@ -351,16 +317,16 @@ class Operation:
                     "Postcond": {},
                     "Execution": []
             }
-        # 第一层特征
+        # First-level features.
         for key in ["Precond", "Postcond"]:
             if not pattern[key]:
                 continue
             pattern_dict = defaultdict(int)
-            # 统计同一类中不同的 pattern 计数
+            # Count distinct patterns within the same cluster.
             for feature in pattern[key]:
                 pattern_tuple = tuple(sorted(Counter(feature).items()))
                 pattern_dict[pattern_tuple] += 1
-            # 选择出现次数最多的 pattern
+            # Select the most frequent pattern.
             most_common_pattern = max(pattern_dict, key=pattern_dict.get)
             arg_name = "SlotArg" if key == "Precond" else "EmitArg"
             sub_pattern = {
@@ -372,7 +338,7 @@ class Operation:
                     sub_pattern[f"{arg_name}Num"] += 1
                     sub_pattern[arg_name].append(phase)
             abstract_pattern[key] = sub_pattern
-        # 第二层特征
+        # Second-level features.
         pattern_dict = defaultdict(set)
         for feature in pattern["Execution"]["machine"]:
             for device, argkeys in feature.items():
@@ -386,8 +352,7 @@ class Operation:
             for argkey in argkeys:
                 sub_pattern["parameters"][argkey] = []
             abstract_pattern["Execution"].append(sub_pattern)
-        # 第三层特征
-        # abstract_pattern["Execution"]["Config"] = {argkey: self.__sorted_unique(argvalues) for argkey, argvalues in pattern["Execution"]["Config"].items()}
+        # Third-level features.
         for device, arg_dict in pattern["Execution"]["parameters"].items():
             for execution in abstract_pattern["Execution"]:
                 if execution["machine"] == device:
@@ -427,13 +392,13 @@ class Operation:
 
         data = self.operation_dsl[opcode]
         merged_data = []
-        # 用于存储已经处理过的字典的索引
+        # Track entries that have already been merged.
         processed_indices = set()
-        # 遍历每一个数据字典
+        # Iterate through each pattern entry.
         for i, item in enumerate(data):
             if i in processed_indices:
-                continue  # 如果这个字典已经合并过，跳过
-            # 初始化合并对象
+                continue  # Skip entries that were already merged.
+            # Initialize the merged pattern.
             merged_item = {
                 "pattern": {
                     "Precond": item["pattern"]["Precond"],
@@ -441,13 +406,13 @@ class Operation:
                     "Postcond": item["pattern"]["Postcond"]
                 },
             }
-            # 合并第一个字典的内容
+            # Seed the merged entry with the first pattern.
             merged_item["pattern"]["Execution"].extend(item["pattern"]["Execution"])
-            # 与后续未处理的数据进行比较和合并
+            # Compare against later unprocessed entries and merge when needed.
             for j in range(i+1, len(data)):
                 if j in processed_indices:
-                    continue  # 如果这个字典已经处理过，跳过
-                # 如果 precond 和 postcond 相同，则合并
+                    continue  # Skip entries that were already processed.
+                # Merge patterns sharing the same endpoints or machine types.
                 if (has_same_slot_emit(item["pattern"]["Precond"], data[j]["pattern"]["Precond"],
                                        item["pattern"]["Postcond"], data[j]["pattern"]["Postcond"]) or 
                     has_same_device_type(item["pattern"]["Execution"], data[j]["pattern"]["Execution"])):
@@ -455,12 +420,12 @@ class Operation:
                     chosen_pattern = choose_pattern(item, data[j])
                     merged_item["pattern"]["Precond"] = chosen_pattern["pattern"]["Precond"]
                     merged_item["pattern"]["Postcond"] = chosen_pattern["pattern"]["Postcond"]
-                    # 合并 Execution
+                    # Merge execution blocks.
                     for new_device in data[j]["pattern"]["Execution"]:
-                        # 检查是否存在相同的 machine
+                        # Check whether the machine already exists.
                         for existing_device in merged_item["pattern"]["Execution"]:
                             if existing_device["machine"] == new_device["machine"]:
-                                # 如果 machine 相同，合并 parameters
+                                # Merge parameters for the same machine.
                                 for key, value in new_device["parameters"].items():
                                     if key in existing_device["parameters"]:
                                         existing_device["parameters"][key].extend(value)
@@ -468,30 +433,30 @@ class Operation:
                                         existing_device["parameters"][key] = value
                                 break
                         else:
-                            # 如果没有相同的 machine，添加新的 machine
+                            # Add a new machine block when no match is found.
                             merged_item["pattern"]["Execution"].append(new_device)
 
-                    # 标记这个字典已经处理过
+                    # Mark the entry as processed.
                     processed_indices.add(j)
 
             for device_dict in merged_item["pattern"]["Execution"]:
                 device_dict["parameters"] = {key: self.__sorted_unique(value_list) for key, value_list in device_dict["parameters"].items()}
-            # 将合并后的字典加入结果列表
+            # Append the merged pattern to the result list.
             merged_data.append(merged_item)
         self.operation_dsl[opcode] = merged_data
 
     def __sorted_unique(self, lst):
         try:
-            # 将所有字符串转为小写
+            # Normalize strings to lowercase.
             processed_lst = [x.lower() if isinstance(x, str) else x for x in lst]
             
-            # 统计元素频率
+            # Count element frequency.
             count = Counter(processed_lst)
             
-            # 按频率排序并返回
+            # Return items ordered by frequency.
             return sorted(count.keys(), key=lambda x: count[x], reverse=True)
         except:
-            # 异常处理，返回原列表
+            # Fall back to the original list on failure.
             return lst
 
     def dump_result(self):
@@ -503,7 +468,6 @@ class Operation:
         base_path = self.operation_dsl_path.rsplit(".json", 1)[0]
         write_json(self.operation_dsl_path, self.operation_dsl)
         write_json(f"{base_path}_tree.json", self.operation_dsl_tree)
-        # write_json(f"{base_path}_tree_corpora.json", self.operation_dsl_tree_corpora) 
 
     def dump_log(self):
         metadata = {"Number of opcode": len(self.operation_dsl)}

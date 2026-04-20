@@ -32,21 +32,6 @@ class Production:
         self.operations = []
         self.EM_results = []
         self.EM_updates = []
-        # {
-        #     Pred: <Operation.UniqueName>,
-        #     FlowUnit: {
-        #         component: "E.coli",
-        #         ComponentType: BiologicalMaterial,
-        #         RefName: <STR>,
-        #         UnitArgType: PROD,
-        #         Vol: (range),
-        #         Container: Flask | Tube,
-        #         Cond: {
-        #             Tempreature: (range)
-        #         }
-        #     },
-        #     Succ: <Operation.UniqueName>
-        # }
 
     def extract(self):
         num_flowunits = 0
@@ -70,7 +55,7 @@ class Production:
                     if metadata["container"]:
                         pattern["FlowUnit"]["container"].append(metadata["container"])
                     
-                    # pattern["Succ"] 的添加规则：如果当前 step 的 postcondition 将被用于该 domain 内所有 step 中的另一个 step 的 precondition，则将这另一个 step 的 operation 添加到 pattern["Succ"] 中
+                    # Add a successor when the current postcondition is reused later as a precondition.
                     for other_job in self.domain_data:
                         for other_step in other_job.get("route_sheet", []):
                             if other_step["precondition"] and metadata["component_type"] in [other_metadata["component_type"] for other_metadata in other_step["precondition"]]:
@@ -78,9 +63,6 @@ class Production:
                         
         self.__abstraction()
         num_abstraction = len(self.production_dsl)
-        # write_json(production_dsl_store_path, self.production_dsl)
-        # print(num_flowunits)
-        # print(num_abstraction)
         print(format(num_abstraction / num_flowunits * 100, ".2f"))
     
     def __extract_actual_product_structure(self):
@@ -98,9 +80,6 @@ class Production:
             if succ not in succ_operation_mapping:
                 succ_operation_mapping[succ] = succ_operation_template.replace("i", str(len(succ_operation_mapping)))
             EM_results.append([pred_operation_mapping[pred], succ_operation_mapping[succ]])
-        # # 对 EM_results 去重
-        # EM_results = list(set([tuple(result) for result in EM_results]))
-        # 对属于同一个 succ 的 pred 进行合并
         # Step 1: Merge preds for the same succ
         succ_to_preds = defaultdict(list)
         for pred, succ in EM_results:
@@ -152,8 +131,6 @@ class Production:
             # E-step
             weights_new = [weight * actual_weight for weight, actual_weight in zip(weights, actual_product_structure_weights)]
             weights_new_sum = sum(weights_new)
-            # print("actual_product_structure_weights: ", actual_product_structure_weights)
-            # print("weights_new: ", weights_new, "\n")
             weights_new = [weight / weights_new_sum for weight in weights_new]
             for i in range(len(structure_candidates)):
                 update = abs(weights_new[i] - weights[i])
@@ -197,7 +174,6 @@ class Production:
     def operation_clustering(self):
         operation_features = self.__operation_feature_extraction()
         feature_space = self.__create_feature_space(operation_features)
-        # operation_vectors = self.__encode_operations_merge(operation_features, feature_space)
         operation_vectors = self.__encode_operations_select(operation_features, feature_space)
 
         vectorizer = DictVectorizer(sparse=False)
