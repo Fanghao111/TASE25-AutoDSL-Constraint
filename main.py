@@ -6,6 +6,7 @@ from src.dsl_design.production import Production
 from src.experiment.baseline import Baseline
 from src.experiment.baseline2 import Baseline_2
 from src.experiment.dsl_pipeline import DSLPipeline
+from src.experiment.unified_pipeline import UnifiedPipeline
 from src.experiment.groundtruth import GroundTruth
 from src.evaluation.evaluation import Evaluation
 from tqdm import tqdm
@@ -13,7 +14,7 @@ from utils.util import read_json, write_json, seed_set
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--mode', default='evaluation', choices=['preprocess', 'autodsl_operation', 'autodsl_production', 'groundtruth', 'baseline', 'baseline_2', 'dsl_pipeline', 'evaluation'])
+parser.add_argument('--mode', default='evaluation', choices=['preprocess', 'autodsl_operation', 'autodsl_production', 'groundtruth', 'baseline', 'baseline_2', 'dsl_pipeline', 'unified_pipeline', 'evaluation'])
 parser.add_argument('--type', default='CPE_CAE_CSE-2', choices=['CPE_CAE_CSE-2', 'CSE-1', 'SGE', 'DAE'])
 parser.add_argument('--evaluation_type', default='CPE', choices=['CPE', 'CAE', 'CSE-1', 'CSE-2', 'SGE', 'DAE'])
 parser.add_argument('--seed', type=int, default=42)
@@ -182,6 +183,18 @@ if __name__ == '__main__':
             dsl_pipeline.instance_description = route_sheet[0]["instance_description"]
             dsl_pipeline.run()
     
+    elif args.mode == "unified_pipeline":
+        route_sheet_all = read_json("data/route_sheet_reduce.json")
+        route_sheet_choosed = [route_sheet for route_sheet in route_sheet_all if route_sheet[0]["instance_description"] in legal_instance_description_list]
+
+        for route_sheet in tqdm(route_sheet_choosed):
+            instance_description = route_sheet[0]["instance_description"]
+            pipeline = UnifiedPipeline(
+                instance_description=instance_description,
+                experiment_type=args.type,
+            )
+            pipeline.run()
+
     elif args.mode == "evaluation":
         evaluation = Evaluation()
         evaluation.evaluate(experiment_type=args.evaluation_type)

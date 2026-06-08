@@ -1,0 +1,18 @@
+You are given a natural language description of a manufacturing process for producing a part. Extract all information into a structured JSON.
+
+For each manufacturing step described, extract whatever information you can identify:
+- What operation is being performed
+- What machine or equipment is used
+- How long the operation takes (as a number, no units)
+- What materials or components go in (inputs)
+- What materials or components come out (outputs)
+- Any process parameters mentioned (speeds, rates, tool types, etc.)
+
+Do NOT follow a fixed schema. Use field names that naturally describe the information. Different steps may have different parameter fields depending on what the description mentions.
+
+For input and output materials, also identify their general type category (e.g., SheetMetal, LathedPart, DrilledComponent, GroundPart, etc.).
+
+The manufacturing process description:
+---ORDER---
+
+Output ONLY a valid JSON object. Do NOT wrap in markdown code blocks. Do NOT include any other text.

@@ -23,7 +23,7 @@ import json
 
 class Evaluation:
     def __init__(self):
-        self.mode = ["Baseline-", "Baseline2-", "DSLPipeline-", "GroundTruth"]
+        self.mode = ["Baseline-", "Baseline2-", "DSLPipeline-", "GroundTruth", "UnifiedPipeline-"]
         self.suffix = ["CPE_CAE_CSE-2/", "CSE-1/", "SGE/"]
         self.scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
         self.result_path = "outputs/"
@@ -61,15 +61,18 @@ class Evaluation:
             baseline_dir_path = self.result_path + self.mode[0] + self.suffix[0]
             baseline2_dir_path = self.result_path + self.mode[1] + self.suffix[0]
             dsl_pipeline_dir_path = self.result_path + self.mode[2] + self.suffix[0]
-            
+            unified_dir_path = self.result_path + self.mode[4] + self.suffix[0]
+
             baseline_bleu = []
             baseline2_bleu = []
             dsl_bleu = []
+            unified_bleu = []
 
             baseline_rouge = {"Precision": [], "Recall": [], "F1": []}
             baseline2_rouge = {"Precision": [], "Recall": [], "F1": []}
             dsl_rouge = {"Precision": [], "Recall": [], "F1": []}
-            
+            unified_rouge = {"Precision": [], "Recall": [], "F1": []}
+
 
             # List subfolders, assuming aligned names across methods.
             subfolders = os.listdir(baseline_dir_path)
@@ -78,9 +81,11 @@ class Evaluation:
                 baseline_path = os.path.join(baseline_dir_path, subfolder, "production_plan.json")
                 baseline2_path = os.path.join(baseline2_dir_path, subfolder, "production_plan.json")
                 dsl_pipeline_path = os.path.join(dsl_pipeline_dir_path, subfolder, "production_plan.json")
+                unified_path = os.path.join(unified_dir_path, subfolder, "production_plan.json")
                 ground_truth_path = os.path.join(self.groundtruth_dir_path, subfolder, "production_plan.json")
 
-                if all(os.path.exists(path) for path in [baseline_path, baseline2_path, dsl_pipeline_path, ground_truth_path]):
+                required = [baseline_path, baseline2_path, dsl_pipeline_path, ground_truth_path]
+                if all(os.path.exists(path) for path in required):
                     # Read JSON content.
                     baseline_content = json.dumps(read_json(baseline_path))
                     baseline2_content = json.dumps(read_json(baseline2_path))
@@ -109,21 +114,34 @@ class Evaluation:
                     dsl_rouge["Recall"].append(dsl_rouge_recall)
                     dsl_rouge["F1"].append(dsl_rouge_F1)
 
+                    # Unified pipeline scores
+                    if os.path.exists(unified_path):
+                        unified_content = json.dumps(read_json(unified_path))
+                        unified_bleu.append(self.__bleu_score(ground_truth_content, unified_content))
+                        u_p, u_r, u_f = self.__rouge_score(ground_truth_content, unified_content)
+                        unified_rouge["Precision"].append(u_p)
+                        unified_rouge["Recall"].append(u_r)
+                        unified_rouge["F1"].append(u_f)
+
             print("baseline_bleu: ", baseline_bleu)
             print("baseline2_bleu: ", baseline2_bleu)
             print("dsl_bleu: ", dsl_bleu)
+            print("unified_bleu: ", unified_bleu)
 
             print("baseline_rouge: ", baseline_rouge)
             print("baseline2_rouge: ", baseline2_rouge)
             print("dsl_rouge: ", dsl_rouge)
+            print("unified_rouge: ", unified_rouge)
 
             write_json("outputs/Evaluation/CPE_baseline_bleu.json", baseline_bleu)
             write_json("outputs/Evaluation/CPE_baseline2_bleu.json", baseline2_bleu)
             write_json("outputs/Evaluation/CPE_dsl_bleu.json", dsl_bleu)
+            write_json("outputs/Evaluation/CPE_unified_bleu.json", unified_bleu)
 
             write_json("outputs/Evaluation/CPE_baseline_rouge.json", baseline_rouge)
             write_json("outputs/Evaluation/CPE_baseline2_rouge.json", baseline2_rouge)
             write_json("outputs/Evaluation/CPE_dsl_rouge.json", dsl_rouge)
+            write_json("outputs/Evaluation/CPE_unified_rouge.json", unified_rouge)
 
         elif experiment_type == "CAE":
             baseline_dir_path = self.result_path + self.mode[0] + self.suffix[0]
@@ -250,13 +268,15 @@ class Evaluation:
         elif experiment_type == "CSE-2":
             baseline_dir_path = self.result_path + self.mode[0] + self.suffix[0]
             dsl_pipeline_dir_path = self.result_path + self.mode[2] + self.suffix[0]
-            
+            unified_dir_path = self.result_path + self.mode[4] + self.suffix[0]
+
             baseline_bleu = []
             dsl_bleu = []
 
             baseline_result = {"accuracy_rate": [], "runtime_err_rate": []}
             baseline2_result = {"accuracy_rate": [], "runtime_err_rate": []}
             dsl_result = {"accuracy_rate": [], "runtime_err_rate": []}
+            unified_result = {"accuracy_rate": [], "runtime_err_rate": []}
             # List subfolders, assuming aligned names across methods.
             subfolders = os.listdir(baseline_dir_path)
 
@@ -271,6 +291,9 @@ class Evaluation:
                 dsl_pipeline_path = os.path.join(dsl_pipeline_dir_path, subfolder, "or_matrix.json")
                 dsl_pipeline_operation_programs_path = os.path.join(dsl_pipeline_dir_path, subfolder, "operation_programs.json")
                 dsl_pipeline_production_programs_path = os.path.join(dsl_pipeline_dir_path, subfolder, "production_programs.json")
+
+                unified_or_path = os.path.join(unified_dir_path, subfolder, "or_matrix.json")
+                unified_rs_path = os.path.join(unified_dir_path, subfolder, "route_sheets.json")
 
                 ground_truth_path = os.path.join(self.groundtruth_dir_path, subfolder, "or_matrix.json")
                 ground_truth_route_sheet = os.path.join(os.path.join(self.groundtruth_dir_path, subfolder, "route_sheets.json"))
@@ -305,7 +328,7 @@ class Evaluation:
                     ground_truth_machine_precedence_constraints = self.__get_groundtruth_machine_precedence_constraint(ground_truth_content, ground_truth_route_sheet_content)
 
                     baseline_result["accuracy_rate"].append(
-                        self.__iou(baseline_resource_constraints + baseline_precedence_constraints,  
+                        self.__iou(baseline_resource_constraints + baseline_precedence_constraints,
                         ground_truth_resource_constraints + ground_truth_machine_precedence_constraints)
                     )
                     baseline_result["runtime_err_rate"].append(
@@ -313,13 +336,13 @@ class Evaluation:
                     )
 
                     baseline2_result["accuracy_rate"].append(
-                        self.__iou(baseline2_resource_constraints + baseline2_precedence_constraints,  
+                        self.__iou(baseline2_resource_constraints + baseline2_precedence_constraints,
                         ground_truth_resource_constraints + ground_truth_machine_precedence_constraints)
                     )
                     baseline2_result["runtime_err_rate"].append(
                         float(read_txt(os.path.join(baseline_dir_path, subfolder, "err_rate.txt")))
                     )
-                    
+
                     dsl_result["accuracy_rate"].append(self.__iou(
                         dsl_resource_constraints + dsl_precedence_constraints,
                         ground_truth_resource_constraints + ground_truth_operation_precedence_constraints
@@ -328,13 +351,29 @@ class Evaluation:
                         float(read_txt(os.path.join(dsl_pipeline_dir_path, subfolder, "err_rate.txt")))
                     )
 
+                    # Unified pipeline
+                    if os.path.exists(unified_or_path) and os.path.exists(unified_rs_path):
+                        unified_or_content = read_json(unified_or_path)
+                        unified_rs_content = read_json(unified_rs_path)
+                        unified_resource = self.__get_unified_resource_constraint_CSE(unified_rs_content)
+                        unified_precedence = self.__get_unified_precedence_constraint_CSE(unified_or_content, unified_rs_content)
+                        unified_result["accuracy_rate"].append(self.__iou(
+                            unified_resource + unified_precedence,
+                            ground_truth_resource_constraints + ground_truth_operation_precedence_constraints
+                        ))
+                        unified_result["runtime_err_rate"].append(
+                            float(read_txt(os.path.join(unified_dir_path, subfolder, "err_rate.txt")))
+                        )
+
             print("baseline_result: ", baseline_result)
             print("baseline2_result: ", baseline2_result)
             print("dsl_result: ", dsl_result)
+            print("unified_result: ", unified_result)
 
             write_json("outputs/Evaluation/CSE-2_baseline.json", baseline_result)
             write_json("outputs/Evaluation/CSE-2_baseline2.json", baseline2_result)
             write_json("outputs/Evaluation/CSE-2_dsl.json", dsl_result)
+            write_json("outputs/Evaluation/CSE-2_unified.json", unified_result)
 
         elif experiment_type == "SGE":
             baseline_dir_path = self.result_path + self.mode[0] + self.suffix[2]
@@ -818,15 +857,40 @@ class Evaluation:
         # Convert nested lists to tuples so they become hashable.
         set1 = set(tuple(item) if isinstance(item, list) else item for item in list1)
         set2 = set(tuple(item) if isinstance(item, list) else item for item in list2)
-        
+
         # Compute intersection and union.
         intersection = set1 & set2
         union = set1 | set2
-        
+
         # Avoid division by zero.
         if not union:
             return 0.0
-        
+
         # Compute IoU.
         iou = len(intersection) / len(union)
         return iou
+
+    def __get_unified_resource_constraint_CSE(self, route_sheets):
+        """Extract {operation: machine} pairs from unified route sheets."""
+        operations2machines = {}
+        for rs_data in route_sheets:
+            for step in rs_data.get("route_sheet", []):
+                operation_name = step.get("operation", "None")
+                machine_name = step.get("machine", "None")
+                operations2machines[operation_name] = machine_name
+        return [str(key) + " " + str(val) for key, val in operations2machines.items()]
+
+    def __get_unified_precedence_constraint_CSE(self, or_matrix, route_sheets):
+        """Extract (pred_operation, succ_operation) pairs from unified OR matrix + route sheets."""
+        precedence_constraints = []
+        for job_index, job_steps in enumerate(or_matrix):
+            for step_index, step in enumerate(job_steps):
+                try:
+                    _, _, dependencies = step
+                    current_operation = route_sheets[job_index]["route_sheet"][step_index]["operation"]
+                    for dep_index in dependencies:
+                        pred_operation = route_sheets[job_index]["route_sheet"][dep_index]["operation"]
+                        precedence_constraints.append((pred_operation, current_operation))
+                except:
+                    continue
+        return [str(key) + " " + str(val) for key, val in precedence_constraints]
