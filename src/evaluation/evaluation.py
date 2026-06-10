@@ -944,6 +944,17 @@ class Evaluation:
         mach_map = self._majority_vote(mach_pairs)
         comp_map = self._majority_vote(comp_pairs)
 
+        # Parameter key alignment via token-subset matching
+        param_pairs = []
+        for i in range(min(len(gt_route_sheets), len(unified_route_sheets))):
+            gt_steps = gt_route_sheets[i].get("route_sheet", [])
+            u_steps = unified_route_sheets[i].get("route_sheet", [])
+            for j in range(min(len(gt_steps), len(u_steps))):
+                gt_params = gt_steps[j].get("parameters", {})
+                u_params = u_steps[j].get("parameters", {})
+                param_pairs.extend(self._match_param_keys(gt_params, u_params))
+        param_map = self._majority_vote(param_pairs)
+
         # Collect all GT and unified name pools for fallback tiers
         gt_ops, gt_machines, gt_comps = set(), set(), set()
         u_ops, u_machines, u_comps = set(), set(), set()
@@ -973,7 +984,7 @@ class Evaluation:
                 if match:
                     mapping[u_name] = match
 
-        return {"operations": op_map, "machines": mach_map, "component_types": comp_map}
+        return {"operations": op_map, "machines": mach_map, "component_types": comp_map, "param_keys": param_map}
 
     def _majority_vote(self, pairs):
         """Given (unified_name, gt_name) pairs, return {unified→gt} by majority vote."""
@@ -998,12 +1009,30 @@ class Evaluation:
                 best_match = c
         return best_match if best_ratio >= threshold else None
 
+    def _match_param_keys(self, gt_params, u_params):
+        """Match parameter keys within a step via token-subset matching."""
+        pairs = []
+        for u_key in u_params:
+            u_tokens = set(u_key.lower().replace('_', ' ').split())
+            best_gt, best_score = None, 0
+            for gt_key in gt_params:
+                gt_tokens = set(gt_key.lower().split())
+                if gt_tokens <= u_tokens:
+                    score = len(gt_tokens) / len(u_tokens)
+                    if score > best_score:
+                        best_score = score
+                        best_gt = gt_key
+            if best_gt:
+                pairs.append((u_key, best_gt))
+        return pairs
+
     def _align_route_sheets(self, unified_rs, name_maps):
         """Return a deep copy of unified route_sheets with names mapped to GT."""
         aligned = copy.deepcopy(unified_rs)
         op_map = name_maps["operations"]
         mach_map = name_maps["machines"]
         comp_map = name_maps["component_types"]
+        param_map = name_maps.get("param_keys", {})
         for job in aligned:
             for step in job.get("route_sheet", []):
                 op = step.get("operation", "")
@@ -1016,6 +1045,8 @@ class Evaluation:
                     ct = cond.get("component_type", "")
                     if ct in comp_map:
                         cond["component_type"] = comp_map[ct]
+                if step.get("parameters") and param_map:
+                    step["parameters"] = {param_map.get(k, k): v for k, v in step["parameters"].items()}
         return aligned
 
     def _align_production_plan(self, production_plan, name_maps):
@@ -1024,6 +1055,7 @@ class Evaluation:
         op_map = name_maps["operations"]
         mach_map = name_maps["machines"]
         comp_map = name_maps["component_types"]
+        param_map = name_maps.get("param_keys", {})
         for entry in aligned:
             m = entry.get("machine", "")
             if m in mach_map:
@@ -1037,4 +1069,6 @@ class Evaluation:
                     seq["machine"] = mach_map[m2]
                 seq["precondition"] = [comp_map.get(c, c) for c in seq.get("precondition", [])]
                 seq["postcondition"] = [comp_map.get(c, c) for c in seq.get("postcondition", [])]
+                if seq.get("parameters") and param_map:
+                    seq["parameters"] = {param_map.get(k, k): v for k, v in seq["parameters"].items()}
         return aligned

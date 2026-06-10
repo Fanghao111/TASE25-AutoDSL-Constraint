@@ -3,10 +3,10 @@ You are given a natural language description of a manufacturing process for prod
 For each manufacturing step described, extract whatever information you can identify:
 - What operation is being performed
 - What machine or equipment is used
-- How long the operation takes (as a number, no units)
+- How long the operation takes (include units, e.g., "83 minutes")
 - What materials or components go in (inputs)
 - What materials or components come out (outputs)
-- Any process parameters mentioned (speeds, rates, tool types, etc.)
+- Any process parameters mentioned (preserve values with units, e.g., "45 degrees", "100 mm/s")
 
 Do NOT follow a fixed schema. Use field names that naturally describe the information. Different steps may have different parameter fields depending on what the description mentions.
 
