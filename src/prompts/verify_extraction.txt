@@ -1,0 +1,17 @@
+You are given a natural language description of a process and a structured JSON that was extracted from it. Your task is to verify that the JSON faithfully represents the original description.
+
+Compare the JSON with the original description field by field:
+1. Fix any values that don't match the original description
+2. Add any information present in the description but missing from the JSON
+3. Remove any information in the JSON that is fabricated and not in the description
+4. Keep the same JSON structure and field names — only fix values
+
+If the JSON is already correct, return it unchanged.
+
+Original description:
+---ORDER---
+
+Extracted JSON:
+---EXTRACTED---
+
+Output ONLY the corrected JSON object. Do NOT wrap in markdown code blocks. Do NOT include any other text.

@@ -4,10 +4,10 @@ import openai
 import os
 import time
 import json
+import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from openai import OpenAI
-from collections import defaultdict, Counter
 from utils.util import read_json, write_json, read_txt, write_txt
 from src.experiment.schedule import schedule
 from src.experiment.groundtruth import GroundTruth
@@ -20,10 +20,12 @@ class UnifiedPipeline:
         self.dump_dir_path = ""
 
         self.orders = []
-        self.raw_jsons = []          # Step 1 output: free-form extracted JSONs
-        self.field_mapping = {}      # discovered field semantic mapping
-        self.normalized_jsons = []   # Step 2 output: verified + normalized JSONs
-        self.route_sheets = []       # normalized JSONs reformatted as route sheets
+        self.raw_jsons = []          # Step 1 output
+        self.verified_jsons = []     # Step 1.5 output
+        self.normalized_jsons = []   # Step 2 output
+        self.semantic_roles = {}     # Step 2 output: LLM-discovered roles
+        self.field_mapping = {}      # derived from semantic_roles for downstream
+        self.route_sheets = []
         self.or_matrix = []
         self.machines = []
         self.assigned_jobs = {}
@@ -33,7 +35,9 @@ class UnifiedPipeline:
         self.total_num = 0
 
         self.free_extract_prompt = read_txt("src/prompts/free_extract.txt")
-        self.verify_normalize_prompt = read_txt("src/prompts/verify_normalize.txt")
+        self.verify_extraction_prompt = read_txt("src/prompts/verify_extraction.txt")
+        self.normalize_and_discover_prompt = read_txt("src/prompts/normalize_and_discover.txt")
+        self.fix_mapping_prompt = read_txt("src/prompts/fix_mapping.txt")
 
         self.groundtruth = None
 
@@ -51,9 +55,12 @@ class UnifiedPipeline:
             # Step 1: Free extraction
             if len(self.raw_jsons) == 0:
                 self.free_extract_all()
-            # Step 2: Verify + normalize
+            # Step 1.5: Verify extractions
+            if len(self.verified_jsons) == 0:
+                self.verify_extraction_all()
+            # Step 2: Normalize + discover semantic roles
             if len(self.normalized_jsons) == 0:
-                self.verify_and_normalize_all()
+                self.normalize_and_discover()
             # Build route sheets from normalized JSONs
             self._build_route_sheets()
             # Step 3: Derive constraints
@@ -63,7 +70,6 @@ class UnifiedPipeline:
             self.ground_production_plan()
 
         elif self.experiment_type == "CSE-1":
-            # Input: ground-truth route sheets. Skip Steps 1-2.
             self.route_sheets = read_json(
                 f"outputs/GroundTruth/{self.instance_description}/route_sheets.json"
             )
@@ -73,7 +79,6 @@ class UnifiedPipeline:
             self.ground_production_plan()
 
         elif self.experiment_type == "SGE":
-            # Input: ground-truth assigned_jobs. Skip Steps 1-3.
             self.assigned_jobs = read_json(
                 f"outputs/GroundTruth/{self.instance_description}/assigned_jobs.json"
             )
@@ -89,7 +94,7 @@ class UnifiedPipeline:
 
     def free_extract_all(self):
         """Extract structured JSON from each order's NL description."""
-        print("Step 1: Free extraction ...")
+        print("Step 1: Free extraction ...", flush=True)
         self.raw_jsons = []
 
         prompts = []
@@ -106,93 +111,155 @@ class UnifiedPipeline:
         write_json(self.dump_dir_path + "raw_jsons.json", self.raw_jsons)
 
     # ------------------------------------------------------------------ #
-    #  Step 2: Verify + normalize                                         #
+    #  Step 1.5: Verify extractions                                       #
     # ------------------------------------------------------------------ #
 
-    def verify_and_normalize_all(self):
-        """Verify each extracted JSON against its NL source, normalize fields."""
-        print("Step 2: Verify + normalize ...")
+    def verify_extraction_all(self):
+        """Verify each extracted JSON against its NL source, fix errors."""
+        print("Step 1.5: Verify extractions ...", flush=True)
 
-        # 2a: Discover field vocabulary from raw extractions
-        field_vocab = self._discover_field_vocab(self.raw_jsons)
-        component_vocab = self._discover_component_vocab(self.raw_jsons)
-
-        # 2b: Per-job verification + normalization
         prompts = []
         for order, raw_json in zip(self.orders, self.raw_jsons):
-            prompt = self.verify_normalize_prompt \
+            prompt = self.verify_extraction_prompt \
                 .replace("---ORDER---", json.dumps(order)) \
-                .replace("---EXTRACTED---", json.dumps(raw_json)) \
-                .replace("---FIELD_VOCAB---", json.dumps(field_vocab)) \
-                .replace("---COMPONENT_VOCAB---", json.dumps(component_vocab))
+                .replace("---EXTRACTED---", json.dumps(raw_json))
             prompts.append(prompt)
 
         results = self._parallel_llm_calls(prompts)
 
-        self.normalized_jsons = []
+        self.verified_jsons = []
         for result in results:
             parsed = self._safe_json_parse(result)
-            self.normalized_jsons.append(parsed)
+            self.verified_jsons.append(parsed)
 
-        # 2c: Build field mapping from the normalized output
-        self.field_mapping = self._build_field_mapping(self.normalized_jsons)
+        write_json(self.dump_dir_path + "verified_jsons.json", self.verified_jsons)
+
+    # ------------------------------------------------------------------ #
+    #  Step 2: Normalize + discover semantic roles                        #
+    # ------------------------------------------------------------------ #
+
+    def normalize_and_discover(self):
+        """One LLM call for normalization + role discovery, then deterministic apply + validate."""
+        print("Step 2: Normalize + discover semantic roles ...", flush=True)
+
+        # 2a: Collect field frequencies and component names
+        from collections import Counter
+        field_counter = Counter()
+        all_components = set()
+        all_steps = []
+        for data in self.verified_jsons:
+            steps = self._find_steps(data)
+            all_steps.extend(steps)
+            for step in steps:
+                if isinstance(step, dict):
+                    for k in step:
+                        field_counter[k] += 1
+            self._collect_string_values(data, all_components)
+
+        # Only send fields that appear in >=5% of steps for normalization
+        # This filters out rare parameter fields and keeps core scheduling fields
+        threshold = max(len(all_steps) * 0.05, 3)
+        frequent_fields = sorted([f for f, c in field_counter.items() if c >= threshold])
+        rare_fields = sorted([f for f, c in field_counter.items() if c < threshold])
+        unique_components = sorted(all_components)
+
+        print(f"  {len(frequent_fields)} frequent fields (>={threshold:.0f} occurrences), "
+              f"{len(rare_fields)} rare fields, {len(unique_components)} unique components", flush=True)
+
+        # 2b: Sample representative JSONs for the LLM (keep compact — proxy has ~6K char limit)
+        # Pick the smallest sample that still shows the structure
+        sample_sizes = [(len(json.dumps(self.verified_jsons[i])), i) for i in range(len(self.verified_jsons))]
+        sample_sizes.sort()
+        # Pick a medium-sized sample (not too small to miss fields, not too large for proxy)
+        mid_idx = sample_sizes[len(sample_sizes) // 2][1]
+        samples = [self.verified_jsons[mid_idx]]
+
+        # 2c: One LLM call — normalize fields + discover roles
+        # Skip component names entirely — handle via deterministic normalization
+        prompt = self.normalize_and_discover_prompt \
+            .replace("---SAMPLES---", json.dumps(samples)) \
+            .replace("---FIELD_NAMES---", json.dumps(frequent_fields)) \
+            .replace("---COMPONENT_NAMES---", "[]")
+
+        print(f"  Prompt size: {len(prompt)} chars", flush=True)
+        result = self._chatgpt_function(prompt)
+        print(f"  LLM response length: {len(result) if result else 0} chars", flush=True)
+        discovery = self._safe_json_parse(result)
+
+        # Convert groups to flat mappings
+        field_mapping_raw = self._groups_to_mapping(discovery.get("field_groups", []))
+        self.semantic_roles = discovery.get("semantic_roles", {})
+        print(f"  Field groups: {len(discovery.get('field_groups', []))}", flush=True)
+
+        # Component normalization: fully deterministic (CamelCase/PascalCase -> lowercase spaces)
+        component_mapping = self._extend_component_mapping({}, unique_components)
+
+        # 2d: Deterministic replacement on all verified_jsons
+        self.normalized_jsons = []
+        for data in self.verified_jsons:
+            normalized = self._apply_field_mapping(data, field_mapping_raw)
+            normalized = self._apply_value_mapping(normalized, component_mapping)
+            self.normalized_jsons.append(normalized)
+
+        # 2e: Deterministic rule validation
+        issues = self._validate_semantic_roles(self.normalized_jsons, self.semantic_roles)
+
+        if issues:
+            print(f"  Validation found {len(issues)} issues, requesting fix ...", flush=True)
+            fix_prompt = self.fix_mapping_prompt \
+                .replace("---MAPPING---", json.dumps(discovery, indent=2)) \
+                .replace("---ISSUES---", json.dumps(issues, indent=2)) \
+                .replace("---SAMPLES---", json.dumps(samples, indent=2))
+            fix_result = self._chatgpt_function(fix_prompt)
+            fixed = self._safe_json_parse(fix_result)
+
+            if fixed.get("field_groups"):
+                field_mapping_raw = self._groups_to_mapping(fixed["field_groups"])
+            if fixed.get("semantic_roles"):
+                self.semantic_roles = fixed["semantic_roles"]
+
+            # Re-apply with fixed mappings
+            self.normalized_jsons = []
+            for data in self.verified_jsons:
+                normalized = self._apply_field_mapping(data, field_mapping_raw)
+                normalized = self._apply_value_mapping(normalized, component_mapping)
+                self.normalized_jsons.append(normalized)
+        else:
+            print("  Validation passed.", flush=True)
+
+        # 2f: Build field_mapping for downstream from semantic_roles
+        self.field_mapping = self._build_field_mapping_from_roles(self.semantic_roles)
 
         write_json(self.dump_dir_path + "normalized_jsons.json", self.normalized_jsons)
         write_json(self.dump_dir_path + "field_mapping.json", self.field_mapping)
+        write_json(self.dump_dir_path + "semantic_roles.json", self.semantic_roles)
+        write_json(self.dump_dir_path + "field_mapping_raw.json", field_mapping_raw)
+        write_json(self.dump_dir_path + "component_mapping.json", component_mapping)
 
-    def _discover_field_vocab(self, jsons):
-        """Collect all unique field names across extracted JSONs and propose canonical names."""
-        all_fields = Counter()
-        for data in jsons:
-            self._collect_fields(data, all_fields)
+    def _sample_jsons(self, jsons, n=5):
+        """Select representative samples: pick diverse structures."""
+        if len(jsons) <= n:
+            return jsons
+        # Pick first, last, and random middle ones
+        indices = [0, len(jsons) - 1]
+        middle = random.sample(range(1, len(jsons) - 1), min(n - 2, len(jsons) - 2))
+        indices.extend(middle)
+        return [jsons[i] for i in sorted(set(indices))]
 
-        # Build canonical name suggestions based on frequency
-        canonical = {
-            "operation": ["operation", "action", "process", "op", "step_name"],
-            "machine": ["machine", "device", "equipment", "tool_machine"],
-            "duration": ["duration", "time", "processing_time", "minutes"],
-            "inputs": ["inputs", "input", "input_materials", "raw_material", "precondition"],
-            "outputs": ["outputs", "output", "output_materials", "product", "postcondition"],
-            "type": ["type", "material_type", "component_type", "category"],
-            "parameters": ["parameters", "params", "settings", "config"],
-        }
-
-        # For each semantic role, pick the name that appears most frequently
-        vocab = {}
-        for role, candidates in canonical.items():
-            best = role  # default
-            best_count = 0
-            for c in candidates:
-                if all_fields[c] > best_count:
-                    best = c
-                    best_count = all_fields[c]
-            vocab[role] = best
-
-        return vocab
-
-    def _discover_component_vocab(self, jsons):
-        """Collect all unique component/material names across jobs."""
-        components = set()
-        for data in jsons:
-            self._collect_string_values(data, components)
-        result = sorted(components)
-        # Truncate to avoid overly long prompts
-        if len(result) > 200:
-            result = result[:200]
-        return result
-
-    def _collect_fields(self, obj, counter):
+    def _collect_field_names(self, obj, fields):
+        """Recursively collect all field names."""
         if isinstance(obj, dict):
             for k, v in obj.items():
-                counter[k] += 1
-                self._collect_fields(v, counter)
+                fields.add(k)
+                self._collect_field_names(v, fields)
         elif isinstance(obj, list):
             for item in obj:
-                self._collect_fields(item, counter)
+                self._collect_field_names(item, fields)
 
     def _collect_string_values(self, obj, values):
+        """Collect string values from nested JSON."""
         if isinstance(obj, dict):
-            for k, v in obj.items():
+            for v in obj.values():
                 if isinstance(v, str) and len(v) > 1:
                     values.add(v)
                 else:
@@ -201,35 +268,185 @@ class UnifiedPipeline:
             for item in obj:
                 self._collect_string_values(item, values)
 
-    def _build_field_mapping(self, jsons):
-        """Analyze normalized JSONs to discover which field names map to which semantic roles."""
-        all_fields = Counter()
-        for data in jsons:
-            self._collect_fields(data, all_fields)
+    def _extend_component_mapping(self, base_mapping, all_components):
+        """Extend LLM-provided component mapping to cover all components.
+        For unmapped components, normalize CamelCase/snake_case to lowercase with spaces."""
+        import re
+        # Build reverse map: canonical -> set of originals
+        canonical_set = set(base_mapping.values())
+        mapped_set = set(base_mapping.keys()) | canonical_set
 
-        # Heuristic mapping: match field names to semantic roles
-        role_keywords = {
-            "operation_field": ["operation", "action", "process", "op"],
-            "machine_field": ["machine", "device", "equipment"],
-            "duration_field": ["duration", "time", "processing_time", "minutes"],
-            "input_field": ["inputs", "input", "input_materials", "precondition", "raw_material"],
-            "output_field": ["outputs", "output", "output_materials", "postcondition", "product"],
-            "input_type_field": ["type", "material_type", "component_type", "category"],
-            "output_type_field": ["type", "material_type", "component_type", "category"],
-            "params_field": ["parameters", "params", "settings"],
-        }
+        extended = dict(base_mapping)
+        for comp in all_components:
+            if comp in mapped_set:
+                continue
+            # Normalize: CamelCase -> space-separated, underscores -> spaces, lowercase
+            normalized = re.sub(r'([a-z])([A-Z])', r'\1 \2', comp)
+            normalized = normalized.replace('_', ' ').strip().lower()
+            if normalized != comp:
+                # Check if normalized form matches an existing canonical
+                if normalized in canonical_set:
+                    extended[comp] = normalized
+                else:
+                    extended[comp] = normalized
+        return extended
 
+    def _groups_to_mapping(self, groups):
+        """Convert group format [{"canonical": "x", "members": ["a", "b"]}] to flat mapping {"a": "x", "b": "x"}."""
         mapping = {}
-        for role, keywords in role_keywords.items():
-            best = keywords[0]
-            best_count = 0
-            for kw in keywords:
-                if all_fields[kw] > best_count:
-                    best = kw
-                    best_count = all_fields[kw]
-            mapping[role] = best
-
+        for group in groups:
+            canonical = group.get("canonical", "")
+            for member in group.get("members", []):
+                if member != canonical:
+                    mapping[member] = canonical
         return mapping
+
+    def _apply_field_mapping(self, obj, mapping):
+        """Recursively rename field keys."""
+        if isinstance(obj, dict):
+            return {mapping.get(k, k): self._apply_field_mapping(v, mapping) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._apply_field_mapping(item, mapping) for item in obj]
+        return obj
+
+    def _apply_value_mapping(self, obj, mapping):
+        """Recursively replace string values."""
+        if isinstance(obj, dict):
+            return {k: self._apply_value_mapping(v, mapping) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._apply_value_mapping(item, mapping) for item in obj]
+        elif isinstance(obj, str):
+            return mapping.get(obj, obj)
+        return obj
+
+    def _validate_semantic_roles(self, normalized_jsons, semantic_roles):
+        """Deterministic validation of discovered semantic roles."""
+        issues = []
+
+        # Collect all steps from normalized JSONs
+        all_steps = []
+        for data in normalized_jsons:
+            steps = self._find_steps(data)
+            all_steps.extend(steps)
+
+        if not all_steps or not semantic_roles:
+            issues.append("No steps found or no semantic roles discovered")
+            return issues
+
+        # Validate duration field: values should be numeric
+        duration_field = semantic_roles.get("duration", {}).get("field", "")
+        if duration_field:
+            non_numeric = 0
+            total = 0
+            for step in all_steps:
+                val = step.get(duration_field)
+                if val is not None:
+                    total += 1
+                    try:
+                        float(str(val).replace(",", ""))
+                    except (ValueError, TypeError):
+                        non_numeric += 1
+            if total > 0 and non_numeric / total > 0.3:
+                issues.append(
+                    f"duration field '{duration_field}': {non_numeric}/{total} values are non-numeric"
+                )
+
+        # Validate resource field: values should repeat across jobs (shared resources)
+        resource_field = semantic_roles.get("resource", {}).get("field", "")
+        if resource_field:
+            from collections import Counter
+            resource_values = Counter()
+            for step in all_steps:
+                val = step.get(resource_field)
+                if isinstance(val, str) and val:
+                    resource_values[val] += 1
+            if resource_values:
+                unique_ratio = len(resource_values) / sum(resource_values.values())
+                if unique_ratio > 0.9:
+                    issues.append(
+                        f"resource field '{resource_field}': {len(resource_values)} unique values out of "
+                        f"{sum(resource_values.values())} total — resources should be shared across steps"
+                    )
+
+        # Validate dependency fields: input/output type overlap should exist
+        dep_in_field = semantic_roles.get("dependency_in", {}).get("field", "")
+        dep_out_field = semantic_roles.get("dependency_out", {}).get("field", "")
+        type_field = semantic_roles.get("dependency_type_field", {}).get("field", "")
+        if dep_in_field and dep_out_field and type_field:
+            all_in_types = set()
+            all_out_types = set()
+            for step in all_steps:
+                for mat in (step.get(dep_in_field) or []):
+                    if isinstance(mat, dict):
+                        t = mat.get(type_field, "")
+                        if t:
+                            all_in_types.add(t.lower())
+                for mat in (step.get(dep_out_field) or []):
+                    if isinstance(mat, dict):
+                        t = mat.get(type_field, "")
+                        if t:
+                            all_out_types.add(t.lower())
+            if all_in_types and all_out_types and not (all_in_types & all_out_types):
+                issues.append(
+                    f"dependency fields: no overlap between input types ({len(all_in_types)}) "
+                    f"and output types ({len(all_out_types)}) — precedence constraints won't work"
+                )
+
+        # Validate field coverage
+        for role_name, role_info in semantic_roles.items():
+            field = role_info.get("field", "")
+            if not field:
+                issues.append(f"role '{role_name}' has no field assigned")
+                continue
+            present = sum(1 for step in all_steps if field in step)
+            if all_steps and present / len(all_steps) < 0.3:
+                issues.append(
+                    f"role '{role_name}' field '{field}': only present in {present}/{len(all_steps)} steps"
+                )
+
+        return issues
+
+    def _build_field_mapping_from_roles(self, semantic_roles):
+        """Convert semantic_roles to the field_mapping format used by downstream code."""
+        role_to_key = {
+            "operation": "operation_field",
+            "resource": "machine_field",
+            "duration": "duration_field",
+            "dependency_in": "input_field",
+            "dependency_out": "output_field",
+            "dependency_type_field": "input_type_field",
+            "extra_params": "params_field",
+        }
+        mapping = {}
+        for role_name, mapping_key in role_to_key.items():
+            field = semantic_roles.get(role_name, {}).get("field", "")
+            if field:
+                mapping[mapping_key] = field
+
+        # If dependency_type_field wasn't discovered, auto-detect from data
+        if "input_type_field" not in mapping:
+            type_field = self._detect_type_field(semantic_roles)
+            mapping["input_type_field"] = type_field
+
+        mapping["output_type_field"] = mapping.get("input_type_field", "type")
+        return mapping
+
+    def _detect_type_field(self, semantic_roles):
+        """Auto-detect the sub-field within input/output used for type matching."""
+        dep_in_field = semantic_roles.get("dependency_in", {}).get("field", "input")
+        # Look at actual data to find the type sub-field
+        for data in self.normalized_jsons[:10]:
+            steps = self._find_steps(data)
+            for step in steps:
+                materials = step.get(dep_in_field, [])
+                if isinstance(materials, list):
+                    for mat in materials:
+                        if isinstance(mat, dict):
+                            # Common type field names
+                            for candidate in ["type", "component_type", "material_type", "category"]:
+                                if candidate in mat:
+                                    return candidate
+        return "type"
 
     def _build_field_mapping_from_gt(self):
         """Build field mapping for ground truth route sheet format."""
@@ -287,14 +504,12 @@ class UnifiedPipeline:
             for key in ["steps", "operations", "process", "manufacturing_steps", "route"]:
                 if key in data and isinstance(data[key], list):
                     return data[key]
-            # Try any list-valued field
             for k, v in data.items():
                 if isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):
                     return v
         return []
 
     def _get_field(self, step, field_name, default):
-        """Get a field value with fallback."""
         if isinstance(step, dict):
             return step.get(field_name, default)
         return default
@@ -334,12 +549,10 @@ class UnifiedPipeline:
             fm.get("output_field", "outputs"),
             "step_id", "step_number", "step",
         }
-        # Check if there's an explicit parameters field
         params_field = fm.get("params_field", "parameters")
         if params_field in step and isinstance(step[params_field], dict):
             return step[params_field]
 
-        # Otherwise, collect non-core scalar fields as parameters
         params = {}
         for k, v in step.items():
             if k not in core_fields and not isinstance(v, (dict, list)):
@@ -352,12 +565,11 @@ class UnifiedPipeline:
 
     def derive_constraints(self):
         """Derive OR matrix from route sheets using key-value type matching."""
-        print("Step 3: Deriving constraints ...")
+        print("Step 3: Deriving constraints ...", flush=True)
         self.or_matrix = []
         self.compile_error_num = 0
         self.total_num = 0
 
-        # Collect all machine names
         machine_set = set()
         for rs_data in self.route_sheets:
             for step in rs_data.get("route_sheet", []):
@@ -366,15 +578,12 @@ class UnifiedPipeline:
                     machine_set.add(m.lower())
         self.machines = sorted(machine_set)
 
-        # Build OR matrix: one row per job
         for rs_data in self.route_sheets:
             steps = rs_data.get("route_sheet", [])
             row = []
 
-            # Derive precedence constraints via input/output type matching
             for i, step in enumerate(steps):
                 self.total_num += 1
-                # Machine index
                 machine_name = step.get("machine", "").lower()
                 try:
                     machine_idx = self.machines.index(machine_name)
@@ -382,7 +591,6 @@ class UnifiedPipeline:
                     machine_idx = 0
                     self.compile_error_num += 1
 
-                # Duration
                 try:
                     duration = int(
                         "".join(c for c in str(step.get("duration", 0)) if c.isdigit() or c == ".")
@@ -392,7 +600,6 @@ class UnifiedPipeline:
                     duration = 0
                     self.compile_error_num += 1
 
-                # Precedence: check if any earlier step's output type matches this step's input type
                 current_input_types = {
                     mat.get("component_type", "").lower()
                     for mat in step.get("precondition", [])
@@ -421,7 +628,7 @@ class UnifiedPipeline:
 
     def solve_jsp(self):
         """Run OR-Tools JSP solver."""
-        print("Step 4a: Solving JSP ...")
+        print("Step 4a: Solving JSP ...", flush=True)
         or_matrix = copy.deepcopy(self.or_matrix)
         assigned_jobs, solver, err_rate = schedule(or_matrix)
         if len(assigned_jobs) == 0:
@@ -434,7 +641,7 @@ class UnifiedPipeline:
 
     def ground_production_plan(self):
         """Map solver output back to route sheet details to produce the final plan."""
-        print("Step 4b: Grounding production plan ...")
+        print("Step 4b: Grounding production plan ...", flush=True)
         production_plan = []
 
         for machine_index_str, production_sequence in self.assigned_jobs.items():
@@ -458,7 +665,6 @@ class UnifiedPipeline:
                     "task_id": task_id,
                 }
 
-                # Look up details from route sheet
                 if job_id < len(self.route_sheets):
                     rs_steps = self.route_sheets[job_id].get("route_sheet", [])
                     if task_id < len(rs_steps):
@@ -495,10 +701,14 @@ class UnifiedPipeline:
             self.orders = read_json(self.dump_dir_path + "orders.json")
         if os.path.exists(self.dump_dir_path + "raw_jsons.json"):
             self.raw_jsons = read_json(self.dump_dir_path + "raw_jsons.json")
+        if os.path.exists(self.dump_dir_path + "verified_jsons.json"):
+            self.verified_jsons = read_json(self.dump_dir_path + "verified_jsons.json")
         if os.path.exists(self.dump_dir_path + "normalized_jsons.json"):
             self.normalized_jsons = read_json(self.dump_dir_path + "normalized_jsons.json")
         if os.path.exists(self.dump_dir_path + "field_mapping.json"):
             self.field_mapping = read_json(self.dump_dir_path + "field_mapping.json")
+        if os.path.exists(self.dump_dir_path + "semantic_roles.json"):
+            self.semantic_roles = read_json(self.dump_dir_path + "semantic_roles.json")
         if os.path.exists(self.dump_dir_path + "route_sheets.json"):
             self.route_sheets = read_json(self.dump_dir_path + "route_sheets.json")
         if os.path.exists(self.dump_dir_path + "or_matrix.json"):
@@ -534,24 +744,25 @@ class UnifiedPipeline:
         client = OpenAI(
             base_url="http://localhost:4141/v1",
             api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
+            timeout=300.0,
         )
         for attempt in range(max_retries):
             try:
                 chat_completion = client.chat.completions.create(
                     messages=[
-                        {"role": "system", "content": "You are an expert in manufacturing processes."},
+                        {"role": "system", "content": "You are an expert in structured data analysis and process scheduling."},
                         {"role": "user", "content": content},
                     ],
                     model=model,
                     max_tokens=8192,
                 )
                 return chat_completion.choices[0].message.content
-            except openai.APIError as e:
-                print(f"API error (attempt {attempt+1}/{max_retries}): {e}")
+            except Exception as e:
+                print(f"API error (attempt {attempt+1}/{max_retries}): {e}", flush=True)
                 if attempt < max_retries - 1:
                     time.sleep(2 * (attempt + 1))
                 else:
-                    print(f"Max retries reached, returning empty response")
+                    print(f"Max retries reached, returning empty response", flush=True)
                     return "{}"
 
     def _safe_json_parse(self, text):
@@ -559,7 +770,6 @@ class UnifiedPipeline:
         if not text:
             return {}
         text = text.strip()
-        # Strip markdown code blocks
         if text.startswith("```"):
             lines = text.split("\n")
             lines = [l for l in lines if not l.strip().startswith("```")]
@@ -567,7 +777,6 @@ class UnifiedPipeline:
         try:
             return json.loads(text)
         except json.JSONDecodeError:
-            # Try to find JSON object in the text
             start = text.find("{")
             end = text.rfind("}") + 1
             if start != -1 and end > start:
@@ -575,7 +784,6 @@ class UnifiedPipeline:
                     return json.loads(text[start:end])
                 except json.JSONDecodeError:
                     pass
-            # Try to find JSON array
             start = text.find("[")
             end = text.rfind("]") + 1
             if start != -1 and end > start:

@@ -1,0 +1,14 @@
+Your previous analysis of structured JSON data produced a semantic role mapping, but validation found issues. Please review and fix the mapping.
+
+Previous mapping:
+---MAPPING---
+
+Validation issues found:
+---ISSUES---
+
+Here are a few sample JSON extractions for reference:
+---SAMPLES---
+
+Please output a corrected version of the full JSON (field_mapping, component_mapping, and semantic_roles) that fixes the identified issues.
+
+Output ONLY a valid JSON object. Do NOT wrap in markdown code blocks. Do NOT include any other text.
