@@ -19,6 +19,9 @@ from rouge_score import rouge_scorer
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import os
 import json
+import copy
+import difflib
+from collections import Counter, defaultdict
 
 
 class Evaluation:
@@ -116,7 +119,16 @@ class Evaluation:
 
                     # Unified pipeline scores
                     if os.path.exists(unified_path):
-                        unified_content = json.dumps(read_json(unified_path))
+                        unified_pp = read_json(unified_path)
+
+                        # Name alignment: map unified names to GT names
+                        gt_rs_path = os.path.join(self.groundtruth_dir_path, subfolder, "route_sheets.json")
+                        u_rs_path = os.path.join(unified_dir_path, subfolder, "route_sheets.json")
+                        if os.path.exists(gt_rs_path) and os.path.exists(u_rs_path):
+                            name_maps = self._build_name_alignment(read_json(gt_rs_path), read_json(u_rs_path))
+                            unified_pp = self._align_production_plan(unified_pp, name_maps)
+
+                        unified_content = json.dumps(unified_pp)
                         unified_bleu.append(self.__bleu_score(ground_truth_content, unified_content))
                         u_p, u_r, u_f = self.__rouge_score(ground_truth_content, unified_content)
                         unified_rouge["Precision"].append(u_p)
@@ -355,8 +367,14 @@ class Evaluation:
                     if os.path.exists(unified_or_path) and os.path.exists(unified_rs_path):
                         unified_or_content = read_json(unified_or_path)
                         unified_rs_content = read_json(unified_rs_path)
-                        unified_resource = self.__get_unified_resource_constraint_CSE(unified_rs_content)
-                        unified_precedence = self.__get_unified_precedence_constraint_CSE(unified_or_content, unified_rs_content)
+
+                        # Name alignment: map unified names to GT names
+                        name_maps = self._build_name_alignment(ground_truth_route_sheet_content, unified_rs_content)
+                        aligned_rs = self._align_route_sheets(unified_rs_content, name_maps)
+                        write_json(os.path.join(unified_dir_path, subfolder, "name_alignment.json"), name_maps)
+
+                        unified_resource = self.__get_unified_resource_constraint_CSE(aligned_rs)
+                        unified_precedence = self.__get_unified_precedence_constraint_CSE(unified_or_content, aligned_rs)
                         unified_result["accuracy_rate"].append(self.__iou(
                             unified_resource + unified_precedence,
                             ground_truth_resource_constraints + ground_truth_operation_precedence_constraints
@@ -894,3 +912,129 @@ class Evaluation:
                 except:
                     continue
         return [str(key) + " " + str(val) for key, val in precedence_constraints]
+
+    # ------------------------------------------------------------------ #
+    #  Name alignment: Unified Pipeline → Ground Truth                    #
+    # ------------------------------------------------------------------ #
+
+    def _build_name_alignment(self, gt_route_sheets, unified_route_sheets):
+        """Build unified→GT name mappings via step-level positional alignment."""
+        # Tier 1: Positional alignment — collect (unified_name, gt_name) pairs
+        op_pairs = []
+        mach_pairs = []
+        comp_pairs = []
+
+        for i in range(min(len(gt_route_sheets), len(unified_route_sheets))):
+            gt_steps = gt_route_sheets[i].get("route_sheet", [])
+            u_steps = unified_route_sheets[i].get("route_sheet", [])
+            for j in range(min(len(gt_steps), len(u_steps))):
+                gs, us = gt_steps[j], u_steps[j]
+                op_pairs.append((us.get("operation", ""), gs.get("operation", "")))
+                mach_pairs.append((us.get("machine", ""), gs.get("machine", "")))
+                for cond_key in ("precondition", "postcondition"):
+                    gt_conds = gs.get(cond_key, [])
+                    u_conds = us.get(cond_key, [])
+                    for k in range(min(len(gt_conds), len(u_conds))):
+                        comp_pairs.append((
+                            u_conds[k].get("component_type", ""),
+                            gt_conds[k].get("component_type", "")
+                        ))
+
+        op_map = self._majority_vote(op_pairs)
+        mach_map = self._majority_vote(mach_pairs)
+        comp_map = self._majority_vote(comp_pairs)
+
+        # Collect all GT and unified name pools for fallback tiers
+        gt_ops, gt_machines, gt_comps = set(), set(), set()
+        u_ops, u_machines, u_comps = set(), set(), set()
+        for rs_list, ops, machs, comps in [
+            (gt_route_sheets, gt_ops, gt_machines, gt_comps),
+            (unified_route_sheets, u_ops, u_machines, u_comps),
+        ]:
+            for job in rs_list:
+                for step in job.get("route_sheet", []):
+                    ops.add(step.get("operation", ""))
+                    machs.add(step.get("machine", ""))
+                    for cond in step.get("precondition", []) + step.get("postcondition", []):
+                        comps.add(cond.get("component_type", ""))
+
+        # Tier 2 + 3: fallback for unmapped names
+        for u_pool, gt_pool, mapping in [
+            (u_ops, gt_ops, op_map),
+            (u_machines, gt_machines, mach_map),
+            (u_comps, gt_comps, comp_map),
+        ]:
+            for u_name in u_pool - set(mapping.keys()):
+                if not u_name:
+                    continue
+                match = self._case_insensitive_match(u_name, gt_pool)
+                if not match:
+                    match = self._fuzzy_match(u_name, gt_pool)
+                if match:
+                    mapping[u_name] = match
+
+        return {"operations": op_map, "machines": mach_map, "component_types": comp_map}
+
+    def _majority_vote(self, pairs):
+        """Given (unified_name, gt_name) pairs, return {unified→gt} by majority vote."""
+        counts = defaultdict(Counter)
+        for u_name, gt_name in pairs:
+            if u_name and gt_name:
+                counts[u_name][gt_name] += 1
+        return {u_name: counter.most_common(1)[0][0] for u_name, counter in counts.items()}
+
+    def _case_insensitive_match(self, name, candidates):
+        for c in candidates:
+            if name.lower() == c.lower():
+                return c
+        return None
+
+    def _fuzzy_match(self, name, candidates, threshold=0.6):
+        best_match, best_ratio = None, 0
+        for c in candidates:
+            ratio = difflib.SequenceMatcher(None, name.lower(), c.lower()).ratio()
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best_match = c
+        return best_match if best_ratio >= threshold else None
+
+    def _align_route_sheets(self, unified_rs, name_maps):
+        """Return a deep copy of unified route_sheets with names mapped to GT."""
+        aligned = copy.deepcopy(unified_rs)
+        op_map = name_maps["operations"]
+        mach_map = name_maps["machines"]
+        comp_map = name_maps["component_types"]
+        for job in aligned:
+            for step in job.get("route_sheet", []):
+                op = step.get("operation", "")
+                if op in op_map:
+                    step["operation"] = op_map[op]
+                m = step.get("machine", "")
+                if m in mach_map:
+                    step["machine"] = mach_map[m]
+                for cond in step.get("precondition", []) + step.get("postcondition", []):
+                    ct = cond.get("component_type", "")
+                    if ct in comp_map:
+                        cond["component_type"] = comp_map[ct]
+        return aligned
+
+    def _align_production_plan(self, production_plan, name_maps):
+        """Return a deep copy of production_plan with names mapped to GT."""
+        aligned = copy.deepcopy(production_plan)
+        op_map = name_maps["operations"]
+        mach_map = name_maps["machines"]
+        comp_map = name_maps["component_types"]
+        for entry in aligned:
+            m = entry.get("machine", "")
+            if m in mach_map:
+                entry["machine"] = mach_map[m]
+            for seq in entry.get("production_sequence", []):
+                op = seq.get("operation", "")
+                if op in op_map:
+                    seq["operation"] = op_map[op]
+                m2 = seq.get("machine", "")
+                if m2 in mach_map:
+                    seq["machine"] = mach_map[m2]
+                seq["precondition"] = [comp_map.get(c, c) for c in seq.get("precondition", [])]
+                seq["postcondition"] = [comp_map.get(c, c) for c in seq.get("postcondition", [])]
+        return aligned
