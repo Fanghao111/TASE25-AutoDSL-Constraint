@@ -6,7 +6,7 @@ from src.dsl_design.production import Production
 from src.experiment.baseline import Baseline
 from src.experiment.baseline2 import Baseline_2
 from src.experiment.dsl_pipeline import DSLPipeline
-from src.experiment.unified_pipeline import UnifiedPipeline
+from src.experiment.fb_pipeline import FBPipeline
 from src.experiment.groundtruth import GroundTruth
 from src.evaluation.evaluation import Evaluation
 from tqdm import tqdm
@@ -14,11 +14,13 @@ from utils.util import read_json, write_json, seed_set
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--mode', default='evaluation', choices=['preprocess', 'autodsl_operation', 'autodsl_production', 'groundtruth', 'baseline', 'baseline_2', 'dsl_pipeline', 'unified_pipeline', 'evaluation'])
+parser.add_argument('--mode', default='evaluation', choices=['preprocess', 'autodsl_operation', 'autodsl_production', 'groundtruth', 'baseline', 'baseline_2', 'dsl_pipeline', 'fb_pipeline', 'evaluation'])
 parser.add_argument('--type', default='CPE_CAE_CSE-2', choices=['CPE_CAE_CSE-2', 'CSE-1', 'SGE', 'DAE'])
 parser.add_argument('--evaluation_type', default='CPE', choices=['CPE', 'CAE', 'CSE-1', 'CSE-2', 'SGE', 'DAE'])
 parser.add_argument('--seed', type=int, default=42)
 parser.add_argument('--demo', action='store_true', default=False)
+parser.add_argument('--force', action='store_true', default=True, help='Force overwrite existing outputs (default: True)')
+parser.add_argument('--no-force', dest='force', action='store_false', help='Skip steps that already have outputs')
 args = parser.parse_args()
 
 legal_instance_description_list = [
@@ -183,15 +185,16 @@ if __name__ == '__main__':
             dsl_pipeline.instance_description = route_sheet[0]["instance_description"]
             dsl_pipeline.run()
     
-    elif args.mode == "unified_pipeline":
+    elif args.mode == "fb_pipeline":
         route_sheet_all = read_json("data/route_sheet_reduce.json")
         route_sheet_choosed = [route_sheet for route_sheet in route_sheet_all if route_sheet[0]["instance_description"] in legal_instance_description_list]
 
         for route_sheet in tqdm(route_sheet_choosed):
             instance_description = route_sheet[0]["instance_description"]
-            pipeline = UnifiedPipeline(
+            pipeline = FBPipeline(
                 instance_description=instance_description,
                 experiment_type=args.type,
+                force=args.force,
             )
             pipeline.run()
 

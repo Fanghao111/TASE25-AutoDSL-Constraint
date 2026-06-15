@@ -1,0 +1,33 @@
+You are given structured JSON data extracted from process descriptions for a scheduling problem. Different extractions may use different field names and component names for the same concepts. Your task is to normalize the naming.
+
+Here are a few sample JSON extractions:
+---SAMPLES---
+
+Here is the complete list of all unique field names found across all extractions:
+---FIELD_NAMES---
+
+Here is the complete list of all unique string values (component/material names) found across all extractions:
+---COMPONENT_NAMES---
+
+Your two tasks:
+
+**Task 1: Field Name Normalization**
+Group field names that refer to the same concept. For each group, pick one canonical name.
+IMPORTANT: Only output groups with 2+ members (i.e., where actual merging happens). Do NOT output single-member groups or identity mappings.
+
+**Task 2: Component Name Normalization**
+Group component/material names that refer to the same thing. For each group, pick one canonical name using PascalCase with NO spaces.
+IMPORTANT: Only output groups with 2+ members. Do NOT output single-member groups.
+
+Output ONLY a valid JSON object with this structure:
+{
+  "field_groups": [
+    {"canonical": "machine", "members": ["machine", "device", "equipment"]},
+    {"canonical": "duration", "members": ["duration", "time", "processing_time"]}
+  ],
+  "component_groups": [
+    {"canonical": "SheetMetal", "members": ["Sheet Metal", "SheetMetal", "sheet_metal"]}
+  ]
+}
+
+Do NOT wrap in markdown code blocks. Do NOT include any other text.

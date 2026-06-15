@@ -8,6 +8,8 @@ from src.dsl_design.production import Production
 from src.experiment.baseline import Baseline
 from src.experiment.baseline2 import Baseline_2
 from src.experiment.dsl_pipeline import DSLPipeline
+from src.experiment.fb_pipeline import FBPipeline
+
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import random
@@ -19,14 +21,12 @@ from rouge_score import rouge_scorer
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import os
 import json
-import copy
-import difflib
 from collections import Counter, defaultdict
 
 
 class Evaluation:
     def __init__(self):
-        self.mode = ["Baseline-", "Baseline2-", "DSLPipeline-", "GroundTruth", "UnifiedPipeline-"]
+        self.mode = ["Baseline-", "Baseline2-", "DSLPipeline-", "GroundTruth", "FB-"]
         self.suffix = ["CPE_CAE_CSE-2/", "CSE-1/", "SGE/"]
         self.scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
         self.result_path = "outputs/"
@@ -69,12 +69,12 @@ class Evaluation:
             baseline_bleu = []
             baseline2_bleu = []
             dsl_bleu = []
-            unified_bleu = []
+            fb_bleu = []
 
             baseline_rouge = {"Precision": [], "Recall": [], "F1": []}
             baseline2_rouge = {"Precision": [], "Recall": [], "F1": []}
             dsl_rouge = {"Precision": [], "Recall": [], "F1": []}
-            unified_rouge = {"Precision": [], "Recall": [], "F1": []}
+            fb_rouge = {"Precision": [], "Recall": [], "F1": []}
 
 
             # List subfolders, assuming aligned names across methods.
@@ -84,7 +84,7 @@ class Evaluation:
                 baseline_path = os.path.join(baseline_dir_path, subfolder, "production_plan.json")
                 baseline2_path = os.path.join(baseline2_dir_path, subfolder, "production_plan.json")
                 dsl_pipeline_path = os.path.join(dsl_pipeline_dir_path, subfolder, "production_plan.json")
-                unified_path = os.path.join(unified_dir_path, subfolder, "production_plan.json")
+                fb_path = os.path.join(unified_dir_path, subfolder, "SGM_production_plan.json")
                 ground_truth_path = os.path.join(self.groundtruth_dir_path, subfolder, "production_plan.json")
 
                 required = [baseline_path, baseline2_path, dsl_pipeline_path, ground_truth_path]
@@ -117,43 +117,35 @@ class Evaluation:
                     dsl_rouge["Recall"].append(dsl_rouge_recall)
                     dsl_rouge["F1"].append(dsl_rouge_F1)
 
-                    # Unified pipeline scores
-                    if os.path.exists(unified_path):
-                        unified_pp = read_json(unified_path)
-
-                        # Name alignment: map unified names to GT names
-                        gt_rs_path = os.path.join(self.groundtruth_dir_path, subfolder, "route_sheets.json")
-                        u_rs_path = os.path.join(unified_dir_path, subfolder, "route_sheets.json")
-                        if os.path.exists(gt_rs_path) and os.path.exists(u_rs_path):
-                            name_maps = self._build_name_alignment(read_json(gt_rs_path), read_json(u_rs_path))
-                            unified_pp = self._align_production_plan(unified_pp, name_maps)
-
-                        unified_content = json.dumps(unified_pp)
-                        unified_bleu.append(self.__bleu_score(ground_truth_content, unified_content))
-                        u_p, u_r, u_f = self.__rouge_score(ground_truth_content, unified_content)
-                        unified_rouge["Precision"].append(u_p)
-                        unified_rouge["Recall"].append(u_r)
-                        unified_rouge["F1"].append(u_f)
+                    # FB pipeline scores
+                    if os.path.exists(fb_path):
+                        fb_pp = read_json(fb_path)
+                        fb_content = json.dumps(fb_pp)
+                        fb_bleu.append(self.__bleu_score(ground_truth_content, fb_content))
+                        fb_p, fb_r, fb_f = self.__rouge_score(ground_truth_content, fb_content)
+                        fb_rouge["Precision"].append(fb_p)
+                        fb_rouge["Recall"].append(fb_r)
+                        fb_rouge["F1"].append(fb_f)
 
             print("baseline_bleu: ", baseline_bleu)
             print("baseline2_bleu: ", baseline2_bleu)
             print("dsl_bleu: ", dsl_bleu)
-            print("unified_bleu: ", unified_bleu)
+            print("fb_bleu: ", fb_bleu)
 
             print("baseline_rouge: ", baseline_rouge)
             print("baseline2_rouge: ", baseline2_rouge)
             print("dsl_rouge: ", dsl_rouge)
-            print("unified_rouge: ", unified_rouge)
+            print("fb_rouge: ", fb_rouge)
 
             write_json("outputs/Evaluation/CPE_baseline_bleu.json", baseline_bleu)
             write_json("outputs/Evaluation/CPE_baseline2_bleu.json", baseline2_bleu)
             write_json("outputs/Evaluation/CPE_dsl_bleu.json", dsl_bleu)
-            write_json("outputs/Evaluation/CPE_unified_bleu.json", unified_bleu)
+            write_json("outputs/Evaluation/CPE_fb_bleu.json", fb_bleu)
 
             write_json("outputs/Evaluation/CPE_baseline_rouge.json", baseline_rouge)
             write_json("outputs/Evaluation/CPE_baseline2_rouge.json", baseline2_rouge)
             write_json("outputs/Evaluation/CPE_dsl_rouge.json", dsl_rouge)
-            write_json("outputs/Evaluation/CPE_unified_rouge.json", unified_rouge)
+            write_json("outputs/Evaluation/CPE_fb_rouge.json", fb_rouge)
 
         elif experiment_type == "CAE":
             baseline_dir_path = self.result_path + self.mode[0] + self.suffix[0]
@@ -216,8 +208,8 @@ class Evaluation:
             baseline_bleu = []
             dsl_bleu = []
 
-            baseline_result = {"accuracy_rate": [], "compile_err_rate": [], "runtime_err_rate": []}
-            dsl_result = {"accuracy_rate": [], "compile_err_rate": [], "runtime_err_rate": []}
+            baseline_result = {"accuracy_rate": [], "compile_err_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
+            dsl_result = {"accuracy_rate": [], "compile_err_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
             # List subfolders, assuming aligned names across methods.
             subfolders = os.listdir(baseline_dir_path)
 
@@ -271,6 +263,20 @@ class Evaluation:
                         float(read_txt(os.path.join(dsl_pipeline_dir_path, subfolder, "err_rate.txt")))
                     )
 
+                    # Makespan ratio
+                    gt_makespan_path = os.path.join(self.groundtruth_dir_path, subfolder, "makespan.txt")
+                    baseline_makespan_path = os.path.join(baseline_dir_path, subfolder, "makespan.txt")
+                    dsl_makespan_path = os.path.join(dsl_pipeline_dir_path, subfolder, "makespan.txt")
+                    if all(os.path.exists(p) for p in [gt_makespan_path, baseline_makespan_path, dsl_makespan_path]):
+                        gt_makespan = float(read_txt(gt_makespan_path))
+                        if gt_makespan > 0:
+                            baseline_result["makespan_ratio"].append(
+                                float(read_txt(baseline_makespan_path)) / gt_makespan
+                            )
+                            dsl_result["makespan_ratio"].append(
+                                float(read_txt(dsl_makespan_path)) / gt_makespan
+                            )
+
             print("baseline_result: ", baseline_result)
             print("dsl_result: ", dsl_result)
 
@@ -285,10 +291,10 @@ class Evaluation:
             baseline_bleu = []
             dsl_bleu = []
 
-            baseline_result = {"accuracy_rate": [], "runtime_err_rate": []}
-            baseline2_result = {"accuracy_rate": [], "runtime_err_rate": []}
-            dsl_result = {"accuracy_rate": [], "runtime_err_rate": []}
-            unified_result = {"accuracy_rate": [], "runtime_err_rate": []}
+            baseline_result = {"accuracy_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
+            baseline2_result = {"accuracy_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
+            dsl_result = {"accuracy_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
+            fb_result = {"accuracy_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
             # List subfolders, assuming aligned names across methods.
             subfolders = os.listdir(baseline_dir_path)
 
@@ -304,8 +310,9 @@ class Evaluation:
                 dsl_pipeline_operation_programs_path = os.path.join(dsl_pipeline_dir_path, subfolder, "operation_programs.json")
                 dsl_pipeline_production_programs_path = os.path.join(dsl_pipeline_dir_path, subfolder, "production_programs.json")
 
-                unified_or_path = os.path.join(unified_dir_path, subfolder, "or_matrix.json")
-                unified_rs_path = os.path.join(unified_dir_path, subfolder, "route_sheets.json")
+                fb_or_path = os.path.join(unified_dir_path, subfolder, "CGM_or_matrix.json")
+                fb_nj_path = os.path.join(unified_dir_path, subfolder, "CAM-3_normalized_jsons.json")
+                fb_fm_path = os.path.join(unified_dir_path, subfolder, "SRD_field_mapping.json")
 
                 ground_truth_path = os.path.join(self.groundtruth_dir_path, subfolder, "or_matrix.json")
                 ground_truth_route_sheet = os.path.join(os.path.join(self.groundtruth_dir_path, subfolder, "route_sheets.json"))
@@ -363,35 +370,53 @@ class Evaluation:
                         float(read_txt(os.path.join(dsl_pipeline_dir_path, subfolder, "err_rate.txt")))
                     )
 
-                    # Unified pipeline
-                    if os.path.exists(unified_or_path) and os.path.exists(unified_rs_path):
-                        unified_or_content = read_json(unified_or_path)
-                        unified_rs_content = read_json(unified_rs_path)
+                    # FB pipeline — generate route sheets on-the-fly for evaluation
+                    if os.path.exists(fb_or_path) and os.path.exists(fb_nj_path) and os.path.exists(fb_fm_path):
+                        fb_or_content = read_json(fb_or_path)
+                        fb_nj_content = read_json(fb_nj_path)
+                        fb_fm_content = read_json(fb_fm_path)
+                        fb_rs_content = FBPipeline.build_route_sheets(fb_nj_content, fb_fm_content, subfolder)
 
-                        # Name alignment: map unified names to GT names
-                        name_maps = self._build_name_alignment(ground_truth_route_sheet_content, unified_rs_content)
-                        aligned_rs = self._align_route_sheets(unified_rs_content, name_maps)
-                        write_json(os.path.join(unified_dir_path, subfolder, "name_alignment.json"), name_maps)
-
-                        unified_resource = self.__get_unified_resource_constraint_CSE(aligned_rs)
-                        unified_precedence = self.__get_unified_precedence_constraint_CSE(unified_or_content, aligned_rs)
-                        unified_result["accuracy_rate"].append(self.__iou(
-                            unified_resource + unified_precedence,
+                        fb_resource = self.__get_unified_resource_constraint_CSE(fb_rs_content)
+                        fb_precedence = self.__get_unified_precedence_constraint_CSE(fb_or_content, fb_rs_content)
+                        fb_result["accuracy_rate"].append(self.__iou(
+                            fb_resource + fb_precedence,
                             ground_truth_resource_constraints + ground_truth_operation_precedence_constraints
                         ))
-                        unified_result["runtime_err_rate"].append(
+                        fb_result["runtime_err_rate"].append(
                             float(read_txt(os.path.join(unified_dir_path, subfolder, "err_rate.txt")))
                         )
+
+                    # Makespan ratio
+                    gt_makespan_path = os.path.join(self.groundtruth_dir_path, subfolder, "makespan.txt")
+                    if os.path.exists(gt_makespan_path):
+                        gt_makespan = float(read_txt(gt_makespan_path))
+                        if gt_makespan > 0:
+                            for method_dir, method_result in [
+                                (baseline_dir_path, baseline_result),
+                                (baseline_dir_path, baseline2_result),
+                                (dsl_pipeline_dir_path, dsl_result),
+                            ]:
+                                ms_path = os.path.join(method_dir, subfolder, "makespan.txt")
+                                if os.path.exists(ms_path):
+                                    method_result["makespan_ratio"].append(
+                                        float(read_txt(ms_path)) / gt_makespan
+                                    )
+                            fb_ms_path = os.path.join(unified_dir_path, subfolder, "makespan.txt")
+                            if os.path.exists(fb_ms_path):
+                                fb_result["makespan_ratio"].append(
+                                    float(read_txt(fb_ms_path)) / gt_makespan
+                                )
 
             print("baseline_result: ", baseline_result)
             print("baseline2_result: ", baseline2_result)
             print("dsl_result: ", dsl_result)
-            print("unified_result: ", unified_result)
+            print("fb_result: ", fb_result)
 
             write_json("outputs/Evaluation/CSE-2_baseline.json", baseline_result)
             write_json("outputs/Evaluation/CSE-2_baseline2.json", baseline2_result)
             write_json("outputs/Evaluation/CSE-2_dsl.json", dsl_result)
-            write_json("outputs/Evaluation/CSE-2_unified.json", unified_result)
+            write_json("outputs/Evaluation/CSE-2_fb.json", fb_result)
 
         elif experiment_type == "SGE":
             baseline_dir_path = self.result_path + self.mode[0] + self.suffix[2]
@@ -913,162 +938,5 @@ class Evaluation:
                     continue
         return [str(key) + " " + str(val) for key, val in precedence_constraints]
 
-    # ------------------------------------------------------------------ #
-    #  Name alignment: Unified Pipeline → Ground Truth                    #
-    # ------------------------------------------------------------------ #
 
-    def _build_name_alignment(self, gt_route_sheets, unified_route_sheets):
-        """Build unified→GT name mappings via step-level positional alignment."""
-        # Tier 1: Positional alignment — collect (unified_name, gt_name) pairs
-        op_pairs = []
-        mach_pairs = []
-        comp_pairs = []
 
-        for i in range(min(len(gt_route_sheets), len(unified_route_sheets))):
-            gt_steps = gt_route_sheets[i].get("route_sheet", [])
-            u_steps = unified_route_sheets[i].get("route_sheet", [])
-            for j in range(min(len(gt_steps), len(u_steps))):
-                gs, us = gt_steps[j], u_steps[j]
-                op_pairs.append((us.get("operation", ""), gs.get("operation", "")))
-                mach_pairs.append((us.get("machine", ""), gs.get("machine", "")))
-                for cond_key in ("precondition", "postcondition"):
-                    gt_conds = gs.get(cond_key, [])
-                    u_conds = us.get(cond_key, [])
-                    for k in range(min(len(gt_conds), len(u_conds))):
-                        comp_pairs.append((
-                            u_conds[k].get("component_type", ""),
-                            gt_conds[k].get("component_type", "")
-                        ))
-
-        op_map = self._majority_vote(op_pairs)
-        mach_map = self._majority_vote(mach_pairs)
-        comp_map = self._majority_vote(comp_pairs)
-
-        # Parameter key alignment via token-subset matching
-        param_pairs = []
-        for i in range(min(len(gt_route_sheets), len(unified_route_sheets))):
-            gt_steps = gt_route_sheets[i].get("route_sheet", [])
-            u_steps = unified_route_sheets[i].get("route_sheet", [])
-            for j in range(min(len(gt_steps), len(u_steps))):
-                gt_params = gt_steps[j].get("parameters", {})
-                u_params = u_steps[j].get("parameters", {})
-                param_pairs.extend(self._match_param_keys(gt_params, u_params))
-        param_map = self._majority_vote(param_pairs)
-
-        # Collect all GT and unified name pools for fallback tiers
-        gt_ops, gt_machines, gt_comps = set(), set(), set()
-        u_ops, u_machines, u_comps = set(), set(), set()
-        for rs_list, ops, machs, comps in [
-            (gt_route_sheets, gt_ops, gt_machines, gt_comps),
-            (unified_route_sheets, u_ops, u_machines, u_comps),
-        ]:
-            for job in rs_list:
-                for step in job.get("route_sheet", []):
-                    ops.add(step.get("operation", ""))
-                    machs.add(step.get("machine", ""))
-                    for cond in step.get("precondition", []) + step.get("postcondition", []):
-                        comps.add(cond.get("component_type", ""))
-
-        # Tier 2 + 3: fallback for unmapped names
-        for u_pool, gt_pool, mapping in [
-            (u_ops, gt_ops, op_map),
-            (u_machines, gt_machines, mach_map),
-            (u_comps, gt_comps, comp_map),
-        ]:
-            for u_name in u_pool - set(mapping.keys()):
-                if not u_name:
-                    continue
-                match = self._case_insensitive_match(u_name, gt_pool)
-                if not match:
-                    match = self._fuzzy_match(u_name, gt_pool)
-                if match:
-                    mapping[u_name] = match
-
-        return {"operations": op_map, "machines": mach_map, "component_types": comp_map, "param_keys": param_map}
-
-    def _majority_vote(self, pairs):
-        """Given (unified_name, gt_name) pairs, return {unified→gt} by majority vote."""
-        counts = defaultdict(Counter)
-        for u_name, gt_name in pairs:
-            if u_name and gt_name:
-                counts[u_name][gt_name] += 1
-        return {u_name: counter.most_common(1)[0][0] for u_name, counter in counts.items()}
-
-    def _case_insensitive_match(self, name, candidates):
-        for c in candidates:
-            if name.lower() == c.lower():
-                return c
-        return None
-
-    def _fuzzy_match(self, name, candidates, threshold=0.6):
-        best_match, best_ratio = None, 0
-        for c in candidates:
-            ratio = difflib.SequenceMatcher(None, name.lower(), c.lower()).ratio()
-            if ratio > best_ratio:
-                best_ratio = ratio
-                best_match = c
-        return best_match if best_ratio >= threshold else None
-
-    def _match_param_keys(self, gt_params, u_params):
-        """Match parameter keys within a step via token-subset matching."""
-        pairs = []
-        for u_key in u_params:
-            u_tokens = set(u_key.lower().replace('_', ' ').split())
-            best_gt, best_score = None, 0
-            for gt_key in gt_params:
-                gt_tokens = set(gt_key.lower().split())
-                if gt_tokens <= u_tokens:
-                    score = len(gt_tokens) / len(u_tokens)
-                    if score > best_score:
-                        best_score = score
-                        best_gt = gt_key
-            if best_gt:
-                pairs.append((u_key, best_gt))
-        return pairs
-
-    def _align_route_sheets(self, unified_rs, name_maps):
-        """Return a deep copy of unified route_sheets with names mapped to GT."""
-        aligned = copy.deepcopy(unified_rs)
-        op_map = name_maps["operations"]
-        mach_map = name_maps["machines"]
-        comp_map = name_maps["component_types"]
-        param_map = name_maps.get("param_keys", {})
-        for job in aligned:
-            for step in job.get("route_sheet", []):
-                op = step.get("operation", "")
-                if op in op_map:
-                    step["operation"] = op_map[op]
-                m = step.get("machine", "")
-                if m in mach_map:
-                    step["machine"] = mach_map[m]
-                for cond in step.get("precondition", []) + step.get("postcondition", []):
-                    ct = cond.get("component_type", "")
-                    if ct in comp_map:
-                        cond["component_type"] = comp_map[ct]
-                if step.get("parameters") and param_map:
-                    step["parameters"] = {param_map.get(k, k): v for k, v in step["parameters"].items()}
-        return aligned
-
-    def _align_production_plan(self, production_plan, name_maps):
-        """Return a deep copy of production_plan with names mapped to GT."""
-        aligned = copy.deepcopy(production_plan)
-        op_map = name_maps["operations"]
-        mach_map = name_maps["machines"]
-        comp_map = name_maps["component_types"]
-        param_map = name_maps.get("param_keys", {})
-        for entry in aligned:
-            m = entry.get("machine", "")
-            if m in mach_map:
-                entry["machine"] = mach_map[m]
-            for seq in entry.get("production_sequence", []):
-                op = seq.get("operation", "")
-                if op in op_map:
-                    seq["operation"] = op_map[op]
-                m2 = seq.get("machine", "")
-                if m2 in mach_map:
-                    seq["machine"] = mach_map[m2]
-                seq["precondition"] = [comp_map.get(c, c) for c in seq.get("precondition", [])]
-                seq["postcondition"] = [comp_map.get(c, c) for c in seq.get("postcondition", [])]
-                if seq.get("parameters") and param_map:
-                    seq["parameters"] = {param_map.get(k, k): v for k, v in seq["parameters"].items()}
-        return aligned

@@ -8,9 +8,17 @@ For each manufacturing step described, extract whatever information you can iden
 - What materials or components come out (outputs)
 - Any process parameters mentioned (preserve values with units, e.g., "45 degrees", "100 mm/s")
 
-Do NOT follow a fixed schema. Use field names that naturally describe the information. Different steps may have different parameter fields depending on what the description mentions.
+IMPORTANT formatting rules:
 
-For input and output materials, also identify their general type category (e.g., SheetMetal, LathedPart, DrilledComponent, GroundPart, etc.).
+Operation names must use Title Case. Use the simplest standard name for each operation — do NOT add qualifiers like "precision" or "internal" unless they refer to a genuinely distinct operation type.
+
+Machine/equipment names must use Title Case.
+
+For input and output materials, identify their general type category using PascalCase with NO spaces.
+
+Parameter keys must be lowercase with spaces. Do NOT use underscores or camelCase. Parameter keys must NOT include unit suffixes. Parameter values must always be strings with units included. Do NOT use bare numbers.
+
+Do NOT follow a fixed schema. Use field names that naturally describe the information. Different steps may have different parameter fields depending on what the description mentions.
 
 The manufacturing process description:
 ---ORDER---
