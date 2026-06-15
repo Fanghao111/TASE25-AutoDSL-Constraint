@@ -733,7 +733,7 @@ class DSLPipeline:
     def or_matrix2JSP_result(self):
         print("or_matrix2JSP_result ing...")
         or_matrix = copy.deepcopy(self.or_matrix)
-        assigned_jobs, solver, err_rate = schedule(or_matrix)
+        assigned_jobs, solver, err_rate, makespan = schedule(or_matrix)
         if len(assigned_jobs) == 0:
             print("No solver")
             self.compile_error_num += 1
@@ -743,6 +743,7 @@ class DSLPipeline:
             self.solver = solver
         write_json(self.dump_dir_path + "assigned_jobs.json", self.assigned_jobs)
         write_txt(self.dump_dir_path + "err_rate.txt", str(err_rate))
+        write_txt(self.dump_dir_path + "makespan.txt", str(makespan))
 
     def dsl_program2route_sheets(self):
         for i in range(len(self.production_programs)):
@@ -799,10 +800,17 @@ class DSLPipeline:
             for step in production_sequence:
                 if step[2] < len(self.operation_programs[step[1]]):
                     print("self.operation_programs[step[1]][step[2]]: ", self.operation_programs[step[1]][step[2]], "\n")
-                    precond = self.operation_programs[step[1]][step[2]].get("Precond", {}).get("SlotArg", [])
-                    postcond = self.operation_programs[step[1]][step[2]].get("Postcond", {}).get("EmitArg", [])
-                    parameters = self.operation_programs[step[1]][step[2]].get("Execution", {}).get("parameters", {})
+                    op_prog = self.operation_programs[step[1]][step[2]]
+                    operation = op_prog.get("Operation", "")
+                    machine = op_prog.get("Execution", {}).get("machine", "")
+                    duration = op_prog.get("Execution", {}).get("duration", "")
+                    precond = op_prog.get("Precond", {}).get("SlotArg", [])
+                    postcond = op_prog.get("Postcond", {}).get("EmitArg", [])
+                    parameters = op_prog.get("Execution", {}).get("parameters", {})
                 else:
+                    operation = ""
+                    machine = ""
+                    duration = ""
                     precond = []
                     postcond = []
                     parameters = {}
@@ -812,6 +820,9 @@ class DSLPipeline:
                     "end": step[0] + step[3],
                     "job_id": step[1],
                     "task_id": step[2],
+                    "operation": operation,
+                    "machine": machine,
+                    "duration": duration,
                     "precondition": precond,
                     "postcondition": postcond,
                     "parameters": parameters

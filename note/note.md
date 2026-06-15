@@ -6,4 +6,5 @@
 3.jsp求解器不需要使用机器码，全部的流转都通过key value来直接匹配
 4.dsl pipeline也的operation也需要ground truth的预定义来保证一致性
 
-machines属于是一定必要？在实际流程中是否一定有
+machines属于是一定必要？在实际流程中是否一定有？实际生产中应该输入输入还是输出？
+dsl校验过程会在很早起删掉一些信息，不具有纠错功能。

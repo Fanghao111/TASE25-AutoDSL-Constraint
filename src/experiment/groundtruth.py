@@ -8,7 +8,7 @@ import json
 from tqdm import tqdm
 from openai import OpenAI
 from collections import defaultdict, Counter
-from utils.util import read_json, write_json, read_txt
+from utils.util import read_json, write_json, read_txt, write_txt
 from src.experiment.schedule import schedule
 
 class GroundTruth:
@@ -76,7 +76,7 @@ class GroundTruth:
     def get_grounded_assigned_jobs(self):
         if len(self.assigned_jobs) == 0:
             or_matrix = copy.deepcopy(self.or_matrix)
-            assigned_jobs, solver, _ = schedule(or_matrix)
+            assigned_jobs, solver, _, makespan = schedule(or_matrix)
             if len(assigned_jobs) == 0:
                 print("No solver")
                 return
@@ -84,6 +84,7 @@ class GroundTruth:
                 self.assigned_jobs = assigned_jobs
                 self.solver = solver
             write_json(self.dump_dir_path + "assigned_jobs.json", self.assigned_jobs)
+            write_txt(self.dump_dir_path + "makespan.txt", str(makespan))
         return self.assigned_jobs
 
     def get_grounded_production_plan(self):

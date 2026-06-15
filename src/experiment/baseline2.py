@@ -161,7 +161,7 @@ class Baseline_2:
     def or_matrix2JSP_result(self):
         print("or_matrix2JSP_result ing...")
         or_matrix = copy.deepcopy(self.or_matrix)
-        assigned_jobs, solver, err_rate = schedule(or_matrix)
+        assigned_jobs, solver, err_rate, makespan = schedule(or_matrix)
         if len(assigned_jobs) == 0:
             print("No solver")
         else:
@@ -169,6 +169,7 @@ class Baseline_2:
             self.solver = solver
         write_json(self.dump_dir_path + "assigned_jobs.json", self.assigned_jobs)
         write_txt(self.dump_dir_path + "err_rate.txt", str(err_rate))
+        write_txt(self.dump_dir_path + "makespan.txt", str(makespan))
 
     # with LLM. NL description + JSP solver output -> production plans.
     def JSP_result2production_plan(self):

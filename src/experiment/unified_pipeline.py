@@ -630,7 +630,7 @@ class UnifiedPipeline:
         """Run OR-Tools JSP solver."""
         print("Step 4a: Solving JSP ...", flush=True)
         or_matrix = copy.deepcopy(self.or_matrix)
-        assigned_jobs, solver, err_rate = schedule(or_matrix)
+        assigned_jobs, solver, err_rate, makespan = schedule(or_matrix)
         if len(assigned_jobs) == 0:
             print("No solution found.")
             self.compile_error_num += 1
@@ -638,6 +638,7 @@ class UnifiedPipeline:
             self.assigned_jobs = assigned_jobs
         write_json(self.dump_dir_path + "assigned_jobs.json", self.assigned_jobs)
         write_txt(self.dump_dir_path + "err_rate.txt", str(err_rate))
+        write_txt(self.dump_dir_path + "makespan.txt", str(makespan))
 
     def ground_production_plan(self):
         """Map solver output back to route sheet details to produce the final plan."""
