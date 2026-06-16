@@ -25,15 +25,6 @@ args = parser.parse_args()
 
 legal_instance_description_list = [
     "instance ta71",
-    "instance ta72",
-    "instance ta73",
-    "instance ta74",
-    "instance ta75",
-    "instance ta76",
-    "instance ta77",
-    "instance ta78",
-    "instance ta79",
-    "instance ta80",
 ]
 
 if __name__ == '__main__':

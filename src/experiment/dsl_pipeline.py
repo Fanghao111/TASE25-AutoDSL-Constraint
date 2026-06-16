@@ -86,7 +86,7 @@ class DSLPipeline:
                     f"Missing intermediate synthetic orders at {self.dump_dir_path}orders.json. "
                     "Please provide the intermediate orders before running dsl_pipeline."
                 )
-            self.orders2dsl_program()
+            self.orders2dsl_program_no_batch_parallel()
             self.dsl_program2or_matrix()
             self.dsl_program2route_sheets()
             self.or_matrix2JSP_result()
@@ -95,7 +95,7 @@ class DSLPipeline:
         elif self.experiment_type == "CSE-1":
             # Input: ground-truth fully structured route sheet.
             # Output: OR matrix.
-            self.route_sheets2dsl_program()
+            self.route_sheets2dsl_program_no_batch()
             self.dsl_program2or_matrix()
             self.or_matrix2JSP_result()
             self.JSP_result2production_plan()
@@ -597,49 +597,26 @@ class DSLPipeline:
         write_json(self.dump_dir_path + "production_programs.json", self.production_programs)
 
     def route_sheets2dsl_program_no_batch(self):
-        print("route_sheets2dsl_program ing...")
+        print("route_sheets2dsl_program ing...", flush=True)
         self.operation_programs = []
         self.production_programs = []
 
         operation_list = [operation for operation, _ in self.operation_dsl.items()]
         production_list = [production for production, _ in self.production_dsl.items()]
 
-        total_operation_list = []
-        total_production_list = []
-
         translation_prompts = []
 
         for route_sheet in self.route_sheets:
-            current_operation_list = []
-            current_production_list = []
-            print("route_sheet: ", route_sheet)
             route_sheet_copy = copy.deepcopy(route_sheet["route_sheet"])
-            for step in route_sheet_copy:
-                current_operation_list.append(step["operation"])
-                for component in step["precondition"]:
-                    current_production_list.append(component["component_type"])
-                for component in step["postcondition"]:
-                    current_production_list.append(component["component_type"])
-            # Deduplicate items.
-            current_operation_list = list(set(current_operation_list))
-            current_production_list = list(set(current_production_list))
-            total_operation_list.append(current_operation_list)
-            total_production_list.append(current_production_list)
-                    
-        # Parse extraction results and prepare translation prompts
-        result_idx = 0
-        for route_sheet in self.route_sheets:
-            oper_repr, prod_repr = {}, {}
+            current_ops = list(set(step["operation"] for step in route_sheet_copy))
+            current_prods = list(set(
+                c["component_type"]
+                for step in route_sheet_copy
+                for c in step["precondition"] + step["postcondition"]
+            ))
 
-            current_operation_list = total_operation_list[result_idx]
-            current_production_list = total_production_list[result_idx]
-
-            for operation in current_operation_list:
-                if operation in operation_list:
-                    oper_repr[operation] = self.operation_dsl[operation]
-            for production in current_production_list:
-                if production in production_list:
-                    prod_repr[production] = self.production_dsl[production]
+            oper_repr = {op: self.operation_dsl[op] for op in current_ops if op in operation_list}
+            prod_repr = {p: self.production_dsl[p] for p in current_prods if p in production_list}
 
             translation_prompt = self.program_translation_prompt_2\
                 .replace("---OPERATION_DSL---", json.dumps(oper_repr))\
@@ -649,17 +626,28 @@ class DSLPipeline:
 
             translation_prompts.append(translation_prompt)
 
-        # Execute translation prompts one by one
-        print("Starting translation...")
-        for idx, prompt in enumerate(translation_prompts):
-            print(f"Processing prompt {idx + 1}/{len(translation_prompts)}")
+        # Process translation prompts in parallel
+        print(f"Starting translation of {len(translation_prompts)} prompts...", flush=True)
+
+        def process_prompt(idx_prompt):
+            idx, prompt = idx_prompt
             response = self.__chatgpt_function(prompt)
             try:
                 clean_result = json.loads(response)
             except:
-                print("Error json loads")
+                print(f"Error json loads for prompt {idx+1}", flush=True)
                 clean_result = {}
+            return idx, clean_result
 
+        results = [None] * len(translation_prompts)
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = {executor.submit(process_prompt, (i, p)): i for i, p in enumerate(translation_prompts)}
+            for future in tqdm(as_completed(futures), total=len(futures), desc="Translating"):
+                idx, clean_result = future.result()
+                results[idx] = clean_result
+                print(f"Completed prompt {idx + 1}/{len(translation_prompts)}", flush=True)
+
+        for clean_result in results:
             self.operation_programs.append(clean_result.get("operation-view programs", []))
             self.production_programs.append(clean_result.get("production-view programs", []))
 
@@ -729,7 +717,8 @@ class DSLPipeline:
             print("row: ", row, "\n")
             self.or_matrix.append(row)
         write_json(self.dump_dir_path + "or_matrix.json", self.or_matrix)
-        
+        write_json(self.dump_dir_path + "machines.json", self.machines)
+
     def or_matrix2JSP_result(self):
         print("or_matrix2JSP_result ing...")
         or_matrix = copy.deepcopy(self.or_matrix)
@@ -853,24 +842,29 @@ class DSLPipeline:
         # Normalize machine names to lowercase.
         self.machines = list(set([machine.lower() for machine_list in operation2machine_dict.values() for machine in machine_list]))
 
-    def __chatgpt_function(self, content, gpt_model="deepseek-chat"):
-        while True:
+    def __chatgpt_function(self, content, gpt_model="gpt-4o"):
+        client = OpenAI(
+            base_url="http://localhost:4141/v1",
+            api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
+            timeout=300.0,
+        )
+        for attempt in range(5):
             try:
-                client = OpenAI(
-                    api_key=os.environ.get("OPENAI_API_KEY"),
-                    base_url="https://api.zhizengzeng.com/v1/"
-                )
-                chat_completion = client.chat.completions.create(
+                resp = client.chat.completions.create(
                     messages=[
                         {"role": "user", "content": content}
                     ],
                     model=gpt_model,
                     max_tokens=8192,
                 )
-                return chat_completion.choices[0].message.content
+                result = resp.choices[0].message.content or ""
+                if result.strip():
+                    return result
+                print(f"Empty response (attempt {attempt+1}/5)", flush=True)
             except Exception as e:
-                print("error: ", e)
-                continue
+                print(f"error (attempt {attempt+1}/5): {e}", flush=True)
+                time.sleep(2 * (attempt + 1))
+        return "{}"
 
 
     def __EM_normalize(self, EM_structure):

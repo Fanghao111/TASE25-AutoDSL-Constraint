@@ -853,7 +853,7 @@ class FBPipeline:
 
         return results
 
-    def _chatgpt_function(self, content, model="claude-sonnet-4-6-20250514", max_retries=5):
+    def _chatgpt_function(self, content, model="gpt-4o", max_retries=5):
         client = OpenAI(
             base_url="http://localhost:4141/v1",
             api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
@@ -861,23 +861,18 @@ class FBPipeline:
         )
         for attempt in range(max_retries):
             try:
-                stream = client.chat.completions.create(
+                resp = client.chat.completions.create(
                     messages=[
                         {"role": "system", "content": "You are an expert in structured data analysis and process scheduling."},
                         {"role": "user", "content": content},
                     ],
                     model=model,
                     max_tokens=16384,
-                    stream=True,
                 )
-                chunks = []
-                for chunk in stream:
-                    if chunk.choices and chunk.choices[0].delta.content:
-                        chunks.append(chunk.choices[0].delta.content)
-                result = "".join(chunks)
+                result = resp.choices[0].message.content or ""
                 if result.strip():
                     return result
-                print(f"Empty streaming response (attempt {attempt+1}/{max_retries})", flush=True)
+                print(f"Empty response (attempt {attempt+1}/{max_retries})", flush=True)
             except Exception as e:
                 print(f"API error (attempt {attempt+1}/{max_retries}): {e}", flush=True)
             if attempt < max_retries - 1:
