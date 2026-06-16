@@ -1,10 +1,8 @@
 from __future__ import annotations
 import copy
-import openai
 import os
 import time
 import json
-import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from openai import OpenAI
@@ -296,26 +294,6 @@ class FBPipeline:
 
         write_json(self.dump_dir_path + "SRD_semantic_roles.json", self.semantic_roles)
         write_json(self.dump_dir_path + "SRD_field_mapping.json", self.field_mapping)
-
-    def _sample_jsons(self, jsons, n=5):
-        """Select representative samples: pick diverse structures."""
-        if len(jsons) <= n:
-            return jsons
-        # Pick first, last, and random middle ones
-        indices = [0, len(jsons) - 1]
-        middle = random.sample(range(1, len(jsons) - 1), min(n - 2, len(jsons) - 2))
-        indices.extend(middle)
-        return [jsons[i] for i in sorted(set(indices))]
-
-    def _collect_field_names(self, obj, fields):
-        """Recursively collect all field names."""
-        if isinstance(obj, dict):
-            for k, v in obj.items():
-                fields.add(k)
-                self._collect_field_names(v, fields)
-        elif isinstance(obj, list):
-            for item in obj:
-                self._collect_field_names(item, fields)
 
     def _collect_string_values(self, obj, values):
         """Collect string values from nested JSON."""

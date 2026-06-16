@@ -21,7 +21,6 @@ from rouge_score import rouge_scorer
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import os
 import json
-from collections import Counter, defaultdict
 
 
 class Evaluation:
@@ -326,7 +325,6 @@ class Evaluation:
             unified_dir_path = self.result_path + self.mode[4] + self.suffix[0]
 
             baseline_result = {"accuracy_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
-            baseline2_result = {"accuracy_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
             dsl_result = {"accuracy_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
             fb_result = {"accuracy_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
 
@@ -414,12 +412,10 @@ class Evaluation:
                             fb_result["makespan_ratio"].append(float(read_txt(fb_ms_path)) / gt_makespan)
 
             print("baseline_result: ", baseline_result)
-            print("baseline2_result: ", baseline2_result)
             print("dsl_result: ", dsl_result)
             print("fb_result: ", fb_result)
 
             write_json("outputs/Evaluation/CSE-2_baseline.json", baseline_result)
-            write_json("outputs/Evaluation/CSE-2_baseline2.json", baseline2_result)
             write_json("outputs/Evaluation/CSE-2_dsl.json", dsl_result)
             write_json("outputs/Evaluation/CSE-2_fb.json", fb_result)
 
@@ -901,16 +897,6 @@ class Evaluation:
         # Compute IoU.
         iou = len(intersection) / len(union)
         return iou
-
-    def __get_unified_resource_constraint_CSE(self, route_sheets):
-        """Extract {operation: machine} pairs from unified route sheets."""
-        operations2machines = {}
-        for rs_data in route_sheets:
-            for step in rs_data.get("route_sheet", []):
-                operation_name = step.get("operation", "None")
-                machine_name = step.get("machine", "None")
-                operations2machines[operation_name] = machine_name
-        return [str(key) + " " + str(val) for key, val in operations2machines.items()]
 
     def __get_unified_precedence_constraint_CSE(self, or_matrix, route_sheets):
         """Extract (pred_operation, succ_operation) pairs from unified OR matrix + route sheets."""
