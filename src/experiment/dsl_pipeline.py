@@ -86,7 +86,7 @@ class DSLPipeline:
                     f"Missing intermediate synthetic orders at {self.dump_dir_path}orders.json. "
                     "Please provide the intermediate orders before running dsl_pipeline."
                 )
-            self.orders2dsl_program()
+            self.orders2dsl_program_no_batch_parallel()
             self.dsl_program2or_matrix()
             self.dsl_program2route_sheets()
             self.or_matrix2JSP_result()
@@ -95,7 +95,7 @@ class DSLPipeline:
         elif self.experiment_type == "CSE-1":
             # Input: ground-truth fully structured route sheet.
             # Output: OR matrix.
-            self.route_sheets2dsl_program()
+            self.route_sheets2dsl_program_no_batch()
             self.dsl_program2or_matrix()
             self.or_matrix2JSP_result()
             self.JSP_result2production_plan()
@@ -842,12 +842,12 @@ class DSLPipeline:
         # Normalize machine names to lowercase.
         self.machines = list(set([machine.lower() for machine_list in operation2machine_dict.values() for machine in machine_list]))
 
-    def __chatgpt_function(self, content, gpt_model="deepseek-chat"):
-        while True:
+    def __chatgpt_function(self, content, gpt_model="gpt-4o"):
+        for attempt in range(5):
             try:
                 client = OpenAI(
-                    api_key=os.environ.get("OPENAI_API_KEY"),
-                    base_url="https://api.zhizengzeng.com/v1/"
+                    api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
+                    base_url="http://localhost:4141/v1"
                 )
                 chat_completion = client.chat.completions.create(
                     messages=[
@@ -858,8 +858,10 @@ class DSLPipeline:
                 )
                 return chat_completion.choices[0].message.content
             except Exception as e:
-                print("error: ", e)
-                continue
+                print(f"error (attempt {attempt+1}/5): ", e)
+                if attempt < 4:
+                    time.sleep(2 ** attempt)
+        raise RuntimeError("LLM call failed after 5 attempts")
 
 
     def __EM_normalize(self, EM_structure):

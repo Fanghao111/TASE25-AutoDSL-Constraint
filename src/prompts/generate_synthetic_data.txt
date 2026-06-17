@@ -1,0 +1,30 @@
+You are an expert in the field of manufacturing. I will give you a structured route sheet describing the manufacturing process for a product. You need to convert each step into a natural language description.
+
+The input is a structured route sheet in the following format:
+---STRUCTURED---
+
+Your task: For each step in the "route_sheet" array, write a natural language sentence that describes the manufacturing operation. The sentence should include:
+- The operation name and what it does
+- The machine used
+- The processing duration
+- Key parameters (e.g., speed, tool type, depth of cut)
+- Input materials/components and output products
+
+The output format must be a JSON object:
+{
+    "part_name": "<same as input>",
+    "steps": [
+        "Natural language description of step 1...",
+        "Natural language description of step 2...",
+        ...
+    ]
+}
+
+Requirements:
+- Each step description should be a single, detailed sentence
+- Include specific parameter values from the input
+- Mention the machine name and duration
+- Do NOT include the structured data fields verbatim; describe them naturally
+- The number of step descriptions must match the number of steps in the route sheet
+
+Please answer the JSON string strictly according to the output format. DO NOT wrap it with code blocks Markdown syntax because I will parse your answer string directly into json. DO NOT output other content.

@@ -590,7 +590,7 @@ class FBPipeline:
     #  LLM utilities                                                      #
     # ------------------------------------------------------------------ #
 
-    def _parallel_llm_calls(self, prompts, max_workers=2):
+    def _parallel_llm_calls(self, prompts, max_workers=1):
         """Execute LLM calls in parallel, preserving order."""
         results = [None] * len(prompts)
 
@@ -608,7 +608,7 @@ class FBPipeline:
 
         return results
 
-    def _chatgpt_function(self, content, model="gpt-4o", max_retries=5):
+    def _chatgpt_function(self, content, model="gpt-4o", max_retries=3):
         client = OpenAI(
             base_url="http://localhost:4141/v1",
             api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
@@ -629,7 +629,16 @@ class FBPipeline:
                     return result
                 print(f"Empty response (attempt {attempt+1}/{max_retries})", flush=True)
             except Exception as e:
-                print(f"API error (attempt {attempt+1}/{max_retries}): {e}", flush=True)
+                err_str = str(e).lower()
+                if "rate" in err_str or "429" in err_str or "too many" in err_str:
+                    wait = 60 * (attempt + 1)
+                    print(f"Rate limited (attempt {attempt+1}/{max_retries}), sleeping {wait}s ...", flush=True)
+                    time.sleep(wait)
+                else:
+                    print(f"API error (attempt {attempt+1}/{max_retries}): {e}", flush=True)
+                    if attempt < max_retries - 1:
+                        time.sleep(2 * (attempt + 1))
+                continue
             if attempt < max_retries - 1:
                 time.sleep(2 * (attempt + 1))
         print(f"Max retries reached, returning empty response", flush=True)

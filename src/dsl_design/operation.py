@@ -495,10 +495,11 @@ class Operation:
         return result
 
     def __chatgpt_function(self, content, gpt_model="gpt-4o"):
-        while True:
+        for attempt in range(5):
             try:
                 client = OpenAI(
-                    api_key=os.environ.get("OPENAI_API_KEY"),
+                    api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
+                    base_url="http://localhost:4141/v1"
                 )
                 chat_completion = client.chat.completions.create(
                     messages=[
@@ -508,5 +509,8 @@ class Operation:
                 )
                 return chat_completion.choices[0].message.content
             except openai.APIError as error:
-                print("error: ", error)
-                continue
+                print(f"error (attempt {attempt+1}/5): ", error)
+                if attempt < 4:
+                    import time
+                    time.sleep(2 ** attempt)
+        raise RuntimeError("LLM call failed after 5 attempts")
