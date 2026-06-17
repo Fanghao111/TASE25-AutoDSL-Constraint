@@ -729,11 +729,10 @@ class DSLPipeline:
             print("row: ", row, "\n")
             self.or_matrix.append(row)
         write_json(self.dump_dir_path + "or_matrix.json", self.or_matrix)
-        
-    def or_matrix2JSP_result(self):
+        write_json(self.dump_dir_path + "machines.json", self.machines)
         print("or_matrix2JSP_result ing...")
         or_matrix = copy.deepcopy(self.or_matrix)
-        assigned_jobs, solver, err_rate = schedule(or_matrix)
+        assigned_jobs, solver, err_rate, makespan = schedule(or_matrix)
         if len(assigned_jobs) == 0:
             print("No solver")
             self.compile_error_num += 1
@@ -743,6 +742,7 @@ class DSLPipeline:
             self.solver = solver
         write_json(self.dump_dir_path + "assigned_jobs.json", self.assigned_jobs)
         write_txt(self.dump_dir_path + "err_rate.txt", str(err_rate))
+        write_txt(self.dump_dir_path + "makespan.txt", str(makespan))
 
     def dsl_program2route_sheets(self):
         for i in range(len(self.production_programs)):

@@ -110,7 +110,9 @@ def schedule(matrix, machine_capacities=[]):
     status = solver.solve(model)
 
     assigned_jobs = collections.defaultdict(list)
+    makespan = -1
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        makespan = int(solver.objective_value)
         print("Solution:")
         # Create one list of assigned tasks per machine.
         for job_id, job in enumerate(cleaned_jobs_data):
@@ -148,7 +150,7 @@ def schedule(matrix, machine_capacities=[]):
             output += sol_line
 
         # Finally print the solution found.
-        print(f"Optimal Schedule Length: {solver.objective_value}")
+        print(f"Optimal Schedule Length: {makespan}")
         print(output)
     else:
         print("No solution found.")
@@ -158,4 +160,4 @@ def schedule(matrix, machine_capacities=[]):
     print(f"  - conflicts: {solver.num_conflicts}")
     print(f"  - branches : {solver.num_branches}")
     print(f"  - wall time: {solver.wall_time}s")
-    return assigned_jobs, solver, err_rate
+    return assigned_jobs, solver, err_rate, makespan

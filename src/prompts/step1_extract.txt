@@ -1,0 +1,35 @@
+You are given a natural language description of a manufacturing process. Extract all information into a structured JSON following the EXACT schema below.
+
+Required schema for each step:
+{
+  "steps": [
+    {
+      "operation": "<operation name>",
+      "machine": "<machine/equipment name>",
+      "duration": "<duration with units>",
+      "precondition": [
+        {"component": "<input component name>", "component_type": "<PascalCase type specific to the material/part>", "container": "<container if mentioned>"}
+      ],
+      "postcondition": [
+        {"component": "<output component name>", "component_type": "<PascalCase type specific to the material/part>", "container": "<container if mentioned>"}
+      ],
+      "parameters": {
+        "<parameter name>": "<value with units>"
+      }
+    }
+  ]
+}
+
+Rules:
+- Every step MUST have: operation, machine, duration, precondition, postcondition
+- parameters is optional (empty {} if none mentioned)
+- duration MUST include units (e.g., "83 minutes", "2 hours")
+- precondition and postcondition are arrays of objects with component, component_type, and container fields
+- container defaults to empty string "" if not mentioned
+- Extract ALL steps in order. Do NOT skip any.
+- Do NOT worry about formatting (case, PascalCase, etc.) for fields OTHER than component_type.
+
+The manufacturing process description:
+---ORDER---
+
+Output ONLY a valid JSON object. Do NOT wrap in markdown code blocks. Do NOT include any other text.

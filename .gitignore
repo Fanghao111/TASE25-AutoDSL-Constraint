@@ -6,3 +6,4 @@ data/feature.json
 data/temp_batch/*
 !data/temp_batch/.gitkeep
 outputs/
+.venv/
