@@ -1,0 +1,17 @@
+You are given a formatted JSON of manufacturing steps. Verify that ALL formatting rules are satisfied:
+
+1. operation: Must be Title Case
+2. machine: Must be Title Case (parenthetical info preserved)
+3. duration: Must be a string with units
+4. precondition/postcondition component_type: Must be PascalCase with NO spaces
+5. precondition/postcondition component: Must be Title Case
+6. precondition/postcondition container: Must be PascalCase or empty string
+7. parameters keys: Must be lowercase with spaces (no underscores, no camelCase, no unit suffixes)
+8. parameters values: Must be strings with units
+
+If any formatting issues are found, return the corrected JSON. If all rules are satisfied, return the JSON unchanged.
+
+Input JSON:
+---INPUT---
+
+Output ONLY the JSON object. Do NOT wrap in markdown code blocks. Do NOT include any other text.

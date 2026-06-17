@@ -188,11 +188,9 @@ class Evaluation:
 
                 # FB Pipeline (optional) - use normalized JSONs as route sheet equivalent
                 fb_nj_path = os.path.join(unified_dir_path, subfolder, "CAM-3_normalized_jsons.json")
-                fb_fm_path = os.path.join(unified_dir_path, subfolder, "SRD_field_mapping.json")
-                if os.path.exists(fb_nj_path) and os.path.exists(fb_fm_path):
+                if os.path.exists(fb_nj_path):
                     fb_nj = read_json(fb_nj_path)
-                    fb_fm = read_json(fb_fm_path)
-                    fb_rs = FBPipeline.build_route_sheets(fb_nj, fb_fm, subfolder)
+                    fb_rs = FBPipeline.build_route_sheets(fb_nj, subfolder)
                     fb_content = json.dumps(fb_rs)
                     fb_bleu.append(self.__bleu_score(ground_truth_content, fb_content))
                     p, r, f = self.__rouge_score(ground_truth_content, fb_content)

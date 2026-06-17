@@ -64,7 +64,7 @@ The system has a four-stage pipeline for converting NL manufacturing description
 - **Baseline** (`baseline.py`): Direct LLM-only approach — NL → structural info → OR matrix → schedule → plan.
 - **Baseline_2** (`baseline2.py`): Variant baseline with different prompting.
 - **DSLPipeline** (`dsl_pipeline.py`): The paper's proposed approach — uses both DSL hierarchies to regulate LLM translation. Supports both OpenAI batch API and parallel single-call modes.
-- **FBPipeline** (`fb_pipeline.py`): Alternative "free-form + bootstrap" pipeline with three stages: (1) CAM — free extraction + verification + normalization, (2) SRD — semantic role discovery, (3) CGM+SGM — constraint generation + solving + grounding.
+- **FBPipeline** (`fb_pipeline.py`): Alternative "free-form + bootstrap" pipeline. LLM stages: (1) CAM-1 extract, (1v) verify extraction, (2) format alignment, (2v) verify format, (3) normalize values → `CAM-3_normalized_jsons.json`. Deterministic stages: (4) CGM build OR matrix → `CGM_or_matrix.json` + `CGM_machines.json`, (5) OR-Tools solve, (6) SGM ground plan → `SGM_production_plan.json`. Uses `schema_validator.py` for structural validation between LLM steps.
 - **GroundTruth** (`groundtruth.py`): Generates reference outputs from known-correct route sheet data.
 
 ### Clustering
@@ -85,6 +85,7 @@ The system has a four-stage pipeline for converting NL manufacturing description
 - Batch LLM calls use `data/temp_batch/` for staging JSONL files
 - `data/embedding_dic.json` caches OpenAI text embeddings (gitignored)
 - The system processes 10 instances: `ta71` through `ta80`
+- Note: `legal_instance_description_list` in `main.py` is currently reduced to `["instance ta71"]` for development; restore to full list for final experiments
 
 ### LLM Configuration
 
@@ -102,3 +103,18 @@ Prompt templates are stored as `.txt` files in `src/prompts/` with `---PLACEHOLD
 - All modes share the same `legal_instance_description_list` (ta71–ta80) defined in `main.py`.
 - Pipeline classes follow load-then-run pattern: constructor sets up state, `load_data()` reads any existing intermediate files, `run()` orchestrates the stages.
 - The `--force` flag (default True) controls whether intermediate artifacts are overwritten; `--no-force` allows resuming from partial runs.
+
+### Evaluation ↔ Pipeline Stage Mapping
+
+Each evaluation type isolates a specific pipeline capability by controlling the input starting point:
+
+| Eval Type | Input | Measures | Metrics |
+|-----------|-------|----------|---------|
+| CPE | NL orders (full pipeline) | End-to-end plan quality | BLEU + ROUGE-L on `production_plan.json` / `SGM_production_plan.json` |
+| CAE | NL orders (intermediate) | NL→structured translation | BLEU + ROUGE-L on `route_sheets.json` / `CAM-3_normalized_jsons.json` |
+| CSE-2 | NL orders (full pipeline) | NL→constraint quality | Constraint IoU + runtime error rate + makespan ratio |
+| CSE-1 | GT route sheets (skip NL) | Constraint generation only | Same as CSE-2 |
+| SGE | GT solver result (skip solve) | Grounding mapping only | BLEU + ROUGE-L on production plan |
+| DAE | CPE results aggregated | Cross-instance stability | VMR (variance-to-mean ratio) |
+
+DSL uses `operation_programs.json` + `production_programs.json` for constraint extraction in CSE; FB uses `CGM_or_matrix.json` + `CGM_machines.json`.

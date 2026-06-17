@@ -1,0 +1,19 @@
+You are given a natural language description and a structured JSON extraction. Verify the JSON against the original text.
+
+Check for:
+1. MISSING information: anything in the description not captured in the JSON
+2. FABRICATED information: anything in the JSON not present in the description
+3. INCORRECT values: any values that don't match the original description
+4. STRUCTURAL completeness: every step must have operation, machine, duration, precondition, postcondition
+
+If issues are found, return the CORRECTED JSON (same schema structure). If the JSON is already correct, return it unchanged.
+
+Do NOT change the schema structure. Only fix values or add/remove content.
+
+Original description:
+---ORDER---
+
+Extracted JSON:
+---EXTRACTED---
+
+Output ONLY the corrected JSON object. Do NOT wrap in markdown code blocks. Do NOT include any other text.

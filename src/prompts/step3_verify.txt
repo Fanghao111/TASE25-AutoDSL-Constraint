@@ -1,0 +1,15 @@
+You are given a normalization mapping that groups semantically equivalent terms. Verify that the groupings are reasonable.
+
+Check for:
+1. OVER-MERGING: terms grouped together that actually refer to different concepts
+2. INCORRECT canonical: the chosen canonical name is not the best representative
+
+If issues are found, return the CORRECTED mapping. If the mapping is correct, return it unchanged.
+
+Current mapping:
+---MAPPING---
+
+Sample data for context:
+---SAMPLES---
+
+Output ONLY the corrected JSON object (same structure as input). Do NOT wrap in markdown code blocks. Do NOT include any other text.
