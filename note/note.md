@@ -28,3 +28,5 @@ jsp求解器有固定输入，machine_id，duration，pre_index
 好模型 vs 差模型
 人工修复后 vs 人工修复前vsGT
 格式prompt vs 无格式prompt+lower
+
+step3归一化会过拟合

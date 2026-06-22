@@ -3,7 +3,7 @@
 **Branch**: fb-1  
 **Date**: 2026-06-17  
 **Instances**: ta71-ta80 (10 instances, each 101 orders)  
-**LLM Backend**: localhost:4141 proxy (serial, no parallel)
+**LLM Backend**: localhost:4142 proxy (serial, no parallel)
 
 ---
 

@@ -4,7 +4,7 @@ import os
 import re
 import time
 import json
-from collections import Counter
+from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from openai import OpenAI
@@ -15,10 +15,11 @@ from src.experiment.schema_validator import validate_extraction
 
 
 class FBPipeline:
-    def __init__(self, instance_description: str, experiment_type: str = "CPE_CAE_CSE-2", force: bool = True):
+    def __init__(self, instance_description: str, experiment_type: str = "CPE_CAE_CSE-2", force: bool = True, constraint_method: str = "global_match"):
         self.instance_description = instance_description
         self.experiment_type = experiment_type
         self.force = force
+        self.constraint_method = constraint_method  # "global_match" or "pda"
         self.dump_dir_path = ""
 
         self.orders = []
@@ -375,7 +376,7 @@ class FBPipeline:
 
     def build_or_matrix(self):
         """Derive OR matrix from normalized JSONs using fixed schema fields."""
-        print("Step 4: Building OR matrix ...", flush=True)
+        print(f"Step 4: Building OR matrix (method={self.constraint_method}) ...", flush=True)
         self.or_matrix = []
         self.compile_error_num = 0
         self.total_num = 0
@@ -397,44 +398,93 @@ class FBPipeline:
                 continue
 
             steps = data.get("steps", [])
-            row = []
-
-            for i, step in enumerate(steps):
-                self.total_num += 1
-                machine_name = str(step.get("machine", "")).lower()
-                try:
-                    machine_idx = self.machines.index(machine_name)
-                except ValueError:
-                    machine_idx = 0
-                    self.compile_error_num += 1
-
-                duration = self._parse_duration(step.get("duration", "0"))
-
-                # Determine precedence via component_type matching
-                current_input_types = set()
-                for item in step.get("precondition", []):
-                    if isinstance(item, dict):
-                        ct = item.get("component_type", "")
-                        if ct:
-                            current_input_types.add(ct.lower())
-
-                pre_indexes = []
-                for j in range(i):
-                    prev_step = steps[j]
-                    prev_output_types = set()
-                    for item in prev_step.get("postcondition", []):
-                        if isinstance(item, dict):
-                            ct = item.get("component_type", "")
-                            if ct:
-                                prev_output_types.add(ct.lower())
-                    if current_input_types & prev_output_types:
-                        pre_indexes.append(j)
-
-                row.append([machine_idx, duration, pre_indexes])
+            if self.constraint_method == "pda":
+                row = self._derive_precedence_pda(steps)
+            else:
+                row = self._derive_precedence_global_match(steps)
             self.or_matrix.append(row)
 
         write_json(self.dump_dir_path + "CGM_or_matrix.json", self.or_matrix)
         write_json(self.dump_dir_path + "CGM_machines.json", self.machines)
+
+    def _derive_precedence_global_match(self, steps):
+        """Original method: scan all previous steps for component_type intersection."""
+        row = []
+        for i, step in enumerate(steps):
+            self.total_num += 1
+            machine_idx = self._get_machine_idx(step)
+            duration = self._parse_duration(step.get("duration", "0"))
+
+            current_input_types = set()
+            for item in step.get("precondition", []):
+                if isinstance(item, dict):
+                    ct = item.get("component_type", "")
+                    if ct:
+                        current_input_types.add(ct.lower())
+
+            pre_indexes = []
+            for j in range(i):
+                prev_step = steps[j]
+                prev_output_types = set()
+                for item in prev_step.get("postcondition", []):
+                    if isinstance(item, dict):
+                        ct = item.get("component_type", "")
+                        if ct:
+                            prev_output_types.add(ct.lower())
+                if current_input_types & prev_output_types:
+                    pre_indexes.append(j)
+
+            row.append([machine_idx, duration, pre_indexes])
+        return row
+
+    def _derive_precedence_pda(self, steps):
+        """PDA method: track product lifecycle with define/kill semantics.
+
+        Maintains a memory of available product flow units. When a step
+        consumes (kills) a product, it establishes a precedence dependency
+        on the step that produced (defined) it. Products are consumed in
+        FIFO order when multiple instances of the same type exist.
+        """
+        row = []
+        # available[component_type] = [step_index, ...] (FIFO queue of producers)
+        available = defaultdict(list)
+
+        for i, step in enumerate(steps):
+            self.total_num += 1
+            machine_idx = self._get_machine_idx(step)
+            duration = self._parse_duration(step.get("duration", "0"))
+
+            # Kill: consume precondition products from available memory
+            pre_indexes = []
+            for item in step.get("precondition", []):
+                if isinstance(item, dict):
+                    ct = item.get("component_type", "")
+                    if ct:
+                        ct_lower = ct.lower()
+                        if available[ct_lower]:
+                            definer_idx = available[ct_lower].pop(0)
+                            if definer_idx not in pre_indexes:
+                                pre_indexes.append(definer_idx)
+                        # else: raw material, no predecessor needed
+
+            # Define: add postcondition products to available memory
+            for item in step.get("postcondition", []):
+                if isinstance(item, dict):
+                    ct = item.get("component_type", "")
+                    if ct:
+                        available[ct.lower()].append(i)
+
+            row.append([machine_idx, duration, pre_indexes])
+        return row
+
+    def _get_machine_idx(self, step):
+        """Get machine index for a step, tracking compile errors."""
+        machine_name = str(step.get("machine", "")).lower()
+        try:
+            return self.machines.index(machine_name)
+        except ValueError:
+            self.compile_error_num += 1
+            return 0
 
     # ------------------------------------------------------------------ #
     #  Step 5: Solve JSP (OR-Tools)                                       #
@@ -590,7 +640,7 @@ class FBPipeline:
     #  LLM utilities                                                      #
     # ------------------------------------------------------------------ #
 
-    def _parallel_llm_calls(self, prompts, max_workers=1):
+    def _parallel_llm_calls(self, prompts, max_workers=2):
         """Execute LLM calls in parallel, preserving order."""
         results = [None] * len(prompts)
 
@@ -610,7 +660,7 @@ class FBPipeline:
 
     def _chatgpt_function(self, content, model="gpt-4o", max_retries=3):
         client = OpenAI(
-            base_url="http://localhost:4141/v1",
+            base_url="http://localhost:4142/v1",
             api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
             timeout=300.0,
         )

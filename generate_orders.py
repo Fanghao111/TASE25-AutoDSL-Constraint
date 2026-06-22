@@ -23,7 +23,7 @@ def chatgpt_function(content, gpt_model="gpt-4o"):
         try:
             client = OpenAI(
                 api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
-                base_url="http://localhost:4141/v1"
+                base_url="http://localhost:4142/v1"
             )
             chat_completion = client.chat.completions.create(
                 messages=[{"role": "user", "content": content}],

@@ -89,7 +89,6 @@ class DSLPipeline:
             self.orders2dsl_program_no_batch_parallel()
             self.dsl_program2or_matrix()
             self.dsl_program2route_sheets()
-            self.or_matrix2JSP_result()
             self.JSP_result2production_plan()
 
         elif self.experiment_type == "CSE-1":
@@ -97,7 +96,6 @@ class DSLPipeline:
             # Output: OR matrix.
             self.route_sheets2dsl_program_no_batch()
             self.dsl_program2or_matrix()
-            self.or_matrix2JSP_result()
             self.JSP_result2production_plan()
 
         elif self.experiment_type == "SGE":
@@ -464,8 +462,8 @@ class DSLPipeline:
                 for sentence in sentences
             ]
 
-            # Execute extraction requests in parallel.
-            with ThreadPoolExecutor() as inner_executor:
+            # Execute extraction requests with concurrency=2.
+            with ThreadPoolExecutor(max_workers=2) as inner_executor:
                 extraction_results = list(inner_executor.map(self.__chatgpt_function, extraction_prompts))
 
             # Merge extraction results.
@@ -497,8 +495,8 @@ class DSLPipeline:
                 clean_result.get("production-view programs", [])
             )
 
-        # Process all orders in parallel.
-        with ThreadPoolExecutor() as outer_executor:
+        # Process all orders with concurrency=2.
+        with ThreadPoolExecutor(max_workers=2) as outer_executor:
             # Keep the output order aligned with the input order.
             results = list(tqdm(
                 outer_executor.map(process_single_order, self.orders),
@@ -847,7 +845,7 @@ class DSLPipeline:
             try:
                 client = OpenAI(
                     api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
-                    base_url="http://localhost:4141/v1"
+                    base_url="http://localhost:4142/v1"
                 )
                 chat_completion = client.chat.completions.create(
                     messages=[
