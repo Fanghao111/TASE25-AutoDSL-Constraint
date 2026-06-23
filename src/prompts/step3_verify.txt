@@ -1,15 +1,38 @@
-You are given a normalization mapping that groups semantically equivalent terms. Verify that the groupings are reasonable.
+You are reviewing a synonym normalization that was applied to a batch of manufacturing process data.
 
-Check for:
-1. OVER-MERGING: terms grouped together that actually refer to different concepts
-2. INCORRECT canonical: the chosen canonical name is not the best representative
+For each of 5 categories (machines, operations, component_types, param_keys, param_values), you are given:
+- "pre_set":  the full sorted list of unique values BEFORE normalization
+- "post_set": the values that remain AFTER applying the mapping (= canonicals + values that were not merged)
+- "merges":   only the non-trivial merge groups, in the form {canonical: [members merged into it]}
 
-If issues are found, return the CORRECTED mapping. If the mapping is correct, return it unchanged.
+Your job is to inspect this diff and produce a corrected set of groups. Check three things:
 
-Current mapping:
----MAPPING---
+1. OVER-MERGING — for each entry in "merges", are ALL members truly synonyms of the SAME concept?
+   If a group merges two distinct concepts, split it into separate groups.
 
-Sample data for context:
----SAMPLES---
+2. UNDER-MERGING — scan "post_set" within each category. Do any remaining values look like
+   synonyms of each other (or of an existing canonical) that the first pass missed?
+   If so, add a new merge group covering them.
 
-Output ONLY the corrected JSON object (same structure as input). Do NOT wrap in markdown code blocks. Do NOT include any other text.
+3. CANONICAL CHOICE — for each merge group, is the chosen canonical the most natural / most
+   standard / least-abbreviated form? If not, pick a better one from the members.
+
+Output schema (same shape the normalization step uses):
+{
+  "machine_groups":        [{"canonical": "...", "members": ["...", ...]}, ...],
+  "operation_groups":      [...],
+  "component_type_groups": [...],
+  "param_key_groups":      [...],
+  "param_value_groups":    [...]
+}
+
+Rules:
+- Use the EXACT spelling from the input pre_set / post_set — do not invent new strings.
+- Each "members" list MUST include the canonical itself plus all merged members.
+- Trivial groups (1 element with no merges) can be omitted entirely.
+- If a category needs no change, you may copy the original groups verbatim from the input.
+
+Pre/post diff to review:
+---DIFF---
+
+Output ONLY a valid JSON object. Do NOT wrap in markdown code blocks. Do NOT include any other text.

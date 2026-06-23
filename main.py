@@ -22,6 +22,7 @@ parser.add_argument('--demo', action='store_true', default=False)
 parser.add_argument('--force', action='store_true', default=True, help='Force overwrite existing outputs (default: True)')
 parser.add_argument('--no-force', dest='force', action='store_false', help='Skip steps that already have outputs')
 parser.add_argument('--constraint-method', default='global_match', choices=['global_match', 'pda'], help='Constraint derivation method: global_match (original) or pda (define/kill lifecycle tracking)')
+parser.add_argument('--step2-verify-method', default='llm', choices=['llm', 'code'], help='Step 2-verify implementation: llm (per-order LLM call) or code (deterministic format_rules)')
 args = parser.parse_args()
 
 legal_instance_description_list = [
@@ -197,6 +198,7 @@ if __name__ == '__main__':
                 experiment_type=args.type,
                 force=args.force,
                 constraint_method=args.constraint_method,
+                step2_verify_method=args.step2_verify_method,
             )
             pipeline.run()
 

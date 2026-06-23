@@ -12,14 +12,16 @@ from utils.util import read_json, write_json, read_txt, write_txt
 from src.experiment.schedule import schedule
 from src.experiment.groundtruth import GroundTruth
 from src.experiment.schema_validator import validate_extraction
+from src.experiment.format_rules import format_data as _code_format_data
 
 
 class FBPipeline:
-    def __init__(self, instance_description: str, experiment_type: str = "CPE_CAE_CSE-2", force: bool = True, constraint_method: str = "global_match"):
+    def __init__(self, instance_description: str, experiment_type: str = "CPE_CAE_CSE-2", force: bool = True, constraint_method: str = "global_match", step2_verify_method: str = "llm"):
         self.instance_description = instance_description
         self.experiment_type = experiment_type
         self.force = force
         self.constraint_method = constraint_method  # "global_match" or "pda"
+        self.step2_verify_method = step2_verify_method  # "llm" or "code"
         self.dump_dir_path = ""
 
         self.orders = []
@@ -219,8 +221,21 @@ class FBPipeline:
     # ------------------------------------------------------------------ #
 
     def verify_format(self):
+        """Verify format. Dispatches to LLM or deterministic-code implementation."""
+        if self.step2_verify_method == "code":
+            self._verify_format_code()
+        else:
+            self._verify_format_llm()
+
+    def _verify_format_code(self):
+        """Apply formatting rules deterministically (no LLM call)."""
+        print("Step 2-verify (code): Applying deterministic format rules ...", flush=True)
+        self.format_verified_jsons = [_code_format_data(d) for d in self.formatted_jsons]
+        write_json(self.dump_dir_path + "step2_verified.json", self.format_verified_jsons)
+
+    def _verify_format_llm(self):
         """LLM check that formatting rules are satisfied."""
-        print("Step 2-verify: Verifying format ...", flush=True)
+        print("Step 2-verify (LLM): Verifying format ...", flush=True)
 
         prompts = []
         for i, data in enumerate(self.formatted_jsons):
@@ -292,22 +307,54 @@ class FBPipeline:
         result = self._chatgpt_function(prompt)
         normalization = self._safe_json_parse(result)
 
-        # Build flat mappings from groups
-        mappings = {}
-        for category in ("machine_groups", "operation_groups", "component_type_groups",
-                         "param_key_groups", "param_value_groups"):
-            groups = normalization.get(category, [])
-            for group in groups:
-                canonical = group.get("canonical", "")
-                for member in group.get("members", []):
-                    if member != canonical:
-                        mappings[member] = canonical
+        # Build flat mappings from groups (shared helper for pre- and post-verify)
+        def _flatten_groups(groups_dict):
+            flat = {}
+            for category in ("machine_groups", "operation_groups", "component_type_groups",
+                             "param_key_groups", "param_value_groups"):
+                for group in groups_dict.get(category, []):
+                    canonical = group.get("canonical", "")
+                    for member in group.get("members", []):
+                        if member != canonical:
+                            flat[member] = canonical
+            return flat
 
-        # Verify the mapping
-        samples = valid_data[:3] if len(valid_data) >= 3 else valid_data
-        verify_prompt = self.step3_verify_prompt \
-            .replace("---MAPPING---", json.dumps(normalization, indent=2)) \
-            .replace("---SAMPLES---", json.dumps(samples, indent=2))
+        mappings = _flatten_groups(normalization)
+
+        # Persist pre-verify intermediate products (mirrors step1/step2 conventions)
+        write_json(self.dump_dir_path + "step3_mappings_pre_verify.json", mappings)
+
+        # Build diff-based verify input: pre_set / post_set / merges per category
+        pre_sets_by_category = {
+            "machines": sorted(machines),
+            "operations": sorted(operations),
+            "component_types": sorted(component_types),
+            "param_keys": sorted(param_keys),
+            "param_values": sorted(param_values),
+        }
+
+        def _apply_set(values, m):
+            return sorted({m.get(v, v) for v in values})
+
+        def _merge_groups(values, m):
+            groups = {}
+            for v in values:
+                groups.setdefault(m.get(v, v), []).append(v)
+            return {c: sorted(ms) for c, ms in groups.items() if len(ms) > 1}
+
+        diff_by_category = {
+            cat: {
+                "pre_set": pre_values,
+                "post_set": _apply_set(pre_values, mappings),
+                "merges": _merge_groups(pre_values, mappings),
+            }
+            for cat, pre_values in pre_sets_by_category.items()
+        }
+
+        # Verify the mapping by inspecting the pre/post diff (not random samples)
+        verify_prompt = self.step3_verify_prompt.replace(
+            "---DIFF---", json.dumps(diff_by_category, indent=2, ensure_ascii=False)
+        )
         verify_result = self._chatgpt_function(verify_prompt)
         verified_normalization = self._safe_json_parse(verify_result)
 
@@ -317,15 +364,7 @@ class FBPipeline:
             ("machine_groups", "operation_groups", "component_type_groups",
              "param_key_groups", "param_value_groups")
         ):
-            mappings = {}
-            for category in ("machine_groups", "operation_groups", "component_type_groups",
-                             "param_key_groups", "param_value_groups"):
-                groups = verified_normalization.get(category, [])
-                for group in groups:
-                    canonical = group.get("canonical", "")
-                    for member in group.get("members", []):
-                        if member != canonical:
-                            mappings[member] = canonical
+            mappings = _flatten_groups(verified_normalization)
 
         # Apply mappings to all data
         self.normalized_jsons = []
