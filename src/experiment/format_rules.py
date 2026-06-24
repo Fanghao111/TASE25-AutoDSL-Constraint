@@ -1,7 +1,7 @@
 """Deterministic formatting rules for fixed-schema JSONs.
 
-Used as the code-based alternative to LLM step2_verify. Applies the same
-rules listed in src/prompts/step2_format.txt, but as pure Python.
+Applied by `FBPipeline.verify_format_code()` as the Step 1-format-verify pass
+(runs after factual verify, before normalize). Pure Python, idempotent, no LLM calls.
 """
 
 import re
@@ -83,7 +83,8 @@ def lowercase_words(text: str) -> str:
 def format_step(step: dict) -> dict:
     """Apply formatting rules to a single step.
 
-    Rules mirror src/prompts/step2_format.txt:
+    Rules embodied here (these used to live in src/prompts/step2_format.txt
+    before the 2-stage refactor; they are now declared in code only):
       operation              -> Title Case
       machine                -> Title Case
       duration               -> unchanged (can't fabricate units)

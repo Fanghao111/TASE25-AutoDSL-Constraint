@@ -14,7 +14,7 @@ INSTANCES = [
 
 OUTPUT_DIRS = [
     "outputs/DSLPipeline-CPE_CAE_CSE-2",
-    "outputs/FB-CPE_CAE_CSE-2",
+    "outputs/FB-2s-CPE_CAE_CSE-2",
 ]
 
 

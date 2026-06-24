@@ -25,7 +25,7 @@ import json
 
 class Evaluation:
     def __init__(self):
-        self.mode = ["Baseline-", "Baseline2-", "DSLPipeline-", "GroundTruth", "FB-"]
+        self.mode = ["Baseline-", "Baseline2-", "DSLPipeline-", "GroundTruth", "FB-2s-"]
         self.suffix = ["CPE_CAE_CSE-2/", "CSE-1/", "SGE/"]
         self.scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
         self.result_path = "outputs/"

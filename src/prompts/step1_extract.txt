@@ -1,4 +1,4 @@
-You are given a natural language description of a manufacturing process. Extract all information into a structured JSON following the EXACT schema below.
+You are given a natural language description of a manufacturing process. Extract all information into a structured JSON following the EXACT schema below, AND apply the formatting rules to every value in a single pass.
 
 Required schema for each step:
 {
@@ -8,10 +8,10 @@ Required schema for each step:
       "machine": "<machine/equipment name>",
       "duration": "<duration with units>",
       "precondition": [
-        {"component": "<input component name>", "component_type": "<PascalCase type specific to the material/part>", "container": "<container if mentioned>"}
+        {"component": "<input component name>", "component_type": "<type>", "container": "<container if mentioned>"}
       ],
       "postcondition": [
-        {"component": "<output component name>", "component_type": "<PascalCase type specific to the material/part>", "container": "<container if mentioned>"}
+        {"component": "<output component name>", "component_type": "<type>", "container": "<container if mentioned>"}
       ],
       "parameters": {
         "<parameter name>": "<value with units>"
@@ -20,14 +20,23 @@ Required schema for each step:
   ]
 }
 
-Rules:
+Formatting rules (apply to ALL values you emit):
+1. operation: Title Case (e.g., "Laser Cutting", "Shearing", "Turning")
+2. machine: Title Case, preserve parenthetical info (e.g., "Shear (Sheet Metal)", "Horizontal Lathe")
+3. duration: string with units (e.g., "83 minutes", "2 hours")
+4. precondition/postcondition component_type: PascalCase with NO spaces (e.g., "SheetMetal", "CutSheetMetal", "LathedPart")
+5. precondition/postcondition component: Title Case descriptive name (e.g., "Sheet Metal", "Lathed Part")
+6. precondition/postcondition container: PascalCase (e.g., "ConveyorBelt") or empty string "" if not mentioned
+7. parameters keys: lowercase with spaces, NO underscores, NO camelCase, NO unit suffixes (e.g., "cutting speed", "shear angle")
+8. parameters values: strings with units included (e.g., "100 mm/s", "45 degrees", "Nitrogen")
+9. Common manufacturing acronyms stay all-uppercase: CNC, EDM, PLC, CAD, CAM, NC, MIG, TIG, etc.
+
+Structural rules:
 - Every step MUST have: operation, machine, duration, precondition, postcondition
 - parameters is optional (empty {} if none mentioned)
-- duration MUST include units (e.g., "83 minutes", "2 hours")
-- precondition and postcondition are arrays of objects with component, component_type, and container fields
 - container defaults to empty string "" if not mentioned
 - Extract ALL steps in order. Do NOT skip any.
-- Do NOT worry about formatting (case, PascalCase, etc.) for fields OTHER than component_type.
+- The fixed schema fields are mandatory; do NOT add other top-level fields.
 
 The manufacturing process description:
 ---ORDER---

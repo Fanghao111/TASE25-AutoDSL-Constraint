@@ -16,20 +16,17 @@ from src.experiment.format_rules import format_data as _code_format_data
 
 
 class FBPipeline:
-    def __init__(self, instance_description: str, experiment_type: str = "CPE_CAE_CSE-2", force: bool = True, constraint_method: str = "global_match", step2_verify_method: str = "llm", pipeline_arch: str = "legacy"):
+    def __init__(self, instance_description: str, experiment_type: str = "CPE_CAE_CSE-2", force: bool = True, constraint_method: str = "global_match"):
         self.instance_description = instance_description
         self.experiment_type = experiment_type
         self.force = force
         self.constraint_method = constraint_method  # "global_match" or "pda"
-        self.step2_verify_method = step2_verify_method  # "llm" or "code"
-        self.pipeline_arch = pipeline_arch  # "legacy" (4-stage) or "merged" (extract+format in one LLM call)
         self.dump_dir_path = ""
 
         self.orders = []
-        self.extracted_jsons = []      # Step 1 output (legacy) / extract+format output (merged)
-        self.verified_jsons = []       # Step 1-verify output (factual)
-        self.formatted_jsons = []      # Step 2 output (legacy only)
-        self.format_verified_jsons = []  # Step 2-verify (legacy) / code-format pass (merged)
+        self.extracted_jsons = []      # Step 1 output: extract + format in one LLM call
+        self.verified_jsons = []       # Step 1-verify output: factual verify vs NL
+        self.format_verified_jsons = []  # Step 1-format-verify output: deterministic code format pass
         self.normalized_jsons = []     # Step 3 output (final)
         self.or_matrix = []
         self.machines = []
@@ -42,71 +39,39 @@ class FBPipeline:
         # Load prompts
         self.step1_extract_prompt = read_txt("src/prompts/step1_extract.txt")
         self.step1_verify_prompt = read_txt("src/prompts/step1_verify.txt")
-        self.step2_format_prompt = read_txt("src/prompts/step2_format.txt")
-        self.step2_verify_prompt = read_txt("src/prompts/step2_verify.txt")
         self.step3_normalize_prompt = read_txt("src/prompts/step3_normalize.txt")
         self.step3_verify_prompt = read_txt("src/prompts/step3_verify.txt")
-        # Merged-arch prompt (lazy load only when needed)
-        self.step1_extract_with_format_prompt = (
-            read_txt("src/prompts/step1_extract_with_format.txt")
-            if pipeline_arch == "merged" else ""
-        )
 
         self.groundtruth = None
 
     def run(self):
-        # Separate output dir per architecture so legacy and merged runs don't overwrite each other.
-        arch_tag = "FB-merged" if self.pipeline_arch == "merged" else "FB"
-        self.dump_dir_path = f"outputs/{arch_tag}-{self.experiment_type}/{self.instance_description}/"
+        self.dump_dir_path = f"outputs/FB-2s-{self.experiment_type}/{self.instance_description}/"
         self.groundtruth = GroundTruth(self.instance_description)
         self._load_data()
 
         if self.experiment_type == "CPE_CAE_CSE-2":
             if len(self.orders) == 0:
                 raise RuntimeError(
-                    f"Missing orders. Looked in:\n"
-                    f"  outputs/FB-{self.experiment_type}/{self.instance_description}/orders.json (canonical)\n"
-                    f"  {self.dump_dir_path}orders.json (arch-specific)\n"
+                    f"Missing orders at {self.dump_dir_path}orders.json. "
                     "Please run generate_orders.py first."
                 )
 
-            if self.pipeline_arch == "merged":
-                # ---- Step 1 (merged): Extract + Format in one call ----
-                if len(self.extracted_jsons) == 0:
-                    self.extract_and_format_all()
-                # ---- Step 1-verify-A: factual correctness vs NL (LLM) ----
-                if len(self.verified_jsons) == 0:
-                    self.verify_extract()
-                # ---- Step 1-verify-B: format pass via deterministic code ----
-                if len(self.format_verified_jsons) == 0:
-                    self._apply_code_format_to_verified()
-                # ---- Step 3: Normalize ----
-                if len(self.normalized_jsons) == 0:
-                    self.normalize_all()
-                # ---- Step 4-6: Build OR Matrix + Solve + Ground ----
-                self.build_or_matrix()
-                self.solve_jsp()
-                self.ground_production_plan()
-            else:
-                # ---- Step 1: Extract ----
-                if len(self.extracted_jsons) == 0:
-                    self.extract_all()
-                # ---- Step 1-verify ----
-                if len(self.verified_jsons) == 0:
-                    self.verify_extract()
-                # ---- Step 2: Format ----
-                if len(self.formatted_jsons) == 0:
-                    self.format_all()
-                # ---- Step 2-verify ----
-                if len(self.format_verified_jsons) == 0:
-                    self.verify_format()
-                # ---- Step 3: Normalize ----
-                if len(self.normalized_jsons) == 0:
-                    self.normalize_all()
-                # ---- Step 4-6: Build OR Matrix + Solve + Ground ----
-                self.build_or_matrix()
-                self.solve_jsp()
-                self.ground_production_plan()
+            # ---- Step 1: Extract + Format in one LLM call ----
+            if len(self.extracted_jsons) == 0:
+                self.extract_all()
+            # ---- Step 1-verify: factual correctness vs NL (LLM) ----
+            if len(self.verified_jsons) == 0:
+                self.verify_extract()
+            # ---- Step 1-format-verify: deterministic code format pass ----
+            if len(self.format_verified_jsons) == 0:
+                self.verify_format_code()
+            # ---- Step 3: Normalize ----
+            if len(self.normalized_jsons) == 0:
+                self.normalize_all()
+            # ---- Step 4-6: Build OR Matrix + Solve + Ground ----
+            self.build_or_matrix()
+            self.solve_jsp()
+            self.ground_production_plan()
 
         elif self.experiment_type == "CSE-1":
             route_sheets = read_json(
@@ -128,12 +93,12 @@ class FBPipeline:
             self.ground_production_plan()
 
     # ------------------------------------------------------------------ #
-    #  Step 1: Extract information (fixed schema)                         #
+    #  Step 1: Extract + Format in a single LLM call                      #
     # ------------------------------------------------------------------ #
 
     def extract_all(self):
-        """Extract structured JSON from each order using fixed schema."""
-        print("Step 1: Extracting information ...", flush=True)
+        """Step 1: extract structured JSON AND apply format rules in one LLM call."""
+        print("Step 1: Extract + Format in one pass ...", flush=True)
         self.extracted_jsons = []
 
         prompts = []
@@ -167,59 +132,16 @@ class FBPipeline:
         write_json(self.dump_dir_path + "step1_extracted.json", self.extracted_jsons)
 
     # ------------------------------------------------------------------ #
-    #  Step 1 (merged arch): Extract + Format in a single LLM call        #
+    #  Step 1-format-verify: deterministic code format pass               #
     # ------------------------------------------------------------------ #
 
-    def extract_and_format_all(self):
-        """Merged-arch Step 1: extract structured JSON AND apply format rules in one LLM call."""
-        print("Step 1 (merged): Extract + Format in one pass ...", flush=True)
-        self.extracted_jsons = []
-
-        prompts = []
-        for order in self.orders:
-            prompt = self.step1_extract_with_format_prompt.replace("---ORDER---", json.dumps(order))
-            prompts.append(prompt)
-
-        results = self._parallel_llm_calls(prompts)
-
-        for i, result in enumerate(results):
-            parsed = self._safe_json_parse(result)
-            is_valid, err = validate_extraction(parsed)
-            if is_valid:
-                self.extracted_jsons.append(parsed)
-            else:
-                self.extracted_jsons.append({"steps": [], "bad_case": f"Step 1 (merged): {err}"})
-
-        # Retry bad cases once
-        bad_indices = [i for i, d in enumerate(self.extracted_jsons) if "bad_case" in d]
-        if bad_indices:
-            print(f"  Retrying {len(bad_indices)} failed extractions...", flush=True)
-            for idx in bad_indices:
-                result = self._chatgpt_function(prompts[idx])
-                parsed = self._safe_json_parse(result)
-                is_valid, err = validate_extraction(parsed)
-                if is_valid:
-                    self.extracted_jsons[idx] = parsed
-            still_bad = sum(1 for d in self.extracted_jsons if "bad_case" in d)
-            print(f"  After retry: {still_bad}/{len(self.extracted_jsons)} still bad", flush=True)
-
-        # File name kept as step1_extracted.json so downstream code is unchanged;
-        # additionally drop a 'merged' marker so the artifact's origin is obvious.
-        write_json(self.dump_dir_path + "step1_extracted.json", self.extracted_jsons)
-        write_json(self.dump_dir_path + "step1_merged_marker.json",
-                   {"arch": "merged", "prompt": "step1_extract_with_format.txt"})
-
-    # ------------------------------------------------------------------ #
-    #  Step 1-verify-B (merged arch): code-based format pass              #
-    # ------------------------------------------------------------------ #
-
-    def _apply_code_format_to_verified(self):
-        """Merged-arch Step 1-verify-B: deterministic code-based format pass on factually-verified JSONs.
+    def verify_format_code(self):
+        """Step 1-format-verify: deterministic code-based format pass on factually-verified JSONs.
 
         Runs AFTER verify_extract() so any factual corrections that drifted the format
         are normalized back. Idempotent; no LLM calls.
         """
-        print("Step 1-verify-format (code): Applying deterministic format rules ...", flush=True)
+        print("Step 1-format-verify (code): Applying deterministic format rules ...", flush=True)
         self.format_verified_jsons = [_code_format_data(d) for d in self.verified_jsons]
         write_json(self.dump_dir_path + "step1_format_fixed.json", self.format_verified_jsons)
 
@@ -263,89 +185,6 @@ class FBPipeline:
                     self.verified_jsons[idx] = {"steps": [], "bad_case": f"Step 1-verify: {err}"}
 
         write_json(self.dump_dir_path + "step1_verified.json", self.verified_jsons)
-
-    # ------------------------------------------------------------------ #
-    #  Step 2: Format (Title Case, PascalCase, etc.)                      #
-    # ------------------------------------------------------------------ #
-
-    def format_all(self):
-        """Adjust formatting of all verified JSONs."""
-        print("Step 2: Formatting ...", flush=True)
-
-        prompts = []
-        for i, data in enumerate(self.verified_jsons):
-            if "bad_case" in data:
-                prompts.append(None)
-                continue
-            prompt = self.step2_format_prompt.replace("---INPUT---", json.dumps(data))
-            prompts.append(prompt)
-
-        valid_indices = [i for i, p in enumerate(prompts) if p is not None]
-        valid_prompts = [prompts[i] for i in valid_indices]
-        results = self._parallel_llm_calls(valid_prompts)
-
-        self.formatted_jsons = list(self.verified_jsons)  # copy
-        for j, idx in enumerate(valid_indices):
-            parsed = self._safe_json_parse(results[j])
-            is_valid, err = validate_extraction(parsed)
-            if is_valid:
-                self.formatted_jsons[idx] = parsed
-            else:
-                # Retry once
-                result = self._chatgpt_function(valid_prompts[j])
-                parsed = self._safe_json_parse(result)
-                is_valid, err = validate_extraction(parsed)
-                if is_valid:
-                    self.formatted_jsons[idx] = parsed
-                else:
-                    self.formatted_jsons[idx] = {"steps": [], "bad_case": f"Step 2: {err}"}
-
-        write_json(self.dump_dir_path + "step2_formatted.json", self.formatted_jsons)
-
-    # ------------------------------------------------------------------ #
-    #  Step 2-verify: Verify formatting                                   #
-    # ------------------------------------------------------------------ #
-
-    def verify_format(self):
-        """Verify format. Dispatches to LLM or deterministic-code implementation."""
-        if self.step2_verify_method == "code":
-            self._verify_format_code()
-        else:
-            self._verify_format_llm()
-
-    def _verify_format_code(self):
-        """Apply formatting rules deterministically (no LLM call)."""
-        print("Step 2-verify (code): Applying deterministic format rules ...", flush=True)
-        self.format_verified_jsons = [_code_format_data(d) for d in self.formatted_jsons]
-        write_json(self.dump_dir_path + "step2_verified.json", self.format_verified_jsons)
-
-    def _verify_format_llm(self):
-        """LLM check that formatting rules are satisfied."""
-        print("Step 2-verify (LLM): Verifying format ...", flush=True)
-
-        prompts = []
-        for i, data in enumerate(self.formatted_jsons):
-            if "bad_case" in data:
-                prompts.append(None)
-                continue
-            prompt = self.step2_verify_prompt.replace("---INPUT---", json.dumps(data))
-            prompts.append(prompt)
-
-        valid_indices = [i for i, p in enumerate(prompts) if p is not None]
-        valid_prompts = [prompts[i] for i in valid_indices]
-        results = self._parallel_llm_calls(valid_prompts)
-
-        self.format_verified_jsons = list(self.formatted_jsons)  # copy
-        for j, idx in enumerate(valid_indices):
-            parsed = self._safe_json_parse(results[j])
-            is_valid, err = validate_extraction(parsed)
-            if is_valid:
-                self.format_verified_jsons[idx] = parsed
-            else:
-                # Keep the formatted version if verify fails
-                self.format_verified_jsons[idx] = self.formatted_jsons[idx]
-
-        write_json(self.dump_dir_path + "step2_verified.json", self.format_verified_jsons)
 
     # ------------------------------------------------------------------ #
     #  Step 3: Semantic normalization (synonym merging)                    #
@@ -738,12 +577,7 @@ class FBPipeline:
     def _load_data(self):
         if not os.path.exists(self.dump_dir_path):
             os.makedirs(self.dump_dir_path)
-        # Orders are always read from the canonical FB-{type}/ dir (single source of truth
-        # across archs). Fall back to arch-specific dir if orders were dropped there directly.
-        canonical_orders_path = f"outputs/FB-{self.experiment_type}/{self.instance_description}/orders.json"
-        if os.path.exists(canonical_orders_path):
-            self.orders = read_json(canonical_orders_path)
-        elif os.path.exists(self.dump_dir_path + "orders.json"):
+        if os.path.exists(self.dump_dir_path + "orders.json"):
             self.orders = read_json(self.dump_dir_path + "orders.json")
         # When force=True, skip loading intermediate files so all steps re-run
         if self.force:
@@ -752,15 +586,8 @@ class FBPipeline:
             self.extracted_jsons = read_json(self.dump_dir_path + "step1_extracted.json")
         if os.path.exists(self.dump_dir_path + "step1_verified.json"):
             self.verified_jsons = read_json(self.dump_dir_path + "step1_verified.json")
-        if self.pipeline_arch == "merged":
-            # Merged arch: step1_format_fixed.json takes the role of step2_verified.json
-            if os.path.exists(self.dump_dir_path + "step1_format_fixed.json"):
-                self.format_verified_jsons = read_json(self.dump_dir_path + "step1_format_fixed.json")
-        else:
-            if os.path.exists(self.dump_dir_path + "step2_formatted.json"):
-                self.formatted_jsons = read_json(self.dump_dir_path + "step2_formatted.json")
-            if os.path.exists(self.dump_dir_path + "step2_verified.json"):
-                self.format_verified_jsons = read_json(self.dump_dir_path + "step2_verified.json")
+        if os.path.exists(self.dump_dir_path + "step1_format_fixed.json"):
+            self.format_verified_jsons = read_json(self.dump_dir_path + "step1_format_fixed.json")
         if os.path.exists(self.dump_dir_path + "step3_normalized.json"):
             self.normalized_jsons = read_json(self.dump_dir_path + "step3_normalized.json")
         if os.path.exists(self.dump_dir_path + "CGM_or_matrix.json"):
