@@ -4,7 +4,6 @@ import os
 import re
 import time
 import json
-from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from openai import OpenAI
@@ -16,11 +15,10 @@ from src.experiment.format_rules import format_data as _code_format_data
 
 
 class FBPipeline:
-    def __init__(self, instance_description: str, experiment_type: str = "CPE_CAE_CSE-2", force: bool = True, constraint_method: str = "global_match"):
+    def __init__(self, instance_description: str, experiment_type: str = "CPE_CAE_CSE-2", force: bool = True):
         self.instance_description = instance_description
         self.experiment_type = experiment_type
         self.force = force
-        self.constraint_method = constraint_method  # "global_match" or "pda"
         self.dump_dir_path = ""
 
         self.orders = []
@@ -340,7 +338,7 @@ class FBPipeline:
 
     def build_or_matrix(self):
         """Derive OR matrix from normalized JSONs using fixed schema fields."""
-        print(f"Step 4: Building OR matrix (method={self.constraint_method}) ...", flush=True)
+        print("Step 4: Building OR matrix (linear precedence) ...", flush=True)
         self.or_matrix = []
         self.compile_error_num = 0
         self.total_num = 0
@@ -362,82 +360,27 @@ class FBPipeline:
                 continue
 
             steps = data.get("steps", [])
-            if self.constraint_method == "pda":
-                row = self._derive_precedence_pda(steps)
-            else:
-                row = self._derive_precedence_global_match(steps)
+            row = self._derive_precedence_linear(steps)
             self.or_matrix.append(row)
 
         write_json(self.dump_dir_path + "CGM_or_matrix.json", self.or_matrix)
         write_json(self.dump_dir_path + "CGM_machines.json", self.machines)
 
-    def _derive_precedence_global_match(self, steps):
-        """Original method: scan all previous steps for component_type intersection."""
-        row = []
-        for i, step in enumerate(steps):
-            self.total_num += 1
-            machine_idx = self._get_machine_idx(step)
-            duration = self._parse_duration(step.get("duration", "0"))
+    def _derive_precedence_linear(self, steps):
+        """Classical JSP precedence: each step depends only on the previous one.
 
-            current_input_types = set()
-            for item in step.get("precondition", []):
-                if isinstance(item, dict):
-                    ct = item.get("component_type", "")
-                    if ct:
-                        current_input_types.add(ct.lower())
-
-            pre_indexes = []
-            for j in range(i):
-                prev_step = steps[j]
-                prev_output_types = set()
-                for item in prev_step.get("postcondition", []):
-                    if isinstance(item, dict):
-                        ct = item.get("component_type", "")
-                        if ct:
-                            prev_output_types.add(ct.lower())
-                if current_input_types & prev_output_types:
-                    pre_indexes.append(j)
-
-            row.append([machine_idx, duration, pre_indexes])
-        return row
-
-    def _derive_precedence_pda(self, steps):
-        """PDA method: track product lifecycle with define/kill semantics.
-
-        Maintains a memory of available product flow units. When a step
-        consumes (kills) a product, it establishes a precedence dependency
-        on the step that produced (defined) it. Products are consumed in
-        FIFO order when multiple instances of the same type exist.
+        The underlying benchmark (Taillard/ABZ/...) defines a job as a totally
+        ordered sequence of (machine, duration) tuples — conjunctive arcs in
+        the disjunctive graph model. This matches the OR-Tools jobs_data input
+        convention and is robust to component_type naming drift introduced
+        during LLM extraction.
         """
         row = []
-        # available[component_type] = [step_index, ...] (FIFO queue of producers)
-        available = defaultdict(list)
-
         for i, step in enumerate(steps):
             self.total_num += 1
             machine_idx = self._get_machine_idx(step)
             duration = self._parse_duration(step.get("duration", "0"))
-
-            # Kill: consume precondition products from available memory
-            pre_indexes = []
-            for item in step.get("precondition", []):
-                if isinstance(item, dict):
-                    ct = item.get("component_type", "")
-                    if ct:
-                        ct_lower = ct.lower()
-                        if available[ct_lower]:
-                            definer_idx = available[ct_lower].pop(0)
-                            if definer_idx not in pre_indexes:
-                                pre_indexes.append(definer_idx)
-                        # else: raw material, no predecessor needed
-
-            # Define: add postcondition products to available memory
-            for item in step.get("postcondition", []):
-                if isinstance(item, dict):
-                    ct = item.get("component_type", "")
-                    if ct:
-                        available[ct.lower()].append(i)
-
+            pre_indexes = [i - 1] if i > 0 else []
             row.append([machine_idx, duration, pre_indexes])
         return row
 
