@@ -127,18 +127,21 @@ class JSSPDependencyGraph:
     def preprocess(self):
         raw_data = self.data.split(' +++++++++++++++++++++++++++++')[1:]
         result = []
-        for data in raw_data:
-            data = data.strip()
         for i in range(0, len(raw_data), 2):
             description = raw_data[i].strip()
             jssp_data = raw_data[i+1].split('\n')[1:]
-            jobs_num = jssp_data[1].split()[0].strip()
-            machines_num = jssp_data[1].split()[1].strip()
+            jobs_num = int(jssp_data[1].split()[0].strip())
+            machines_num = int(jssp_data[1].split()[1].strip())
             jobs_data = []
-            jssp_data = jssp_data[2:]
-            for line in jssp_data:
-                steps = []
+            # Only consume exactly jobs_num data lines; ignore trailing blank lines
+            # that would otherwise be appended as phantom `{"job": N+1, "steps": []}`.
+            for line in jssp_data[2:]:
+                if len(jobs_data) >= jobs_num:
+                    break
                 units = line.split()
+                if not units:
+                    continue
+                steps = []
                 for j in range(0, len(units), 2):
                     machine = units[j].strip()
                     time = units[j+1].strip()
@@ -152,8 +155,8 @@ class JSSPDependencyGraph:
                 })
             result.append({
                 "description": description,
-                "jobs_num": int(jobs_num),
-                "machines_num": int(machines_num),
+                "jobs_num": jobs_num,
+                "machines_num": machines_num,
                 "data": jobs_data
             })
         write_json(self.jssp_data_path, result)
