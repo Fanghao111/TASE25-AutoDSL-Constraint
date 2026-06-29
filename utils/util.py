@@ -1,7 +1,63 @@
 import json
 import os
 import random
+import threading
 import numpy as np
+import httpx
+from openai import OpenAI
+
+
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "http://localhost:4142/v1")
+LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-4o")
+LLM_API_KEY = os.environ.get("OPENAI_API_KEY", "sk-placeholder")
+EMBED_BASE_URL = os.environ.get("EMBED_BASE_URL", "http://localhost:4142/v1")
+EMBED_MODEL = os.environ.get("EMBED_MODEL", "text-embedding-3-small")
+
+# Shared singleton clients so all worker threads reuse one httpx connection pool
+# (HTTP keep-alive). Without this, every LLM call opens a new TCP socket through
+# the ssh tunnel and exhausts the ssh client's fd limit ("accept: Too many open files").
+_chat_client = None
+_embed_client = None
+_client_lock = threading.Lock()
+
+
+def _build_http_client(pool_size):
+    limits = httpx.Limits(
+        max_connections=pool_size,
+        max_keepalive_connections=pool_size,
+        keepalive_expiry=300.0,
+    )
+    return httpx.Client(limits=limits)
+
+
+def make_chat_client():
+    global _chat_client
+    if _chat_client is None:
+        with _client_lock:
+            if _chat_client is None:
+                pool = int(os.environ.get("LLM_MAX_WORKERS", "96"))
+                _chat_client = OpenAI(
+                    base_url=LLM_BASE_URL,
+                    api_key=LLM_API_KEY,
+                    timeout=90.0,
+                    http_client=_build_http_client(pool),
+                )
+    return _chat_client
+
+
+def make_embed_client():
+    global _embed_client
+    if _embed_client is None:
+        with _client_lock:
+            if _embed_client is None:
+                pool = int(os.environ.get("LLM_MAX_WORKERS", "96"))
+                _embed_client = OpenAI(
+                    base_url=EMBED_BASE_URL,
+                    api_key=LLM_API_KEY,
+                    timeout=120.0,
+                    http_client=_build_http_client(pool),
+                )
+    return _embed_client
 
 def _ensure_parent_dir(file_path):
     parent_dir = os.path.dirname(file_path)

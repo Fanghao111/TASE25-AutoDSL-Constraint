@@ -10,7 +10,7 @@ from src.dsl_design.cluster import DPMM
 from src.dsl_design.feature import Feature
 from utils.distribution import N_Gaussian_Distribution
 from transformers import AutoTokenizer, AutoModel
-from utils.util import write_json, read_txt
+from utils.util import write_json, read_txt, make_chat_client, LLM_MODEL
 
 class Operation:
     def __init__(self, feature:Feature, operation_dsl_path):
@@ -494,13 +494,12 @@ class Operation:
         result = self.__chatgpt_function(prompt)
         return result
 
-    def __chatgpt_function(self, content, gpt_model="gpt-4o"):
+    def __chatgpt_function(self, content, gpt_model=None):
+        if gpt_model is None:
+            gpt_model = LLM_MODEL
         for attempt in range(5):
             try:
-                client = OpenAI(
-                    api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
-                    base_url="http://localhost:4142/v1"
-                )
+                client = make_chat_client()
                 chat_completion = client.chat.completions.create(
                     messages=[
                         {"role": "user", "content": content}

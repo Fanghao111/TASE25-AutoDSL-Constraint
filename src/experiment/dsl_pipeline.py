@@ -34,7 +34,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from openai import OpenAI
 import numpy as np
-from utils.util import read_json, write_json, read_txt, write_txt
+from utils.util import read_json, write_json, read_txt, write_txt, make_chat_client, make_embed_client, LLM_MODEL, EMBED_MODEL
 from src.experiment.schedule import schedule
 from nltk.stem import WordNetLemmatizer
 from src.experiment.groundtruth import GroundTruth
@@ -67,7 +67,7 @@ class DSLPipeline:
         self.instance_description = instance_description
 
         self.lemmatizer = WordNetLemmatizer()
-        self.nlp = spacy.load("en_core_web_trf")
+        self.nlp = spacy.load(os.environ.get("SPACY_MODEL", "en_core_web_sm"))
 
         self.embedding_dic = {}
         self.sys_content = "You are an expert in the field of manufacturing"
@@ -840,13 +840,12 @@ class DSLPipeline:
         # Normalize machine names to lowercase.
         self.machines = list(set([machine.lower() for machine_list in operation2machine_dict.values() for machine in machine_list]))
 
-    def __chatgpt_function(self, content, gpt_model="gpt-4o"):
+    def __chatgpt_function(self, content, gpt_model=None):
+        if gpt_model is None:
+            gpt_model = LLM_MODEL
         for attempt in range(5):
             try:
-                client = OpenAI(
-                    api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
-                    base_url="http://localhost:4142/v1"
-                )
+                client = make_chat_client()
                 chat_completion = client.chat.completions.create(
                     messages=[
                         {"role": "user", "content": content}
@@ -941,10 +940,10 @@ class DSLPipeline:
         else:
             while True:
                 try:
-                    client = OpenAI()
+                    client = make_embed_client()
                     response = client.embeddings.create(
                         input=text,
-                        model="text-embedding-3-small"
+                        model=EMBED_MODEL
                     )
                     self.embedding_dic[text] = response.data[0].embedding
                     write_json("data/embedding_dic.json", self.embedding_dic)

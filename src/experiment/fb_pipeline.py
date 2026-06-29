@@ -7,7 +7,7 @@ import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from openai import OpenAI
-from utils.util import read_json, write_json, read_txt, write_txt
+from utils.util import read_json, write_json, read_txt, write_txt, make_chat_client, LLM_MODEL
 from src.experiment.schedule import schedule
 from src.experiment.groundtruth import GroundTruth
 from src.experiment.schema_validator import validate_extraction
@@ -230,6 +230,38 @@ class FBPipeline:
         result = self._chatgpt_function(prompt)
         normalization = self._safe_json_parse(result)
 
+        # Validate the LLM output has the expected groups-of-dicts shape.
+        # Re-run the call up to N times instead of crashing on bad shape.
+        def _is_valid_groups(parsed):
+            if not isinstance(parsed, dict):
+                return False
+            for category in ("machine_groups", "operation_groups", "component_type_groups",
+                             "param_key_groups", "param_value_groups"):
+                groups = parsed.get(category, [])
+                if not isinstance(groups, list):
+                    return False
+                for group in groups:
+                    if not isinstance(group, dict):
+                        return False
+            return True
+
+        def _call_until_valid(call_prompt, label, max_retries=3):
+            for attempt in range(max_retries):
+                raw = self._chatgpt_function(call_prompt)
+                parsed = self._safe_json_parse(raw)
+                if _is_valid_groups(parsed):
+                    return parsed
+                print(f"  [step3] {label} returned invalid shape on attempt {attempt + 1}, retrying...",
+                      flush=True)
+            print(f"  [step3] {label} still invalid after {max_retries} attempts; using empty groups",
+                  flush=True)
+            return {}
+
+        # Retry the normalize call if the first attempt produced an invalid shape.
+        if not _is_valid_groups(normalization):
+            print(f"  [step3] normalize returned invalid shape on attempt 1, retrying...", flush=True)
+            normalization = _call_until_valid(prompt, "normalize", max_retries=2)
+
         # Build flat mappings from groups (shared helper for pre- and post-verify)
         def _flatten_groups(groups_dict):
             flat = {}
@@ -278,8 +310,7 @@ class FBPipeline:
         verify_prompt = self.step3_verify_prompt.replace(
             "---DIFF---", json.dumps(diff_by_category, indent=2, ensure_ascii=False)
         )
-        verify_result = self._chatgpt_function(verify_prompt)
-        verified_normalization = self._safe_json_parse(verify_result)
+        verified_normalization = _call_until_valid(verify_prompt, "verify", max_retries=3)
 
         # Rebuild mappings from verified result if valid
         if verified_normalization and any(
@@ -544,8 +575,10 @@ class FBPipeline:
     #  LLM utilities                                                      #
     # ------------------------------------------------------------------ #
 
-    def _parallel_llm_calls(self, prompts, max_workers=2):
+    def _parallel_llm_calls(self, prompts, max_workers=None):
         """Execute LLM calls in parallel, preserving order."""
+        if max_workers is None:
+            max_workers = int(os.environ.get("LLM_MAX_WORKERS", "96"))
         results = [None] * len(prompts)
 
         def call_with_index(idx, prompt):
@@ -562,12 +595,10 @@ class FBPipeline:
 
         return results
 
-    def _chatgpt_function(self, content, model="gpt-4o", max_retries=3):
-        client = OpenAI(
-            base_url="http://localhost:4142/v1",
-            api_key=os.environ.get("OPENAI_API_KEY", "sk-placeholder"),
-            timeout=300.0,
-        )
+    def _chatgpt_function(self, content, model=None, max_retries=3):
+        if model is None:
+            model = LLM_MODEL
+        client = make_chat_client()
         for attempt in range(max_retries):
             try:
                 resp = client.chat.completions.create(
@@ -583,15 +614,9 @@ class FBPipeline:
                     return result
                 print(f"Empty response (attempt {attempt+1}/{max_retries})", flush=True)
             except Exception as e:
-                err_str = str(e).lower()
-                if "rate" in err_str or "429" in err_str or "too many" in err_str:
-                    wait = 60 * (attempt + 1)
-                    print(f"Rate limited (attempt {attempt+1}/{max_retries}), sleeping {wait}s ...", flush=True)
-                    time.sleep(wait)
-                else:
-                    print(f"API error (attempt {attempt+1}/{max_retries}): {e}", flush=True)
-                    if attempt < max_retries - 1:
-                        time.sleep(2 * (attempt + 1))
+                print(f"API error (attempt {attempt+1}/{max_retries}): {e}", flush=True)
+                if attempt < max_retries - 1:
+                    time.sleep(2 * (attempt + 1))
                 continue
             if attempt < max_retries - 1:
                 time.sleep(2 * (attempt + 1))
