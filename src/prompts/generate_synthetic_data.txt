@@ -24,6 +24,7 @@ Requirements:
 - Each step description should be a single, detailed sentence
 - Include specific parameter values from the input
 - Mention the machine name and duration
+- **CRITICAL UNIT RULE — read carefully and follow exactly. Violating this rule will break downstream evaluation. The input `duration` is already in MINUTES. You MUST output every duration verbatim as `<integer> minutes` — same number, no conversion, no rounding, no unit change. Examples: input `82` → output "for 82 minutes" (NOT "for 1.4 hours", NOT "for 82 hours"). Input `4` → "for 4 minutes" (NOT "for 4 hours"). Input `1` → "for 1 minute". This rule applies even when the resulting time seems short or long for the operation type — do not "fix" it.**
 - Do NOT include the structured data fields verbatim; describe them naturally
 - The number of step descriptions must match the number of steps in the route sheet
 
