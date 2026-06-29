@@ -21,6 +21,8 @@ parser.add_argument('--seed', type=int, default=42)
 parser.add_argument('--demo', action='store_true', default=False)
 parser.add_argument('--force', action='store_true', default=True, help='Force overwrite existing outputs (default: True)')
 parser.add_argument('--no-force', dest='force', action='store_false', help='Skip steps that already have outputs')
+parser.add_argument('--instances', nargs='+', default=None,
+                    help='Filter to specific instances, e.g. --instances ta73 ta74. Accepts "ta73" or "instance ta73". Default: all 10.')
 args = parser.parse_args()
 
 legal_instance_description_list = [
@@ -38,6 +40,10 @@ legal_instance_description_list = [
 
 if __name__ == '__main__':
     seed_set(args.seed)
+    if args.instances:
+        wanted = {(i if i.startswith("instance ") else f"instance {i}") for i in args.instances}
+        legal_instance_description_list = [i for i in legal_instance_description_list if i in wanted]
+        print(f"Filtered to {len(legal_instance_description_list)} instance(s): {legal_instance_description_list}", flush=True)
     if args.mode == "preprocess":
         # Final outputs: data/route_sheet.json and data/route_sheet_reduce.json.
         route_sheet = RouteSheet(
