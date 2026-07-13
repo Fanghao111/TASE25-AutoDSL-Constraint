@@ -23,47 +23,59 @@ import os
 import json
 
 
+# Evaluation type names (see MIGRATION.md for old→new mapping):
+#   production_plan   — s7 output vs GT production_plan (BLEU / ROUGE-L)
+#   route_sheet       — s4 output → build_route_sheets vs GT route_sheets (BLEU / ROUGE-L)
+#   graph_from_gt     — GT route_sheet → s5 output vs GT graph (accuracy IoU + err + makespan)
+#   graph             — NL → s5 output vs GT graph (accuracy IoU + err + makespan)
+#   ground_from_gt    — GT schedule → s7 output vs GT plan (BLEU / ROUGE-L)
+#   dae               — DSL diagnostic aggregation (read prior production_plan results)
+
+
 class Evaluation:
     def __init__(self):
         self.mode = ["Baseline-", "Baseline2-", "DSLPipeline-", "GroundTruth", "FB-2s-"]
+        # NOTE: the "full" suffix maps to the FB experiment_type "full" (was "CPE_CAE_CSE-2");
+        # DSL/Baseline still ship data under the legacy "CPE_CAE_CSE-2" folder name so we
+        # keep that string in `suffix` for DSL/Baseline lookups.
         self.suffix = ["CPE_CAE_CSE-2/", "CSE-1/", "SGE/"]
         self.scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
         self.result_path = "outputs/"
         self.groundtruth_dir_path = self.result_path + self.mode[3]
 
+        # FB_EVAL_LABEL lets the wrapper steer FB pipeline path & evaluation output
+        # dir per model (e.g. "FB-models/qwen3-4b"). Unset -> original behavior.
+        fb_label = os.environ.get("FB_EVAL_LABEL")
+        self.fb_dir_override = (self.result_path + fb_label + "/") if fb_label else None
+        self.fb_eval_out_dir = ("outputs/Evaluation/" + fb_label.replace("/", "_") + "/") if fb_label else "outputs/Evaluation/"
+        if fb_label:
+            os.makedirs(self.fb_eval_out_dir, exist_ok=True)
+
+        # DSL_EVAL_LABEL mirrors FB_EVAL_LABEL for the DSL pipeline (e.g. "DSL-models/qwen3-4b").
+        dsl_label = os.environ.get("DSL_EVAL_LABEL")
+        self.dsl_dir_override = (self.result_path + dsl_label + "/") if dsl_label else None
+        self.dsl_eval_out_dir = ("outputs/Evaluation/" + dsl_label.replace("/", "_") + "/") if dsl_label else "outputs/Evaluation/"
+        if dsl_label:
+            os.makedirs(self.dsl_eval_out_dir, exist_ok=True)
+
+        # Back-compat: existing FB writes use self.eval_out_dir.
+        self.eval_out_dir = self.fb_eval_out_dir
+
     def evaluate(self, experiment_type: str):
         """
-        experiment_type: str, CPE | CAE | CSE-1 | CSE-2 | SGE
-        CPE:
-            - Input: NL description
-            - Output: production plan
-            - Methods: ROUGE-L, BLEU
-        CAE:
-            - Input: NL description
-            - Output: fully structural route sheet
-            - Methods: BLEU, ROUGE-L
-        CSE-1:
-            - Input: groundtruth fully structural route sheet
-            - Output: or matirx
-            - Methods:
-                - Constraint-Level Accuracy: evaluate constraint consistency
-                - Compiler Error Rate
-                - Runtime Error Rate
-        CSE-2:
-            - Input: NL description
-            - Output: or matirx
-            - Methods: same as CSE-1
-        SGE:
-            - Input: JSP solver result (assigned_jobs.json)
-            - Output: production plan
-            - Methods: BLEU, ROUGE-L
-        DAE:
+        experiment_type:
+            production_plan  — NL description → production plan (BLEU / ROUGE-L)
+            route_sheet      — NL description → fully-structural route sheet (BLEU / ROUGE-L)
+            graph_from_gt    — GT route sheet → OR matrix (accuracy IoU + err_rate + makespan_ratio)
+            graph            — NL description → OR matrix (accuracy IoU + err_rate + makespan_ratio)
+            ground_from_gt   — GT JSP solver result → production plan (BLEU / ROUGE-L)
+            dae              — aggregate variance-to-mean ratio over prior production_plan results
         """
-        if experiment_type == "CPE":
+        if experiment_type == "production_plan":
             baseline_dir_path = self.result_path + self.mode[0] + self.suffix[0]
             baseline2_dir_path = self.result_path + self.mode[1] + self.suffix[0]
-            dsl_pipeline_dir_path = self.result_path + self.mode[2] + self.suffix[0]
-            unified_dir_path = self.result_path + self.mode[4] + self.suffix[0]
+            dsl_pipeline_dir_path = self.dsl_dir_override or (self.result_path + self.mode[2] + self.suffix[0])
+            unified_dir_path = self.fb_dir_override or (self.result_path + self.mode[4] + self.suffix[0])
 
             baseline_bleu = []
             baseline2_bleu = []
@@ -114,8 +126,8 @@ class Evaluation:
                     dsl_rouge["Recall"].append(r)
                     dsl_rouge["F1"].append(f)
 
-                # FB Pipeline (optional)
-                fb_path = os.path.join(unified_dir_path, subfolder, "SGM_production_plan.json")
+                # FB Pipeline (optional) — s7 output
+                fb_path = os.path.join(unified_dir_path, subfolder, "s7_production_plan.json")
                 if os.path.exists(fb_path):
                     fb_content = json.dumps(read_json(fb_path))
                     fb_bleu.append(self.__bleu_score(ground_truth_content, fb_content))
@@ -134,20 +146,20 @@ class Evaluation:
             print("dsl_rouge: ", dsl_rouge)
             print("fb_rouge: ", fb_rouge)
 
-            write_json("outputs/Evaluation/CPE_baseline_bleu.json", baseline_bleu)
-            write_json("outputs/Evaluation/CPE_baseline2_bleu.json", baseline2_bleu)
-            write_json("outputs/Evaluation/CPE_dsl_bleu.json", dsl_bleu)
-            write_json("outputs/Evaluation/CPE_fb_bleu.json", fb_bleu)
+            write_json("outputs/Evaluation/production_plan_baseline_bleu.json", baseline_bleu)
+            write_json("outputs/Evaluation/production_plan_baseline2_bleu.json", baseline2_bleu)
+            write_json(os.path.join(self.dsl_eval_out_dir, "production_plan_dsl_bleu.json"), dsl_bleu)
+            write_json(os.path.join(self.eval_out_dir, "production_plan_fb_bleu.json"), fb_bleu)
 
-            write_json("outputs/Evaluation/CPE_baseline_rouge.json", baseline_rouge)
-            write_json("outputs/Evaluation/CPE_baseline2_rouge.json", baseline2_rouge)
-            write_json("outputs/Evaluation/CPE_dsl_rouge.json", dsl_rouge)
-            write_json("outputs/Evaluation/CPE_fb_rouge.json", fb_rouge)
+            write_json("outputs/Evaluation/production_plan_baseline_rouge.json", baseline_rouge)
+            write_json("outputs/Evaluation/production_plan_baseline2_rouge.json", baseline2_rouge)
+            write_json(os.path.join(self.dsl_eval_out_dir, "production_plan_dsl_rouge.json"), dsl_rouge)
+            write_json(os.path.join(self.eval_out_dir, "production_plan_fb_rouge.json"), fb_rouge)
 
-        elif experiment_type == "CAE":
+        elif experiment_type == "route_sheet":
             baseline_dir_path = self.result_path + self.mode[0] + self.suffix[0]
-            dsl_pipeline_dir_path = self.result_path + self.mode[2] + self.suffix[0]
-            unified_dir_path = self.result_path + self.mode[4] + self.suffix[0]
+            dsl_pipeline_dir_path = self.dsl_dir_override or (self.result_path + self.mode[2] + self.suffix[0])
+            unified_dir_path = self.fb_dir_override or (self.result_path + self.mode[4] + self.suffix[0])
 
             baseline_bleu = []
             dsl_bleu = []
@@ -186,8 +198,8 @@ class Evaluation:
                     dsl_rouge["Recall"].append(r)
                     dsl_rouge["F1"].append(f)
 
-                # FB Pipeline (optional) - use normalized JSONs as route sheet equivalent
-                fb_nj_path = os.path.join(unified_dir_path, subfolder, "CAM-3_normalized_jsons.json")
+                # FB Pipeline (optional) — s4 normalized JSON, adapted to route_sheet format
+                fb_nj_path = os.path.join(unified_dir_path, subfolder, "s4_normalized.json")
                 if os.path.exists(fb_nj_path):
                     fb_nj = read_json(fb_nj_path)
                     fb_rs = FBPipeline.build_route_sheets(fb_nj, subfolder)
@@ -206,18 +218,18 @@ class Evaluation:
             print("dsl_rouge: ", dsl_rouge)
             print("fb_rouge: ", fb_rouge)
 
-            write_json("outputs/Evaluation/CAE_baseline_bleu.json", baseline_bleu)
-            write_json("outputs/Evaluation/CAE_dsl_bleu.json", dsl_bleu)
-            write_json("outputs/Evaluation/CAE_fb_bleu.json", fb_bleu)
+            write_json("outputs/Evaluation/route_sheet_baseline_bleu.json", baseline_bleu)
+            write_json(os.path.join(self.dsl_eval_out_dir, "route_sheet_dsl_bleu.json"), dsl_bleu)
+            write_json(os.path.join(self.eval_out_dir, "route_sheet_fb_bleu.json"), fb_bleu)
 
-            write_json("outputs/Evaluation/CAE_baseline_rouge.json", baseline_rouge)
-            write_json("outputs/Evaluation/CAE_dsl_rouge.json", dsl_rouge)
-            write_json("outputs/Evaluation/CAE_fb_rouge.json", fb_rouge)
+            write_json("outputs/Evaluation/route_sheet_baseline_rouge.json", baseline_rouge)
+            write_json(os.path.join(self.dsl_eval_out_dir, "route_sheet_dsl_rouge.json"), dsl_rouge)
+            write_json(os.path.join(self.eval_out_dir, "route_sheet_fb_rouge.json"), fb_rouge)
 
-        elif experiment_type == "CSE-1":
+        elif experiment_type == "graph_from_gt":
             baseline_dir_path = self.result_path + self.mode[0] + self.suffix[1]
-            dsl_pipeline_dir_path = self.result_path + self.mode[2] + self.suffix[1]
-            fb_dir_path = self.result_path + self.mode[4] + self.suffix[1]
+            dsl_pipeline_dir_path = self.dsl_dir_override or (self.result_path + self.mode[2] + self.suffix[1])
+            fb_dir_path = self.fb_dir_override or (self.result_path + self.mode[4] + self.suffix[1])
 
             baseline_result = {"accuracy_rate": [], "compile_err_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
             dsl_result = {"accuracy_rate": [], "compile_err_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
@@ -241,7 +253,7 @@ class Evaluation:
                 gt_makespan_path = os.path.join(self.groundtruth_dir_path, subfolder, "makespan.txt")
                 gt_makespan = float(read_txt(gt_makespan_path)) if os.path.exists(gt_makespan_path) else 0
 
-                # --- Baseline (optional) ---
+                # --- Baseline (optional) — reads legacy baseline output layout ---
                 baseline_path = os.path.join(baseline_dir_path, subfolder, "or_matrix.json")
                 baseline_route_sheet = os.path.join(baseline_dir_path, subfolder, "route_sheets.json")
                 baseline_machines = os.path.join(baseline_dir_path, subfolder, "machines.json")
@@ -263,7 +275,7 @@ class Evaluation:
                         if os.path.exists(bl_ms_path):
                             baseline_result["makespan_ratio"].append(float(read_txt(bl_ms_path)) / gt_makespan)
 
-                # --- DSL Pipeline (optional) ---
+                # --- DSL Pipeline (optional) — reads legacy dsl output layout ---
                 dsl_pipeline_path = os.path.join(dsl_pipeline_dir_path, subfolder, "or_matrix.json")
                 dsl_op_path = os.path.join(dsl_pipeline_dir_path, subfolder, "operation_programs.json")
                 dsl_prod_path = os.path.join(dsl_pipeline_dir_path, subfolder, "production_programs.json")
@@ -286,25 +298,24 @@ class Evaluation:
                         if os.path.exists(dsl_ms_path):
                             dsl_result["makespan_ratio"].append(float(read_txt(dsl_ms_path)) / gt_makespan)
 
-                # --- FB Pipeline (optional) ---
-                fb_or_path = os.path.join(fb_dir_path, subfolder, "CGM_or_matrix.json")
-                fb_machines_path = os.path.join(fb_dir_path, subfolder, "CGM_machines.json")
+                # --- FB Pipeline (optional) — s5/s6 output ---
+                fb_or_path = os.path.join(fb_dir_path, subfolder, "s5_or_matrix.json")
+                fb_machines_path = os.path.join(fb_dir_path, subfolder, "s5_machines.json")
                 if all(os.path.exists(p) for p in [fb_or_path, fb_machines_path]):
                     fb_or_content = read_json(fb_or_path)
                     fb_machines_content = read_json(fb_machines_path)
-                    # Extract actual machine assignments from FB's OR matrix output
                     fb_resource = self.__get_baseline_recourse_constraint_CSE_1(fb_or_content, fb_machines_content, ground_truth_route_sheet_content)
                     fb_precedence = self.__get_unified_precedence_constraint_CSE(fb_or_content, ground_truth_route_sheet_content)
                     fb_result["accuracy_rate"].append(self.__iou(
                         fb_resource + fb_precedence,
                         ground_truth_resource_constraints + ground_truth_operation_precedence_constraints
                     ))
-                    fb_err_path = os.path.join(fb_dir_path, subfolder, "err_rate.txt")
+                    fb_err_path = os.path.join(fb_dir_path, subfolder, "s6_err_rate.txt")
                     fb_result["runtime_err_rate"].append(
                         float(read_txt(fb_err_path)) if os.path.exists(fb_err_path) else 0.0
                     )
                     if gt_makespan > 0:
-                        fb_ms_path = os.path.join(fb_dir_path, subfolder, "makespan.txt")
+                        fb_ms_path = os.path.join(fb_dir_path, subfolder, "s6_makespan.txt")
                         if os.path.exists(fb_ms_path):
                             fb_result["makespan_ratio"].append(float(read_txt(fb_ms_path)) / gt_makespan)
 
@@ -313,14 +324,14 @@ class Evaluation:
             print("fb_result: ", fb_result)
 
             if baseline_result["accuracy_rate"]:
-                write_json("outputs/Evaluation/CSE-1_baseline.json", baseline_result)
-            write_json("outputs/Evaluation/CSE-1_dsl.json", dsl_result)
-            write_json("outputs/Evaluation/CSE-1_fb.json", fb_result)
+                write_json("outputs/Evaluation/graph_from_gt_baseline.json", baseline_result)
+            write_json(os.path.join(self.dsl_eval_out_dir, "graph_from_gt_dsl.json"), dsl_result)
+            write_json(os.path.join(self.eval_out_dir, "graph_from_gt_fb.json"), fb_result)
 
-        elif experiment_type == "CSE-2":
+        elif experiment_type == "graph":
             baseline_dir_path = self.result_path + self.mode[0] + self.suffix[0]
-            dsl_pipeline_dir_path = self.result_path + self.mode[2] + self.suffix[0]
-            unified_dir_path = self.result_path + self.mode[4] + self.suffix[0]
+            dsl_pipeline_dir_path = self.dsl_dir_override or (self.result_path + self.mode[2] + self.suffix[0])
+            unified_dir_path = self.fb_dir_override or (self.result_path + self.mode[4] + self.suffix[0])
 
             baseline_result = {"accuracy_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
             dsl_result = {"accuracy_rate": [], "runtime_err_rate": [], "makespan_ratio": []}
@@ -344,7 +355,7 @@ class Evaluation:
                 gt_makespan_path = os.path.join(self.groundtruth_dir_path, subfolder, "makespan.txt")
                 gt_makespan = float(read_txt(gt_makespan_path)) if os.path.exists(gt_makespan_path) else 0
 
-                # --- Baseline (optional) ---
+                # --- Baseline (optional) — legacy layout ---
                 baseline_path = os.path.join(baseline_dir_path, subfolder, "or_matrix.json")
                 baseline_route_sheet = os.path.join(baseline_dir_path, subfolder, "structural_info.json")
                 baseline_machines = os.path.join(baseline_dir_path, subfolder, "machines.json")
@@ -366,7 +377,7 @@ class Evaluation:
                         if os.path.exists(ms_path):
                             baseline_result["makespan_ratio"].append(float(read_txt(ms_path)) / gt_makespan)
 
-                # --- DSL Pipeline (optional) ---
+                # --- DSL Pipeline (optional) — legacy layout ---
                 dsl_pipeline_path = os.path.join(dsl_pipeline_dir_path, subfolder, "or_matrix.json")
                 dsl_op_path = os.path.join(dsl_pipeline_dir_path, subfolder, "operation_programs.json")
                 dsl_prod_path = os.path.join(dsl_pipeline_dir_path, subfolder, "production_programs.json")
@@ -388,9 +399,9 @@ class Evaluation:
                         if os.path.exists(dsl_ms_path):
                             dsl_result["makespan_ratio"].append(float(read_txt(dsl_ms_path)) / gt_makespan)
 
-                # --- FB Pipeline (optional) ---
-                fb_or_path = os.path.join(unified_dir_path, subfolder, "CGM_or_matrix.json")
-                fb_machines_path = os.path.join(unified_dir_path, subfolder, "CGM_machines.json")
+                # --- FB Pipeline (optional) — s5/s6 output ---
+                fb_or_path = os.path.join(unified_dir_path, subfolder, "s5_or_matrix.json")
+                fb_machines_path = os.path.join(unified_dir_path, subfolder, "s5_machines.json")
                 if all(os.path.exists(p) for p in [fb_or_path, fb_machines_path]):
                     fb_or_content = read_json(fb_or_path)
                     fb_machines_content = read_json(fb_machines_path)
@@ -400,12 +411,12 @@ class Evaluation:
                         fb_resource + fb_precedence,
                         ground_truth_resource_constraints + ground_truth_operation_precedence_constraints
                     ))
-                    fb_err_path = os.path.join(unified_dir_path, subfolder, "err_rate.txt")
+                    fb_err_path = os.path.join(unified_dir_path, subfolder, "s6_err_rate.txt")
                     fb_result["runtime_err_rate"].append(
                         float(read_txt(fb_err_path)) if os.path.exists(fb_err_path) else 0.0
                     )
                     if gt_makespan > 0:
-                        fb_ms_path = os.path.join(unified_dir_path, subfolder, "makespan.txt")
+                        fb_ms_path = os.path.join(unified_dir_path, subfolder, "s6_makespan.txt")
                         if os.path.exists(fb_ms_path):
                             fb_result["makespan_ratio"].append(float(read_txt(fb_ms_path)) / gt_makespan)
 
@@ -413,13 +424,13 @@ class Evaluation:
             print("dsl_result: ", dsl_result)
             print("fb_result: ", fb_result)
 
-            write_json("outputs/Evaluation/CSE-2_baseline.json", baseline_result)
-            write_json("outputs/Evaluation/CSE-2_dsl.json", dsl_result)
-            write_json("outputs/Evaluation/CSE-2_fb.json", fb_result)
+            write_json("outputs/Evaluation/graph_baseline.json", baseline_result)
+            write_json(os.path.join(self.dsl_eval_out_dir, "graph_dsl.json"), dsl_result)
+            write_json(os.path.join(self.eval_out_dir, "graph_fb.json"), fb_result)
 
-        elif experiment_type == "SGE":
-            dsl_pipeline_dir_path = self.result_path + self.mode[2] + self.suffix[2]
-            fb_dir_path = self.result_path + self.mode[4] + self.suffix[2]
+        elif experiment_type == "ground_from_gt":
+            dsl_pipeline_dir_path = self.dsl_dir_override or (self.result_path + self.mode[2] + self.suffix[2])
+            fb_dir_path = self.fb_dir_override or (self.result_path + self.mode[4] + self.suffix[2])
 
             dsl_bleu = []
             fb_bleu = []
@@ -435,7 +446,7 @@ class Evaluation:
                     continue
                 ground_truth_content = json.dumps(read_json(ground_truth_path))
 
-                # DSL
+                # DSL — legacy layout
                 dsl_path = os.path.join(dsl_pipeline_dir_path, subfolder, "production_plan.json")
                 if os.path.exists(dsl_path):
                     dsl_content = json.dumps(read_json(dsl_path))
@@ -445,8 +456,8 @@ class Evaluation:
                     dsl_rouge["Recall"].append(r)
                     dsl_rouge["F1"].append(f)
 
-                # FB
-                fb_path = os.path.join(fb_dir_path, subfolder, "SGM_production_plan.json")
+                # FB — s7 output
+                fb_path = os.path.join(fb_dir_path, subfolder, "s7_production_plan.json")
                 if os.path.exists(fb_path):
                     fb_content = json.dumps(read_json(fb_path))
                     fb_bleu.append(self.__bleu_score(ground_truth_content, fb_content))
@@ -460,20 +471,20 @@ class Evaluation:
             print("fb_bleu: ", fb_bleu)
             print("fb_rouge: ", fb_rouge)
 
-            write_json("outputs/Evaluation/SGE_dsl_bleu.json", dsl_bleu)
-            write_json("outputs/Evaluation/SGE_dsl_rouge.json", dsl_rouge)
-            write_json("outputs/Evaluation/SGE_fb_bleu.json", fb_bleu)
-            write_json("outputs/Evaluation/SGE_fb_rouge.json", fb_rouge)
+            write_json(os.path.join(self.dsl_eval_out_dir, "ground_from_gt_dsl_bleu.json"), dsl_bleu)
+            write_json(os.path.join(self.dsl_eval_out_dir, "ground_from_gt_dsl_rouge.json"), dsl_rouge)
+            write_json(os.path.join(self.eval_out_dir, "ground_from_gt_fb_bleu.json"), fb_bleu)
+            write_json(os.path.join(self.eval_out_dir, "ground_from_gt_fb_rouge.json"), fb_rouge)
 
-        elif experiment_type == "DAE":
+        elif experiment_type == "dae":
             DAE_result = {
                 "dsl_data": [],
                 "baseline_data": [],
                 "baseline2_data": []
             }
             result = [[] for _ in range(10)]
-            dsl_bleu = read_json("outputs/Evaluation/CPE_dsl_bleu.json")
-            dsl_rouge = read_json("outputs/Evaluation/CPE_dsl_rouge.json")
+            dsl_bleu = read_json(os.path.join(self.dsl_eval_out_dir, "production_plan_dsl_bleu.json"))
+            dsl_rouge = read_json(os.path.join(self.dsl_eval_out_dir, "production_plan_dsl_rouge.json"))
             for i in range(10):
                 result[i].append(dsl_bleu[i])
                 result[i].append(dsl_rouge["Precision"][i])
@@ -482,8 +493,8 @@ class Evaluation:
             DAE_result["dsl_data"] = result
 
             result = [[] for _ in range(10)]
-            baseline_bleu = read_json("outputs/Evaluation/CPE_baseline_bleu.json")
-            baseline_rouge = read_json("outputs/Evaluation/CPE_baseline_rouge.json")
+            baseline_bleu = read_json("outputs/Evaluation/production_plan_baseline_bleu.json")
+            baseline_rouge = read_json("outputs/Evaluation/production_plan_baseline_rouge.json")
             for i in range(10):
                 result[i].append(baseline_bleu[i])
                 result[i].append(baseline_rouge["Precision"][i])
@@ -492,8 +503,8 @@ class Evaluation:
             DAE_result["baseline_data"] = result
 
             result = [[] for _ in range(10)]
-            baseline2_bleu = read_json("outputs/Evaluation/CPE_baseline2_bleu.json")
-            baseline2_rouge = read_json("outputs/Evaluation/CPE_baseline2_rouge.json")
+            baseline2_bleu = read_json("outputs/Evaluation/production_plan_baseline2_bleu.json")
+            baseline2_rouge = read_json("outputs/Evaluation/production_plan_baseline2_rouge.json")
             for i in range(10):
                 result[i].append(baseline2_bleu[i])
                 result[i].append(baseline2_rouge["Precision"][i])
@@ -541,8 +552,8 @@ class Evaluation:
                 DAE_metric_result["F1"]["baseline_data"].append(DAE_result["baseline_data"][i][3])
                 DAE_metric_result["F1"]["baseline2_data"].append(DAE_result["baseline2_data"][i][3])
 
-            write_json("outputs/Evaluation/DAE.json", DAE_result)
-            write_json("outputs/Evaluation/DAE_metric.json", DAE_metric_result)
+            write_json("outputs/Evaluation/dae.json", DAE_result)
+            write_json("outputs/Evaluation/dae_metric.json", DAE_metric_result)
 
             # Function to calculate VMR
             def calculate_vmr(values):
@@ -560,15 +571,20 @@ class Evaluation:
                 for metric, values in DAE_metric_result.items()
             }
 
-            write_json("outputs/Evaluation/DAE_vmr.json", vmr_results)
+            write_json("outputs/Evaluation/dae_vmr.json", vmr_results)
             return
 
     def __bleu_score(self, reference, candidate):
-        return sentence_bleu([reference], candidate, smoothing_function=SmoothingFunction().method4)
+        # NLTK sentence_bleu expects token lists, not raw strings. Passing strings
+        # makes it tokenize per character, which inflates scores via the shared
+        # JSON template chars ({, ", :, comma, etc.) and squashes model differences.
+        # Split on whitespace so each JSON token (e.g. `"op":`, `60},`) is one unit.
+        return sentence_bleu([reference.split()], candidate.split(),
+                             smoothing_function=SmoothingFunction().method4)
 
     def __rouge_score_old(self, reference, candidate):
         # return: precision, recall, fmeasure
-        return self.scorer.score(reference, candidate)["rougeL"] 
+        return self.scorer.score(reference, candidate)["rougeL"]
 
     def __rouge_score_similarity(self, reference, candidate):
         # reference: groundtruth
@@ -691,7 +707,7 @@ class Evaluation:
                     operation_name = operation_details.get("operation", "None")
 
                     # Retrieve machine name from the machine list
-                
+
                     machine_name = machine_list[machine_id]
 
                     # Map operation to machine
@@ -910,6 +926,3 @@ class Evaluation:
                 except:
                     continue
         return [str(key) + " " + str(val) for key, val in precedence_constraints]
-
-
-

@@ -1,7 +1,7 @@
 """Deterministic formatting rules for fixed-schema JSONs.
 
-Applied by `FBPipeline.verify_format_code()` as the Step 1-format-verify pass
-(runs after factual verify, before normalize). Pure Python, idempotent, no LLM calls.
+Applied by `FBPipeline.apply_format()` as the s3 format pass
+(runs after s2 verify, before s4 normalize). Pure Python, idempotent, no LLM calls.
 """
 
 import re

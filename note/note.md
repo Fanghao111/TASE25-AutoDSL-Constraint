@@ -30,3 +30,9 @@ jsp求解器有固定输入，machine_id，duration，pre_index
 格式prompt vs 无格式prompt+lower
 
 step3归一化会过拟合
+
+jsp fjsp  其他类型任务的支持
+当前默认线性，需要更好的匹配策略构建图/与pda对比加入一些检测
+
+s1 s2 per step/order/instance 对比选效果
+现在s1 per order，s2 per step，s4 per instance

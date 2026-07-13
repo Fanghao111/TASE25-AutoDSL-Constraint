@@ -1,11 +1,17 @@
-from utils.util import read_json, write_json, read_txt, write_txt
-from tqdm import tqdm
-from openai import OpenAI
-import openai
-import time
-import os
 import json
-import re
+import os
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+from tqdm import tqdm
+
+from utils.util import (
+    LLM_MODEL,
+    make_chat_client,
+    read_json,
+    read_txt,
+    write_json,
+)
 
 
 class RouteSheet:
@@ -16,63 +22,204 @@ class RouteSheet:
         self.jssp_mapped_path = jssp_mapped_path
         self.route_sheet_reduce_path = route_sheet_reduce_path
         self.route_sheet_store_path = route_sheet_store_path
-        self.batch_input_path = "data/temp_batch/batch_input.jsonl"
-        self.batch_output_path = "data/temp_batch/batch_output.jsonl"
         self.prompt = read_txt("src/prompts/route_sheet_prompt.txt")
         self.sys_prompt = "You are an expert in the field of manufacturing"
-        self.batch_size = 1500
 
     def mapping(self):
+        skip_arrange = os.environ.get("SKIP_ARRANGE_MAPPING", "").lower() in ("1", "true", "yes")
         for i in range(len(self.arrange)):
             mapping = self.arrange[i]["mapping"]
-            machines_num = self.jssp_data[i]["machines_num"]
             data = self.jssp_data[i]["data"]
-            for job in data:
-                steps = job["steps"]
-                for step in steps:
-                    machine = step["machine"]
-                    step["machine"] = mapping[machine] if machine in mapping else machine
+            if not skip_arrange:
+                for job in data:
+                    for step in job["steps"]:
+                        key = str(step["machine"])
+                        if key in mapping:
+                            step["machine"] = mapping[key]
             self.jssp_data[i]["data"] = data
         write_json(self.jssp_mapped_path, self.jssp_data)
 
-    def create_route_sheet(self):
+    def create_route_sheet(self, target_descriptions=None, target_flat_idxs=None):
         jssp_data = read_json(self.jssp_mapped_path)
-        jssp_jobs_number = [len(j["data"]) for j in jssp_data]
-        jobs_data = []
-        for single_jssp in jssp_data:
-            for job in single_jssp["data"]:
-                jobs_data.append(self.__create_real_job(job["steps"]))
-        
-        for k in tqdm(range(0, len(jobs_data), self.batch_size)):
-            print("Current k: ", k)
-            batch_route_sheet = []
-            jobs_data_batch = jobs_data[k:k+self.batch_size]
-            self.__empty_jsonl_contents()
-            for i in range(0, len(jobs_data_batch)):
-                job = jobs_data_batch[i]
-                prompt = self.prompt.replace("---STEPS---", str(job))
-                self.__gpt_batch_store(self.sys_prompt, prompt, str(i))
-                
-            print("Batch stored")
-            batch_obj = self.__gpt_batch_call()
-            print("Batch called, waiting for results...")
-            results = self.__get_batch_result(batch_obj.id)
-            print("Results received")
-            print("jobs_data_batch len: ", len(jobs_data_batch))
-            print("results len: ", len(results))
-            for result in results:
+
+        # Build flat index in the same order as jssp_data.data — one slot per job.
+        # Only carry the (instance_idx, job_idx) pointer here; steps are expanded lazily
+        # for target jobs only, so unrelated instances with null mappings never crash.
+        flat_ptr = []   # list of (inst_idx, job_idx)
+        flat_desc = []
+        for inst_idx, inst in enumerate(jssp_data):
+            for job_idx in range(len(inst["data"])):
+                flat_ptr.append((inst_idx, job_idx))
+                flat_desc.append(inst["description"])
+        total_jobs = len(flat_ptr)
+
+        # Load existing flat file (preserve other instances' entries); pad/truncate if it doesn't match.
+        if os.path.exists(self.route_sheet_store_path):
+            old_flat = read_json(self.route_sheet_store_path)
+            if len(old_flat) < total_jobs:
+                old_flat = old_flat + [{} for _ in range(total_jobs - len(old_flat))]
+            elif len(old_flat) > total_jobs:
+                old_flat = old_flat[:total_jobs]
+        else:
+            old_flat = [{} for _ in range(total_jobs)]
+
+        # Decide which flat indices to (re)generate.
+        if target_descriptions is None:
+            target_idxs = list(range(total_jobs))
+        else:
+            target_set = set(target_descriptions)
+            target_idxs = [i for i, d in enumerate(flat_desc) if d in target_set]
+
+        # Optional secondary filter: only keep flat indices explicitly requested.
+        # Used to re-run just the positions that produced empty dicts previously.
+        if target_flat_idxs is not None:
+            fset = set(target_flat_idxs)
+            target_idxs = [i for i in target_idxs if i in fset]
+
+        if not target_idxs:
+            print("create_route_sheet: no jobs matched target_descriptions; nothing to do", flush=True)
+            write_json(self.route_sheet_store_path, old_flat)
+            return
+
+        # Lazy-expand steps only for target jobs. If a target job hits a null machine
+        # (arrange.mapping value is null), skip it — leave the old_flat slot untouched.
+        prompts = []
+        prompt_flat_idxs = []
+        prompt_step_counts = []
+        prompt_expected_machines = []   # per-prompt list[str] — expected machine names
+        prompt_expected_durations = []  # per-prompt list[int] — expected duration integers
+        skipped = 0
+        for flat_i in target_idxs:
+            inst_idx, job_idx = flat_ptr[flat_i]
+            steps = jssp_data[inst_idx]["data"][job_idx]["steps"]
+            if any(s["machine"] is None for s in steps):
+                skipped += 1
+                continue
+            real_job = self.__create_real_job(steps)
+            prompts.append(self.prompt.replace("---STEPS---", json.dumps(real_job, indent=2)))
+            prompt_flat_idxs.append(flat_i)
+            prompt_step_counts.append(len(real_job))
+            prompt_expected_machines.append([s["machine"] for s in real_job])
+            prompt_expected_durations.append([s["duration"] for s in real_job])
+
+        if skipped:
+            print(f"create_route_sheet: skipped {skipped} target jobs with null machine mappings", flush=True)
+        if not prompts:
+            write_json(self.route_sheet_store_path, old_flat)
+            return
+
+        print(f"create_route_sheet: regenerating {len(prompts)} route sheets via LLM ({LLM_MODEL})", flush=True)
+
+        max_workers = int(os.environ.get("LLM_MAX_WORKERS", "100"))
+        client = make_chat_client()
+
+        def call_llm(local_idx, prompt, expected_steps, expected_machines, expected_durations):
+            """Per-slot LLM call with 5 inline attempts.
+
+            Each attempt is validated against the full hard-constraint set — struct,
+            length, per-step machine name, per-step duration wording. On any failure
+            the loop continues to the next attempt (exponential backoff). Falls back
+            to {} only after all attempts exhaust their budget; that empty result is
+            caller-visible so a retry pass can re-select this slot."""
+            for attempt in range(5):
                 try:
-                    clean_result = json.loads(result)
-                except:
-                    print("Error json loads")
-                    clean_result = result
-                batch_route_sheet.append(clean_result)
-            # Incrementally update the stored route sheets.
-            route_sheet = batch_route_sheet
-            if os.path.exists(self.route_sheet_store_path):
-                old_route_sheet = read_json(self.route_sheet_store_path)
-                route_sheet = old_route_sheet + batch_route_sheet
-            write_json(self.route_sheet_store_path, route_sheet)
+                    resp = client.chat.completions.create(
+                        messages=[
+                            {"role": "system", "content": self.sys_prompt},
+                            {"role": "user", "content": prompt},
+                        ],
+                        model=LLM_MODEL,
+                        max_tokens=16384,
+                    )
+                    text = resp.choices[0].message.content or ""
+                except Exception as e:
+                    print(f"LLM error (attempt {attempt+1}/5) local_idx={local_idx}: {e}", flush=True)
+                    if attempt < 4:
+                        time.sleep(2 ** attempt)
+                    continue
+
+                try:
+                    parsed = json.loads(text)
+                except (json.JSONDecodeError, TypeError):
+                    print(f"JSON parse failed local_idx={local_idx} attempt {attempt+1}/5", flush=True)
+                    if attempt < 4:
+                        time.sleep(2 ** attempt)
+                    continue
+
+                rs = parsed.get("route_sheet") if isinstance(parsed, dict) else None
+                if not isinstance(rs, list) or len(rs) != expected_steps:
+                    got = len(rs) if isinstance(rs, list) else "N/A"
+                    print(
+                        f"step count mismatch local_idx={local_idx}: expected {expected_steps}, got {got}; attempt {attempt+1}/5",
+                        flush=True,
+                    )
+                    if attempt < 4:
+                        time.sleep(2 ** attempt)
+                    continue
+
+                # Per-step machine name + duration wording check.
+                bad_at = None
+                bad_reason = None
+                for i, step in enumerate(rs):
+                    if not isinstance(step, dict):
+                        bad_at, bad_reason = i, f"step is not a dict (got {type(step).__name__})"
+                        break
+                    if step.get("machine") != expected_machines[i]:
+                        bad_at = i
+                        bad_reason = f"machine mismatch: got {step.get('machine')!r} expected {expected_machines[i]!r}"
+                        break
+                    want_dur = f"{expected_durations[i]} minutes"
+                    if step.get("duration") != want_dur:
+                        bad_at = i
+                        bad_reason = f"duration mismatch: got {step.get('duration')!r} expected {want_dur!r}"
+                        break
+                if bad_at is not None:
+                    print(
+                        f"content mismatch local_idx={local_idx} step={bad_at}: {bad_reason}; attempt {attempt+1}/5",
+                        flush=True,
+                    )
+                    if attempt < 4:
+                        time.sleep(2 ** attempt)
+                    continue
+
+                return local_idx, parsed
+            return local_idx, {}
+
+        results = [None] * len(prompts)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [
+                executor.submit(
+                    call_llm,
+                    i,
+                    p,
+                    prompt_step_counts[i],
+                    prompt_expected_machines[i],
+                    prompt_expected_durations[i],
+                )
+                for i, p in enumerate(prompts)
+            ]
+            for future in tqdm(as_completed(futures), total=len(futures), desc="route sheet LLM"):
+                local_idx, parsed = future.result()
+                results[local_idx] = parsed if isinstance(parsed, dict) else {}
+
+        # Only overwrite slots that produced a non-empty result. This preserves
+        # any pre-existing content in old_flat when the current attempt exhausts
+        # all 5 retries (so a follow-up run can target just the failed slots).
+        empty_after_retry = []
+        for local_i, flat_i in enumerate(prompt_flat_idxs):
+            if results[local_i]:
+                old_flat[flat_i] = results[local_i]
+            else:
+                empty_after_retry.append(flat_i)
+
+        write_json(self.route_sheet_store_path, old_flat)
+        print(f"create_route_sheet: wrote {len(old_flat)} entries to {self.route_sheet_store_path}", flush=True)
+        if empty_after_retry:
+            print(
+                f"create_route_sheet: {len(empty_after_retry)} slot(s) still empty after 5-attempt inline retries "
+                f"(flat_idxs: {empty_after_retry[:20]}{'...' if len(empty_after_retry) > 20 else ''})",
+                flush=True,
+            )
 
     def route_sheet_reduce(self):
         route_sheet = read_json(self.route_sheet_store_path)
@@ -86,7 +233,7 @@ class RouteSheet:
                 if len(route_sheet) == 0:
                     break
                 ele = route_sheet.pop(0)
-                
+
                 if isinstance(ele, dict):
                     ele["instance_description"] = self.jssp_data[i]["description"]
                     result[i].append(ele)
@@ -112,89 +259,3 @@ class RouteSheet:
                 "patterns": patterns
             })
         return new_steps
-
-    def __gpt_batch_store(self, sys_content, user_content, index):
-        standard = {"custom_id": "", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o", "messages": [{"role": "system", "content": ""},{"role": "user", "content": ""}],"max_tokens": 10000}}
-        prompt_unit = standard.copy()
-        prompt_unit["body"]["messages"][0]["content"] = sys_content
-        prompt_unit["body"]["messages"][1]["content"] = user_content
-        prompt_unit["custom_id"] = index
-        with open(self.batch_input_path, 'a') as file:
-            json_line = json.dumps(prompt_unit)
-            file.write(json_line + '\n')
-
-    def __gpt_batch_call(self):
-        client = OpenAI()
-        while(True):
-            try:
-                batch_input_file = client.files.create(
-                    file=open(self.batch_input_path, "rb"),
-                    purpose="batch"
-                )
-                break
-            except openai.APIError as error:
-                print(error)
-                time.sleep(3)
-        batch_input_file_id = batch_input_file.id
-        while(True):
-            try:
-                batch_obj = client.batches.create(
-                    input_file_id=batch_input_file_id,
-                    endpoint="/v1/chat/completions",
-                    completion_window="24h",
-                )
-                break
-            except openai.APIError as error:
-                print(error)
-                time.sleep(3)
-        write_txt("data/temp_batch/batch_id.txt", batch_obj.id)
-        return batch_obj
-    
-    def __get_batch_result(self, batch_id):
-        client = OpenAI()
-        results_return = []
-        while True:
-            try:
-                batch = client.batches.retrieve(batch_id)
-            except openai.APIError as error:
-                print(error)
-                time.sleep(3)
-                continue
-            if batch.status == "completed":
-                result_file_id = batch.output_file_id
-                result = client.files.content(result_file_id).content
-                result_file_name = self.batch_output_path
-                with open(result_file_name, 'wb') as file:
-                    file.write(result)
-                results = []
-                with open(result_file_name, 'r') as file:
-                    for line in file:
-                        # Parsing the JSON string into a dict and appending to the list of results
-                        json_object = json.loads(line.strip())
-                        results.append(json_object)
-                for r in results:
-                    result = r["response"]["body"]["choices"][0]["message"]["content"]
-                    results_return.append(result)
-                return results_return
-            elif batch.status == "failed" :
-                print("Batch failed")
-                return []
-            elif batch.status == "expired":
-                print("Batch expired")
-                return []
-            elif batch.status == "cancelled":
-                print("Batch cancelled")
-                return []
-            elif batch.status == "cancelling":
-                print("Batch cancelling")
-                return []
-            else:
-                time.sleep(3)
-
-    def __empty_jsonl_contents(self):
-        if os.path.exists(self.batch_input_path):
-            with open(self.batch_input_path, 'w') as file:
-                file.write('')
-        if os.path.exists(self.batch_output_path):
-            with open(self.batch_output_path, 'w') as file:
-                file.write('')

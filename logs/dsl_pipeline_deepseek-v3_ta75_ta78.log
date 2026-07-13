@@ -1,0 +1,8 @@
+Filtered to 2 instance(s): ['instance ta75', 'instance ta78']
+  0%|          | 0/2 [00:00<?, ?it/s]orders2dsl_program ing...
+
+Processing Orders:   0%|          | 0/100 [00:00<?, ?it/s][Aerror (attempt 1/5):  Error code: 500 - {'error': {'message': 'litellm.InternalServerError: InternalServerError: OpenAIException - Connection error.. Received Model Group=deepseek-v3\nAvailable Model Group Fallbacks=None', 'type': None, 'param': None, 'code': '500'}}
+error (attempt 1/5):  Error code: 500 - {'error': {'message': 'litellm.InternalServerError: InternalServerError: OpenAIException - Connection error.. Received Model Group=deepseek-v3\nAvailable Model Group Fallbacks=None', 'type': None, 'param': None, 'code': '500'}}
+error (attempt 1/5):  error (attempt 2/5): Error code: 500 - {'error': {'message': 'litellm.InternalServerError: InternalServerError: OpenAIException - Connection error.. Received Model Group=deepseek-v3\nAvailable Model Group Fallbacks=None', 'type': None, 'param': None, 'code': '500'}} 
+Error code: 500 - {'error': {'message': 'litellm.InternalServerError: InternalServerError: OpenAIException - Connection error.. Received Model Group=deepseek-v3\nAvailable Model Group Fallbacks=None', 'type': None, 'param': None, 'code': '500'}}
+error (attempt 2/5):  Error code: 500 - {'error': {'message': 'litellm.InternalServerError: InternalServerError: OpenAIException - Connection error.. Received Model Group=deepseek-v3\nAvailable Model Group Fallbacks=None', 'type': None, 'param': None, 'code': '500'}}

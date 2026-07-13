@@ -9,14 +9,20 @@ from src.experiment.dsl_pipeline import DSLPipeline
 from src.experiment.fb_pipeline import FBPipeline
 from src.experiment.groundtruth import GroundTruth
 from src.evaluation.evaluation import Evaluation
+from src.evaluation.fb_evaluation import FBEvaluation, ALL_EVALUATION_TYPES as FB_EVAL_TYPES
 from tqdm import tqdm
 from utils.util import read_json, write_json, seed_set
 import argparse
+import os
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--mode', default='evaluation', choices=['preprocess', 'autodsl_operation', 'autodsl_production', 'groundtruth', 'baseline', 'baseline_2', 'dsl_pipeline', 'fb_pipeline', 'evaluation'])
-parser.add_argument('--type', default='CPE_CAE_CSE-2', choices=['CPE_CAE_CSE-2', 'CSE-1', 'SGE', 'DAE'])
-parser.add_argument('--evaluation_type', default='CPE', choices=['CPE', 'CAE', 'CSE-1', 'CSE-2', 'SGE', 'DAE'])
+parser.add_argument('--mode', default='evaluation', choices=['preprocess', 'autodsl_operation', 'autodsl_production', 'groundtruth', 'baseline', 'baseline_2', 'dsl_pipeline', 'fb_pipeline', 'evaluation', 'fb_evaluation'])
+parser.add_argument('--type', default='full', choices=['full', 'from_gt_route_sheet', 'from_gt_schedule', 'dae'])
+parser.add_argument('--evaluation_type', default='production_plan',
+                    choices=['production_plan', 'route_sheet', 'graph_from_gt', 'graph', 'ground_from_gt', 'dae'])
+parser.add_argument('--fb_evaluation_type', default='all',
+                    choices=FB_EVAL_TYPES + ['all'],
+                    help='For --mode fb_evaluation. "all" runs the 9 evaluation_types in sequence.')
 parser.add_argument('--seed', type=int, default=42)
 parser.add_argument('--demo', action='store_true', default=False)
 parser.add_argument('--force', action='store_true', default=True, help='Force overwrite existing outputs (default: True)')
@@ -24,6 +30,16 @@ parser.add_argument('--no-force', dest='force', action='store_false', help='Skip
 parser.add_argument('--instances', nargs='+', default=None,
                     help='Filter to specific instances, e.g. --instances ta73 ta74. Accepts "ta73" or "instance ta73". Default: all 10.')
 args = parser.parse_args()
+
+# Legacy experiment_type names still used by baseline / baseline_2 / dsl_pipeline
+# (their internal branch keys were not renamed to keep DSL baseline outputs stable).
+# FB pipeline uses the new names directly.
+_LEGACY_TYPE_MAP = {
+    'full': 'CPE_CAE_CSE-2',
+    'from_gt_route_sheet': 'CSE-1',
+    'from_gt_schedule': 'SGE',
+    'dae': 'DAE',
+}
 
 legal_instance_description_list = [
     "instance ta71",
@@ -45,20 +61,27 @@ if __name__ == '__main__':
         legal_instance_description_list = [i for i in legal_instance_description_list if i in wanted]
         print(f"Filtered to {len(legal_instance_description_list)} instance(s): {legal_instance_description_list}", flush=True)
     if args.mode == "preprocess":
-        # Final outputs: data/route_sheet.json and data/route_sheet_reduce.json.
+        # Final outputs: <PREPROCESS_OUTPUT_DIR>/route_sheet.json + route_sheet_reduce.json
+        # (default preprocess/). For 4LLM parallel runs each model sets its own dir
+        # (preprocess/<model>) so writes don't collide. PREPROCESS_SKIP_MAPPING=1 skips
+        # the deterministic mapping() step to avoid concurrent writes to jssp_mapped.json.
+        out_dir = os.environ.get("PREPROCESS_OUTPUT_DIR", "preprocess")
+        os.makedirs(out_dir, exist_ok=True)
         route_sheet = RouteSheet(
-            machines_data_path="data/machines.json", 
-            jssp_data_path="data/jssp_data.json", 
-            arrange_path="data/arrange.json", 
-            jssp_mapped_path="data/jssp_mapped.json", 
-            route_sheet_store_path="data/route_sheet.json", route_sheet_reduce_path="data/route_sheet_reduce.json"
+            machines_data_path="data/machines.json",
+            jssp_data_path="data/jssp_data.json",
+            arrange_path="data/arrange.json",
+            jssp_mapped_path="preprocess/jssp_mapped.json",
+            route_sheet_store_path=f"{out_dir}/route_sheet.json",
+            route_sheet_reduce_path=f"{out_dir}/route_sheet_reduce.json",
         )
-        # route_sheet.mapping()
-        # route_sheet.create_route_sheet()
+        if os.environ.get("PREPROCESS_SKIP_MAPPING", "").lower() not in ("1", "true", "yes"):
+            route_sheet.mapping()
+        route_sheet.create_route_sheet(target_descriptions=set(legal_instance_description_list))
         route_sheet.route_sheet_reduce()
     elif args.mode == "autodsl_operation":
         # Final outputs: operation DSLs, features, and likelihood traces.
-        route_sheet_all = read_json("data/route_sheet_reduce.json")
+        route_sheet_all = read_json("preprocess/route_sheet_reduce.json")
         total_feature = []
         total_operation_dsl = []
         total_likelihood_list = []
@@ -104,7 +127,7 @@ if __name__ == '__main__':
     elif args.mode == "autodsl_production":
         # Final outputs: production DSLs and EM statistics.
         total_EM_results = []
-        route_sheet_all = read_json("data/route_sheet_reduce.json")
+        route_sheet_all = read_json("preprocess/route_sheet_reduce.json")
         total_production_dsl = []
         total_EM_updates = []
         
@@ -134,7 +157,7 @@ if __name__ == '__main__':
         write_json("outputs/AutoDSL/EM_results.json", total_EM_results)
 
     elif args.mode == "groundtruth":
-        route_sheet_all = read_json("data/route_sheet_reduce.json")
+        route_sheet_all = read_json("preprocess/route_sheet_reduce.json")
         route_sheet_choosed = [route_sheet for route_sheet in route_sheet_all if route_sheet[0]["instance_description"] in legal_instance_description_list]
 
         for route_sheet in tqdm(route_sheet_choosed):
@@ -146,26 +169,29 @@ if __name__ == '__main__':
             groundtruth.get_grounded_production_plan()
 
     elif args.mode == "baseline":
-        route_sheet_all = read_json("data/route_sheet_reduce.json")
+        route_sheet_all = read_json("preprocess/route_sheet_reduce.json")
         route_sheet_choosed = [route_sheet for route_sheet in route_sheet_all if route_sheet[0]["instance_description"] in legal_instance_description_list]
-        
+
+        legacy_type = _LEGACY_TYPE_MAP.get(args.type, args.type)
         for route_sheet in tqdm(route_sheet_choosed):
-            baseline = Baseline(structured_route_sheet=route_sheet, instance_description=route_sheet[0]["instance_description"], experiment_type=args.type)
+            baseline = Baseline(structured_route_sheet=route_sheet, instance_description=route_sheet[0]["instance_description"], experiment_type=legacy_type)
             baseline.run()
 
     elif args.mode == "baseline_2":
-        route_sheet_all = read_json("data/route_sheet_reduce.json")
+        route_sheet_all = read_json("preprocess/route_sheet_reduce.json")
         route_sheet_choosed = [route_sheet for route_sheet in route_sheet_all if route_sheet[0]["instance_description"] in legal_instance_description_list]
 
+        legacy_type = _LEGACY_TYPE_MAP.get(args.type, args.type)
         for route_sheet in tqdm(route_sheet_choosed):
-            baseline_2 = Baseline_2(structured_route_sheet=route_sheet, instance_description=route_sheet[0]["instance_description"], experiment_type=args.type)
+            baseline_2 = Baseline_2(structured_route_sheet=route_sheet, instance_description=route_sheet[0]["instance_description"], experiment_type=legacy_type)
             baseline_2.run()
 
     elif args.mode == "dsl_pipeline":
-        route_sheet_all = read_json("data/route_sheet_reduce.json")
+        route_sheet_all = read_json("preprocess/route_sheet_reduce.json")
         route_sheet_choosed = [route_sheet for route_sheet in route_sheet_all if route_sheet[0]["instance_description"] in legal_instance_description_list]
 
-        dsl_pipeline = DSLPipeline([], production_dsl={}, operation_dsl={}, EM_structure={}, instance_description="", experiment_type=args.type)
+        legacy_type = _LEGACY_TYPE_MAP.get(args.type, args.type)
+        dsl_pipeline = DSLPipeline([], production_dsl={}, operation_dsl={}, EM_structure={}, instance_description="", experiment_type=legacy_type)
 
         for route_sheet in tqdm(route_sheet_choosed):
             production_dsls = read_json("outputs/AutoDSL/total_production_dsl.json")
@@ -192,7 +218,7 @@ if __name__ == '__main__':
             dsl_pipeline.run()
 
     elif args.mode == "fb_pipeline":
-        route_sheet_all = read_json("data/route_sheet_reduce.json")
+        route_sheet_all = read_json("preprocess/route_sheet_reduce.json")
         route_sheet_choosed = [route_sheet for route_sheet in route_sheet_all if route_sheet[0]["instance_description"] in legal_instance_description_list]
 
         for route_sheet in tqdm(route_sheet_choosed):
@@ -208,5 +234,8 @@ if __name__ == '__main__':
         evaluation = Evaluation()
         evaluation.evaluate(experiment_type=args.evaluation_type)
 
+    elif args.mode == "fb_evaluation":
+        FBEvaluation().run(evaluation_type=args.fb_evaluation_type)
+
     else:
-        raise ValueError("Invalid mode. Please choose from preprocess, autodsl_operation, autodsl_production, groundtruth, baseline, baseline_2, dsl_pipeline, evaluation.")
+        raise ValueError("Invalid mode. Please choose from preprocess, autodsl_operation, autodsl_production, groundtruth, baseline, baseline_2, dsl_pipeline, evaluation, fb_evaluation.")

@@ -1,0 +1,8 @@
+start process:  instance ta71
+Traceback (most recent call last):
+  File "D:\FB\TASE25-AutoDSL-Constraint\main.py", line 129, in <module>
+    production.extract()
+  File "D:\FB\TASE25-AutoDSL-Constraint\src\dsl_design\production.py", line 55, in extract
+    if metadata["container"]:
+       ~~~~~~~~^^^^^^^^^^^^^
+KeyError: 'container'

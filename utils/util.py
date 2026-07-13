@@ -35,11 +35,12 @@ def make_chat_client():
     if _chat_client is None:
         with _client_lock:
             if _chat_client is None:
-                pool = int(os.environ.get("LLM_MAX_WORKERS", "96"))
+                pool = int(os.environ.get("LLM_MAX_WORKERS", "100"))
                 _chat_client = OpenAI(
                     base_url=LLM_BASE_URL,
                     api_key=LLM_API_KEY,
-                    timeout=90.0,
+                    timeout=600.0,
+                    max_retries=0,
                     http_client=_build_http_client(pool),
                 )
     return _chat_client
@@ -50,11 +51,12 @@ def make_embed_client():
     if _embed_client is None:
         with _client_lock:
             if _embed_client is None:
-                pool = int(os.environ.get("LLM_MAX_WORKERS", "96"))
+                pool = int(os.environ.get("LLM_MAX_WORKERS", "100"))
                 _embed_client = OpenAI(
                     base_url=EMBED_BASE_URL,
                     api_key=LLM_API_KEY,
-                    timeout=120.0,
+                    timeout=600.0,
+                    max_retries=0,
                     http_client=_build_http_client(pool),
                 )
     return _embed_client

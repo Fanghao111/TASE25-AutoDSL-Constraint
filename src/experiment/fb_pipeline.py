@@ -14,73 +14,83 @@ from src.experiment.schema_validator import validate_extraction
 from src.experiment.format_rules import format_data as _code_format_data
 
 
+# Pipeline step names (see MIGRATION.md for old→new mapping):
+#   s1 extract    — NL order → fixed-schema JSON             (LLM, per-order)
+#   s2 verify     — factual verification vs NL                (LLM, per-order)
+#   s3 format     — deterministic Title/Pascal/lower casing   (code)
+#   s4 normalize  — global synonym merging across all orders  (LLM, single call + verify)
+#   s5 graph      — build OR matrix / disjunctive graph       (code)
+#   s6 solve      — JSP CP-SAT scheduling                     (OR-Tools)
+#   s7 ground     — reproject schedule back to production plan (code)
+
+
 class FBPipeline:
-    def __init__(self, instance_description: str, experiment_type: str = "CPE_CAE_CSE-2", force: bool = True):
+    def __init__(self, instance_description: str, experiment_type: str = "full", force: bool = True):
         self.instance_description = instance_description
         self.experiment_type = experiment_type
         self.force = force
         self.dump_dir_path = ""
 
         self.orders = []
-        self.extracted_jsons = []      # Step 1 output: extract + format in one LLM call
-        self.verified_jsons = []       # Step 1-verify output: factual verify vs NL
-        self.format_verified_jsons = []  # Step 1-format-verify output: deterministic code format pass
-        self.normalized_jsons = []     # Step 3 output (final)
-        self.or_matrix = []
-        self.machines = []
-        self.assigned_jobs = {}
-        self.production_plan = []
+        self.extracted_jsons = []        # s1 output
+        self.verified_jsons = []         # s2 output
+        self.formatted_jsons = []        # s3 output
+        self.normalized_jsons = []       # s4 output (final structured JSON)
+        self.or_matrix = []              # s5 output
+        self.machines = []               # s5 output
+        self.assigned_jobs = {}          # s6 output
+        self.production_plan = []        # s7 output
 
         self.compile_error_num = 0
         self.total_num = 0
 
-        # Load prompts
-        self.step1_extract_prompt = read_txt("src/prompts/step1_extract.txt")
-        self.step1_verify_prompt = read_txt("src/prompts/step1_verify.txt")
-        self.step3_normalize_prompt = read_txt("src/prompts/step3_normalize.txt")
-        self.step3_verify_prompt = read_txt("src/prompts/step3_verify.txt")
+        # Load prompts (prompt filenames unchanged — they're data assets)
+        self.s1_extract_prompt = read_txt("src/prompts/step1_extract.txt")
+        self.s2_verify_prompt = read_txt("src/prompts/step1_verify.txt")
+        self.s4_normalize_prompt = read_txt("src/prompts/step3_normalize.txt")
+        self.s4_verify_prompt = read_txt("src/prompts/step3_verify.txt")
 
         self.groundtruth = None
 
     def run(self):
-        self.dump_dir_path = f"outputs/FB-2s-{self.experiment_type}/{self.instance_description}/"
+        output_prefix = os.environ.get("FB_OUTPUT_PREFIX", f"FB-2s-{self.experiment_type}")
+        self.dump_dir_path = f"outputs/{output_prefix}/{self.instance_description}/"
         self.groundtruth = GroundTruth(self.instance_description)
         self._load_data()
 
-        if self.experiment_type == "CPE_CAE_CSE-2":
+        if self.experiment_type == "full":
             if len(self.orders) == 0:
                 raise RuntimeError(
-                    f"Missing orders at {self.dump_dir_path}orders.json. "
-                    "Please run generate_orders.py first."
+                    f"Missing orders at preprocess/orders/{self.instance_description.replace('instance ', '')}/orders.json"
                 )
 
-            # ---- Step 1: Extract + Format in one LLM call ----
+            # ---- s1: Extract ----
             if len(self.extracted_jsons) == 0:
-                self.extract_all()
-            # ---- Step 1-verify: factual correctness vs NL (LLM) ----
+                self.extract()
+            # ---- s2: Verify (factual vs NL) ----
             if len(self.verified_jsons) == 0:
-                self.verify_extract()
-            # ---- Step 1-format-verify: deterministic code format pass ----
-            if len(self.format_verified_jsons) == 0:
-                self.verify_format_code()
-            # ---- Step 3: Normalize ----
+                self.verify()
+            # ---- s3: Format (code) ----
+            if len(self.formatted_jsons) == 0:
+                self.apply_format()
+            # ---- s4: Normalize ----
             if len(self.normalized_jsons) == 0:
-                self.normalize_all()
-            # ---- Step 4-6: Build OR Matrix + Solve + Ground ----
-            self.build_or_matrix()
-            self.solve_jsp()
-            self.ground_production_plan()
+                self.normalize()
+            # ---- s5..s7: Graph + Solve + Ground ----
+            self.build_graph()
+            self.solve()
+            self.ground()
 
-        elif self.experiment_type == "CSE-1":
+        elif self.experiment_type == "from_gt_route_sheet":
             route_sheets = read_json(
                 f"outputs/GroundTruth/{self.instance_description}/route_sheets.json"
             )
             self.normalized_jsons = [self._route_sheet_to_fixed_schema(rs) for rs in route_sheets]
-            self.build_or_matrix()
-            self.solve_jsp()
-            self.ground_production_plan()
+            self.build_graph()
+            self.solve()
+            self.ground()
 
-        elif self.experiment_type == "SGE":
+        elif self.experiment_type == "from_gt_schedule":
             self.assigned_jobs = read_json(
                 f"outputs/GroundTruth/{self.instance_description}/assigned_jobs.json"
             )
@@ -88,20 +98,20 @@ class FBPipeline:
                 f"outputs/GroundTruth/{self.instance_description}/route_sheets.json"
             )
             self.normalized_jsons = [self._route_sheet_to_fixed_schema(rs) for rs in route_sheets]
-            self.ground_production_plan()
+            self.ground()
 
     # ------------------------------------------------------------------ #
-    #  Step 1: Extract + Format in a single LLM call                      #
+    #  s1: Extract — NL → fixed-schema JSON (LLM, per-order parallel)     #
     # ------------------------------------------------------------------ #
 
-    def extract_all(self):
-        """Step 1: extract structured JSON AND apply format rules in one LLM call."""
-        print("Step 1: Extract + Format in one pass ...", flush=True)
+    def extract(self):
+        """s1: extract structured JSON AND apply format rules in one LLM call."""
+        print("s1 extract: NL → fixed-schema JSON ...", flush=True)
         self.extracted_jsons = []
 
         prompts = []
         for order in self.orders:
-            prompt = self.step1_extract_prompt.replace("---ORDER---", json.dumps(order))
+            prompt = self.s1_extract_prompt.replace("---ORDER---", json.dumps(order))
             prompts.append(prompt)
 
         results = self._parallel_llm_calls(prompts)
@@ -112,7 +122,7 @@ class FBPipeline:
             if is_valid:
                 self.extracted_jsons.append(parsed)
             else:
-                self.extracted_jsons.append({"steps": [], "bad_case": f"Step 1: {err}"})
+                self.extracted_jsons.append({"steps": [], "bad_case": f"s1 extract: {err}"})
 
         # Retry bad cases once
         bad_indices = [i for i, d in enumerate(self.extracted_jsons) if "bad_case" in d]
@@ -127,70 +137,134 @@ class FBPipeline:
             still_bad = sum(1 for d in self.extracted_jsons if "bad_case" in d)
             print(f"  After retry: {still_bad}/{len(self.extracted_jsons)} still bad", flush=True)
 
-        write_json(self.dump_dir_path + "step1_extracted.json", self.extracted_jsons)
+        write_json(self.dump_dir_path + "s1_extracted.json", self.extracted_jsons)
 
     # ------------------------------------------------------------------ #
-    #  Step 1-format-verify: deterministic code format pass               #
+    #  s2: Verify — factual correctness vs NL (LLM)                       #
     # ------------------------------------------------------------------ #
 
-    def verify_format_code(self):
-        """Step 1-format-verify: deterministic code-based format pass on factually-verified JSONs.
+    def verify(self):
+        """s2: per-step verify against the matching NL sentence.
 
-        Runs AFTER verify_extract() so any factual corrections that drifted the format
-        are normalized back. Idempotent; no LLM calls.
+        One LLM call per (order, step) pair. The output for each step is a
+        single-step dict; we assemble the per-order `{"steps": [...]}` in
+        code, so:
+
+        - The output step count for each order EQUALS the input s1 step count
+          by construction — no more "s2 dropped to []" or "s2 doubled steps"
+          class of failures.
+        - Each LLM call has minimal context (one NL sentence + one JSON step),
+          so it can't confuse itself by re-emitting neighbors.
+        - If a single step's LLM call fails schema after one retry, we fall
+          back to the s1 version of THAT step (not the whole order).
         """
-        print("Step 1-format-verify (code): Applying deterministic format rules ...", flush=True)
-        self.format_verified_jsons = [_code_format_data(d) for d in self.verified_jsons]
-        write_json(self.dump_dir_path + "step1_format_fixed.json", self.format_verified_jsons)
+        print("s2 verify: LLM per-step factual verification vs NL ...", flush=True)
 
-    # ------------------------------------------------------------------ #
-    #  Step 1-verify: Verify factual accuracy                             #
-    # ------------------------------------------------------------------ #
-
-    def verify_extract(self):
-        """Verify each extraction against its NL source."""
-        print("Step 1-verify: Verifying extractions ...", flush=True)
-
-        prompts = []
+        # Flatten to per-step tasks. Each task is (order_idx, step_idx, prompt).
+        tasks = []  # list of (i, j, prompt)
         for i, (order, extracted) in enumerate(zip(self.orders, self.extracted_jsons)):
             if "bad_case" in extracted:
-                prompts.append(None)
                 continue
-            prompt = self.step1_verify_prompt \
-                .replace("---ORDER---", json.dumps(order)) \
-                .replace("---EXTRACTED---", json.dumps(extracted))
-            prompts.append(prompt)
+            nl_steps = order.get("steps", []) if isinstance(order, dict) else []
+            for j, s1_step in enumerate(extracted.get("steps", [])):
+                if j >= len(nl_steps):
+                    continue  # no NL for this step; will fall back to s1
+                prompt = self.s2_verify_prompt \
+                    .replace("---STEP_NL---", json.dumps(nl_steps[j])) \
+                    .replace("---STEP_JSON---", json.dumps(s1_step))
+                tasks.append((i, j, prompt))
 
-        # Only call LLM for valid entries
-        valid_indices = [i for i, p in enumerate(prompts) if p is not None]
-        valid_prompts = [prompts[i] for i in valid_indices]
-        results = self._parallel_llm_calls(valid_prompts)
+        prompts = [t[2] for t in tasks]
+        results = self._parallel_llm_calls(prompts) if prompts else []
 
-        self.verified_jsons = list(self.extracted_jsons)  # copy
-        for j, idx in enumerate(valid_indices):
-            parsed = self._safe_json_parse(results[j])
-            is_valid, err = validate_extraction(parsed)
-            if is_valid:
-                self.verified_jsons[idx] = parsed
-            else:
+        # Start from s1 verbatim; overwrite per-step with verified step when accepted.
+        self.verified_jsons = [copy.deepcopy(x) for x in self.extracted_jsons]
+
+        s2_accept = s2_fallback = 0
+        for (i, j, prompt), raw in zip(tasks, results):
+            step = self._parse_single_step(raw)
+            if step is None:
                 # Retry once
-                result = self._chatgpt_function(valid_prompts[j])
-                parsed = self._safe_json_parse(result)
-                is_valid, err = validate_extraction(parsed)
-                if is_valid:
-                    self.verified_jsons[idx] = parsed
-                else:
-                    self.verified_jsons[idx] = {"steps": [], "bad_case": f"Step 1-verify: {err}"}
+                raw2 = self._chatgpt_function(prompt)
+                step = self._parse_single_step(raw2)
+            if step is not None:
+                self.verified_jsons[i]["steps"][j] = step
+                s2_accept += 1
+            else:
+                # Fallback: leave s1's step in place (already there via deepcopy)
+                s2_fallback += 1
 
-        write_json(self.dump_dir_path + "step1_verified.json", self.verified_jsons)
+        total = s2_accept + s2_fallback
+        print(f"  s2 accepted: {s2_accept}/{total}  fell back to s1 step: {s2_fallback}",
+              flush=True)
+        write_json(self.dump_dir_path + "s2_verified.json", self.verified_jsons)
+
+    @staticmethod
+    def _single_step_schema_ok(step) -> bool:
+        """A step is well-formed iff it looks like s1's per-step schema.
+
+        Same required fields as validate_extraction expects, but at the single
+        step level (no {"steps": ...} wrapper).
+        """
+        if not isinstance(step, dict):
+            return False
+        required = {"operation", "machine", "duration", "precondition", "postcondition"}
+        if not required.issubset(step.keys()):
+            return False
+        if not str(step.get("machine", "")).strip():
+            return False
+        if not any(c.isdigit() for c in str(step.get("duration", ""))):
+            return False
+        for f in ("precondition", "postcondition"):
+            if not isinstance(step.get(f), list):
+                return False
+        return True
+
+    def _parse_single_step(self, raw):
+        """Parse LLM raw output as a SINGLE-step JSON object.
+
+        Handles the case where the model still wraps in {"steps": [...]}
+        (extract the first element) or {"steps": [step1, step2, ...]} with
+        multiple (take only the first — better than nothing).
+        Returns the step dict on success, None on failure.
+        """
+        parsed = self._safe_json_parse(raw)
+        if not parsed:
+            return None
+        # Unwrap if the model returned {"steps": [...]}
+        if isinstance(parsed, dict) and "steps" in parsed:
+            steps = parsed.get("steps") or []
+            if not steps:
+                return None
+            parsed = steps[0]
+        # Some models occasionally return [step] instead of step
+        if isinstance(parsed, list):
+            if not parsed:
+                return None
+            parsed = parsed[0]
+        return parsed if self._single_step_schema_ok(parsed) else None
 
     # ------------------------------------------------------------------ #
-    #  Step 3: Semantic normalization (synonym merging)                    #
+    #  s3: Format — deterministic code format pass                        #
     # ------------------------------------------------------------------ #
 
-    def normalize_all(self):
-        """Discover and apply semantic normalization across all valid data."""
-        print("Step 3: Normalizing ...", flush=True)
+    def apply_format(self):
+        """s3: deterministic code-based format pass on factually-verified JSONs.
+
+        Runs AFTER verify() so any factual corrections that drifted the format
+        are normalized back. Idempotent; no LLM calls.
+        """
+        print("s3 format (code): applying Title/Pascal/lower casing ...", flush=True)
+        self.formatted_jsons = [_code_format_data(d) for d in self.verified_jsons]
+        write_json(self.dump_dir_path + "s3_formatted.json", self.formatted_jsons)
+
+    # ------------------------------------------------------------------ #
+    #  s4: Normalize — global synonym merging (LLM, single call + verify) #
+    # ------------------------------------------------------------------ #
+
+    def normalize(self):
+        """s4: discover and apply semantic normalization across all valid data."""
+        print("s4 normalize: global synonym merging ...", flush=True)
 
         # Collect all unique values by category
         machines = set()
@@ -199,7 +273,7 @@ class FBPipeline:
         param_keys = set()
         param_values = set()
 
-        valid_data = [d for d in self.format_verified_jsons if "bad_case" not in d]
+        valid_data = [d for d in self.formatted_jsons if "bad_case" not in d]
 
         for data in valid_data:
             for step in data.get("steps", []):
@@ -217,7 +291,7 @@ class FBPipeline:
                         param_values.add(v)
 
         # LLM call for normalization
-        prompt = self.step3_normalize_prompt \
+        prompt = self.s4_normalize_prompt \
             .replace("---MACHINES---", json.dumps(sorted(machines))) \
             .replace("---OPERATIONS---", json.dumps(sorted(operations))) \
             .replace("---COMPONENT_TYPES---", json.dumps(sorted(component_types))) \
@@ -251,15 +325,15 @@ class FBPipeline:
                 parsed = self._safe_json_parse(raw)
                 if _is_valid_groups(parsed):
                     return parsed
-                print(f"  [step3] {label} returned invalid shape on attempt {attempt + 1}, retrying...",
+                print(f"  [s4] {label} returned invalid shape on attempt {attempt + 1}, retrying...",
                       flush=True)
-            print(f"  [step3] {label} still invalid after {max_retries} attempts; using empty groups",
+            print(f"  [s4] {label} still invalid after {max_retries} attempts; using empty groups",
                   flush=True)
             return {}
 
         # Retry the normalize call if the first attempt produced an invalid shape.
         if not _is_valid_groups(normalization):
-            print(f"  [step3] normalize returned invalid shape on attempt 1, retrying...", flush=True)
+            print(f"  [s4] normalize returned invalid shape on attempt 1, retrying...", flush=True)
             normalization = _call_until_valid(prompt, "normalize", max_retries=2)
 
         # Build flat mappings from groups (shared helper for pre- and post-verify)
@@ -276,8 +350,8 @@ class FBPipeline:
 
         mappings = _flatten_groups(normalization)
 
-        # Persist pre-verify intermediate products (mirrors step1/step2 conventions)
-        write_json(self.dump_dir_path + "step3_mappings_pre_verify.json", mappings)
+        # Persist pre-verify intermediate products (mirrors s1..s3 convention)
+        write_json(self.dump_dir_path + "s4_mappings_pre.json", mappings)
 
         # Build diff-based verify input: pre_set / post_set / merges per category
         pre_sets_by_category = {
@@ -307,7 +381,7 @@ class FBPipeline:
         }
 
         # Verify the mapping by inspecting the pre/post diff (not random samples)
-        verify_prompt = self.step3_verify_prompt.replace(
+        verify_prompt = self.s4_verify_prompt.replace(
             "---DIFF---", json.dumps(diff_by_category, indent=2, ensure_ascii=False)
         )
         verified_normalization = _call_until_valid(verify_prompt, "verify", max_retries=3)
@@ -322,18 +396,15 @@ class FBPipeline:
 
         # Apply mappings to all data
         self.normalized_jsons = []
-        for data in self.format_verified_jsons:
+        for data in self.formatted_jsons:
             if "bad_case" in data:
                 self.normalized_jsons.append(data)
                 continue
             normalized = self._apply_normalization(data, mappings)
             self.normalized_jsons.append(normalized)
 
-        write_json(self.dump_dir_path + "step3_normalized.json", self.normalized_jsons)
-        write_json(self.dump_dir_path + "step3_mappings.json", mappings)
-
-        # Also save as CAM-3_normalized_jsons.json for evaluation compatibility
-        write_json(self.dump_dir_path + "CAM-3_normalized_jsons.json", self.normalized_jsons)
+        write_json(self.dump_dir_path + "s4_normalized.json", self.normalized_jsons)
+        write_json(self.dump_dir_path + "s4_mappings.json", mappings)
 
     def _apply_normalization(self, data, mappings):
         """Apply normalization mappings to a fixed-schema JSON."""
@@ -364,12 +435,12 @@ class FBPipeline:
         return result
 
     # ------------------------------------------------------------------ #
-    #  Step 4: Build OR Matrix (deterministic)                            #
+    #  s5: Graph — build disjunctive graph / OR matrix (code)             #
     # ------------------------------------------------------------------ #
 
-    def build_or_matrix(self):
-        """Derive OR matrix from normalized JSONs using fixed schema fields."""
-        print("Step 4: Building OR matrix (linear precedence) ...", flush=True)
+    def build_graph(self):
+        """s5: derive OR matrix from normalized JSONs using fixed schema fields."""
+        print("s5 graph: building disjunctive graph (linear precedence) ...", flush=True)
         self.or_matrix = []
         self.compile_error_num = 0
         self.total_num = 0
@@ -394,8 +465,8 @@ class FBPipeline:
             row = self._derive_precedence_linear(steps)
             self.or_matrix.append(row)
 
-        write_json(self.dump_dir_path + "CGM_or_matrix.json", self.or_matrix)
-        write_json(self.dump_dir_path + "CGM_machines.json", self.machines)
+        write_json(self.dump_dir_path + "s5_or_matrix.json", self.or_matrix)
+        write_json(self.dump_dir_path + "s5_machines.json", self.machines)
 
     def _derive_precedence_linear(self, steps):
         """Classical JSP precedence: each step depends only on the previous one.
@@ -425,12 +496,12 @@ class FBPipeline:
             return 0
 
     # ------------------------------------------------------------------ #
-    #  Step 5: Solve JSP (OR-Tools)                                       #
+    #  s6: Solve — CP-SAT JSP scheduling (OR-Tools)                       #
     # ------------------------------------------------------------------ #
 
-    def solve_jsp(self):
-        """Run OR-Tools JSP solver."""
-        print("Step 5: Solving JSP ...", flush=True)
+    def solve(self):
+        """s6: run OR-Tools JSP solver."""
+        print("s6 solve: OR-Tools CP-SAT scheduling ...", flush=True)
         or_matrix = copy.deepcopy(self.or_matrix)
         assigned_jobs, solver, err_rate, makespan = schedule(or_matrix)
         if len(assigned_jobs) == 0:
@@ -438,17 +509,17 @@ class FBPipeline:
             self.compile_error_num += 1
         else:
             self.assigned_jobs = assigned_jobs
-        write_json(self.dump_dir_path + "assigned_jobs.json", self.assigned_jobs)
-        write_txt(self.dump_dir_path + "err_rate.txt", str(err_rate))
-        write_txt(self.dump_dir_path + "makespan.txt", str(makespan))
+        write_json(self.dump_dir_path + "s6_assigned_jobs.json", self.assigned_jobs)
+        write_txt(self.dump_dir_path + "s6_err_rate.txt", str(err_rate))
+        write_txt(self.dump_dir_path + "s6_makespan.txt", str(makespan))
 
     # ------------------------------------------------------------------ #
-    #  Step 6: Ground production plan                                     #
+    #  s7: Ground — map schedule back to production plan                  #
     # ------------------------------------------------------------------ #
 
-    def ground_production_plan(self):
-        """Map solver output back to step details."""
-        print("Step 6: Grounding production plan ...", flush=True)
+    def ground(self):
+        """s7: map solver output back to step details."""
+        print("s7 ground: reprojecting schedule to production plan ...", flush=True)
         production_plan = []
 
         for machine_index_str, production_sequence in self.assigned_jobs.items():
@@ -498,8 +569,8 @@ class FBPipeline:
             production_plan.append(machine_plan)
 
         self.production_plan = production_plan
-        write_json(self.dump_dir_path + "SGM_production_plan.json", self.production_plan)
-        write_txt(self.dump_dir_path + "compile_error_num.txt", str(self.compile_error_num))
+        write_json(self.dump_dir_path + "s7_production_plan.json", self.production_plan)
+        write_txt(self.dump_dir_path + "s7_compile_errors.txt", str(self.compile_error_num))
 
     # ------------------------------------------------------------------ #
     #  Route sheet builder (static — used by evaluation as adapter)       #
@@ -551,25 +622,30 @@ class FBPipeline:
     def _load_data(self):
         if not os.path.exists(self.dump_dir_path):
             os.makedirs(self.dump_dir_path)
-        if os.path.exists(self.dump_dir_path + "orders.json"):
-            self.orders = read_json(self.dump_dir_path + "orders.json")
+        # Read orders directly from the canonical location — no per-model copy needed.
+        # (Historically generate_orders.py fanned orders into each pipeline's dump dir;
+        # since that script was removed, we read canonical directly and keep dump dirs
+        # for pipeline outputs only.)
+        canonical_orders = f"preprocess/orders/{self.instance_description.replace('instance ', '')}/orders.json"
+        if os.path.exists(canonical_orders):
+            self.orders = read_json(canonical_orders)
         # When force=True, skip loading intermediate files so all steps re-run
         if self.force:
             return
-        if os.path.exists(self.dump_dir_path + "step1_extracted.json"):
-            self.extracted_jsons = read_json(self.dump_dir_path + "step1_extracted.json")
-        if os.path.exists(self.dump_dir_path + "step1_verified.json"):
-            self.verified_jsons = read_json(self.dump_dir_path + "step1_verified.json")
-        if os.path.exists(self.dump_dir_path + "step1_format_fixed.json"):
-            self.format_verified_jsons = read_json(self.dump_dir_path + "step1_format_fixed.json")
-        if os.path.exists(self.dump_dir_path + "step3_normalized.json"):
-            self.normalized_jsons = read_json(self.dump_dir_path + "step3_normalized.json")
-        if os.path.exists(self.dump_dir_path + "CGM_or_matrix.json"):
-            self.or_matrix = read_json(self.dump_dir_path + "CGM_or_matrix.json")
-        if os.path.exists(self.dump_dir_path + "CGM_machines.json"):
-            self.machines = read_json(self.dump_dir_path + "CGM_machines.json")
-        if os.path.exists(self.dump_dir_path + "assigned_jobs.json"):
-            self.assigned_jobs = read_json(self.dump_dir_path + "assigned_jobs.json")
+        if os.path.exists(self.dump_dir_path + "s1_extracted.json"):
+            self.extracted_jsons = read_json(self.dump_dir_path + "s1_extracted.json")
+        if os.path.exists(self.dump_dir_path + "s2_verified.json"):
+            self.verified_jsons = read_json(self.dump_dir_path + "s2_verified.json")
+        if os.path.exists(self.dump_dir_path + "s3_formatted.json"):
+            self.formatted_jsons = read_json(self.dump_dir_path + "s3_formatted.json")
+        if os.path.exists(self.dump_dir_path + "s4_normalized.json"):
+            self.normalized_jsons = read_json(self.dump_dir_path + "s4_normalized.json")
+        if os.path.exists(self.dump_dir_path + "s5_or_matrix.json"):
+            self.or_matrix = read_json(self.dump_dir_path + "s5_or_matrix.json")
+        if os.path.exists(self.dump_dir_path + "s5_machines.json"):
+            self.machines = read_json(self.dump_dir_path + "s5_machines.json")
+        if os.path.exists(self.dump_dir_path + "s6_assigned_jobs.json"):
+            self.assigned_jobs = read_json(self.dump_dir_path + "s6_assigned_jobs.json")
 
     # ------------------------------------------------------------------ #
     #  LLM utilities                                                      #
@@ -578,7 +654,7 @@ class FBPipeline:
     def _parallel_llm_calls(self, prompts, max_workers=None):
         """Execute LLM calls in parallel, preserving order."""
         if max_workers is None:
-            max_workers = int(os.environ.get("LLM_MAX_WORKERS", "96"))
+            max_workers = int(os.environ.get("LLM_MAX_WORKERS", "64"))
         results = [None] * len(prompts)
 
         def call_with_index(idx, prompt):

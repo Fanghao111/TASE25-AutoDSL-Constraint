@@ -1,9 +1,8 @@
 # Generate NL order descriptions for all 10 instances (ta71-ta80) via LLM.
 # Foreground: stdout streams to terminal AND logs/generate_orders_run.log.
 #
-# Writes outputs/Orders/{instance}/orders.json (canonical) and fans copies to
-# the two pipeline output dirs. Idempotent — skips instances whose canonical
-# orders.json already exists.
+# Writes preprocess/orders/ta{71..80}/orders.json (canonical). Idempotent —
+# skips instances whose orders.json already exists.
 #
 # Usage:
 #   .\scripts\generate_orders.ps1

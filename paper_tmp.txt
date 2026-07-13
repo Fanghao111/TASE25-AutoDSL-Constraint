@@ -1,0 +1,1228 @@
+                                       IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING                                1
+
+                                          Automated Constraint Specification for Job
+                                       Scheduling by Regulating Generative Model with
+
+                                                 Domain-Specific Representation
+
+                                                                    Yu-Zhe Shi, Qiao Xu, Yanjia Li, Mingchen Liu, Huamin Qu,
+                                                                     Lecheng Ruan and Qining Wang, Senior Member, IEEE
+
+arXiv:2510.02679v1 [cs.AI] 3 Oct 2025     Abstract--Advanced Planning and Scheduling (APS)                                Index Terms--Smart Manufacturing; Constraint Specification;
+                                       systems have become indispensable for modern manufacturing                      Domain-Specific Representation
+                                       operations, enabling optimized resource allocation and
+                                       production efficiency in increasingly complex and dynamic                                                 I. INTRODUCTION
+                                       environments. While algorithms for solving abstracted
+                                       scheduling problems have been extensively investigated, the                        Smart manufacturing has become a cornerstone of industrial
+                                       critical prerequisite of specifying manufacturing requirements                  development, promising enhanced productivity and adaptabil-
+                                       into formal constraints remains manual and labor-intensive.                     ity through digital transformation [1]. This manufacturing
+                                       Although recent advances of generative models, particularly                     paradigm represents a fundamental shift from traditional pro-
+                                       Large Language Models (LLMs), show promise in automating                        duction systems, incorporating advanced technologies to create
+                                       constraint specification from heterogeneous raw manufacturing                   more intelligent and responsive operations [2], [3], [4]. As
+                                       data, their direct application faces challenges due to natural                  manufacturers face increasing pressure to handle product vari-
+                                       language ambiguity, non-deterministic outputs, and limited                      ety and shorter delivery times, the conventional rigid produc-
+                                       domain-specific knowledge. This paper presents a constraint-                    tion models are giving way to Flexible Manufacturing System
+                                       centric architecture that regulates LLMs to perform reliable                    (FMS) [5]. These systems must efficiently process multiple
+                                       automated constraint specification for production scheduling.                   jobs with different specifications, processing requirements, and
+                                       The architecture defines a hierarchical structural space                        priorities--all while sharing limited manufacturing resources.
+                                       organized across three levels, implemented through domain-                      Accordingly, Advanced Planning and Scheduling (APS) sys-
+                                       specific representation to ensure precision and reliability                     tem [6] emerges as a crucial decision-making process in smart
+                                       while maintaining flexibility. Furthermore, an automated                        manufacturing, as it determines how effectively manufacturing
+                                       production scenario adaptation algorithm is designed and                        resources are utilized to meet production objectives.
+                                       deployed to efficiently customize the architecture for specific
+                                       manufacturing configurations. Experimental results demonstrate                     The implementation of an APS system comprehends two
+                                       that the proposed approach successfully balances the generative                 major phases: (i) the specification of real-world manufacturing
+                                       capabilities of LLMs with the reliability requirements of                       constraints, such as procedural dependency for production
+                                       manufacturing systems, significantly outperforming pure LLM-                    and availability of factory resource, into a mathematical Job
+                                       based approaches in constraint specification tasks.                             Scheduling Problem (JSP) formulation [7], [8]; and (ii) the so-
+                                                                                                                       lution for the formulated JSP [9], [10]. In the previous research
+                                          Note to Practitioners--This paper presents a practical so-                   paradigm, manufacturing constraints are typically abstracted
+                                       lution for automating the conversion of raw manufacturing                       and standardized to emphasize the scheduling fundamentals
+                                       information into job scheduling specifications, addressing a                    while deliberately excluding production-scenario-specific con-
+                                       common challenge in implementing APS systems. The proposed                      text such as material characteristics, machine specifications,
+                                       architecture can process diverse manufacturing documentation                    and product requirements [11], [12]. Under this setting, diverse
+                                       formats, from semi-structured route sheets to natural language                  JSP solvers have been successfully developed for specific
+                                       instructions, while ensuring reliability through domain-specific                problem characteristics and instances [13], [14].
+                                       representations. Manufacturing practitioners can use this system
+                                       to reduce the manual effort in specifying digitalized constraints                  However, abstracted constraints for a JSP solver do not
+                                       for production, particularly beneficial for facilities with frequent            emerge spontaneously from real-world manufacturing scenar-
+                                       requirement changes or small-batch, multi-variety production.                   ios; they require meticulous development and formalization by
+                                       The system's ability to automatically adapt to different manufac-               experienced manufacturing experts [15]. This manual spec-
+                                       turing scenarios makes it accessible without requiring extensive                ification process was historically manageable in traditional
+                                       programming expertise, offering a practical balance between                     manufacturing settings with stable production scopes, as it was
+                                       automation and accuracy in production planning.                                 essentially a one-time effort with long-term utility. However,
+                                                                                                                       the emergence of smart manufacturing has fundamentally
+                                          This work is partially supported by the National Natural Science Foundation  transformed this landscape through several challenges. First,
+                                       of China under Grants 52475001 and RGC GRF Grant 16210321. Yu-Zhe Shi           the shift toward small-batch, multi-variety production demands
+                                       and Qiao Xu contributed equally. (Corresponding author: Lecheng Ruan)           extensive constraint specifications to accommodate diverse
+
+                                          Yu-Zhe Shi, Qiao Xu, Lecheng Ruan, and Qining Wang are with School of
+                                       Advanced Manufacturing and Robotics, Peking University, Beijing 100871,
+                                       China.
+
+                                          Yu-Zhe Shi, Yanjia Li, and Huamin Qu are with the Department of
+                                       Computer Science and Engineering, School of Engineering, The Hong Kong
+                                       University of Science and Technology, Hong Kong SAR.
+
+                                          Mingchen Liu is with the School of Computer Science and Technology,
+                                       Huazhong University of Science and Technology, Wuhan 430074, China.
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING                                                                                                                                                                                                                                                                                                                                                             2
+
+A Natural Language
+                                                        DSL Program Represention                                                      DSL Program Verification on
+                                     Constraint Generation                                                                                                       DSL Program Representation
+                                                                             of Production Procedure                                                        Dual Program Views                                             in JSP Solver Format                                                                                                             of Production Plan
+            Description                                                    lathe(
+                                                                                                                                      jobs_data = [
+                                                                             slot = metal_bar_0,
+                                                        lathed_part_0 component /  broached_c_0 component /                [...,                                                                                                                    lathe(
+
+     The vertical lathe turns a metal bar                                    duration = 19 units,                                                        v y con e er_belt          v y con e er_belt                                                                                                                                                   start_time = 0,
+
+     in 19u time with ADINTWS carbide...                                     machine = Lathe_M,
+                                                                                                                              (1, 19, [0]),                                                                                                             end_time = 19,
+
+                                                                             parameters = (
+                                                             lathed part                broached c.                               (2, 21, [1]),                                                                                                             slot = metal_bar_0,
+     Broach the lathed into a component                                                                                                                                                                                       (3, 104, [2]),                                                                                                            machine = Lathe_M_#0,...)
+
+     in 21u time with 5mm depth cut...                                         carbide = ADINTWS),
+                                                     lathe                 broaching                 drilling              (4, 161, [1]),...],
+
+     Drill the component in 104u time by                                     emit = lathed_part_0);
+                                                                                                                        ...
+                                                                                                                     broaching(
+
+     a 10mm drill in 500 RPM spindle...                                    lathed_part(...)...
+                                                        machine:               device:                   device:         ]                                                                                                                               start_time = 46,
+
+                                                                           broaching(...)...                                                           Lathe_M;               B M; roaching_            D ; rill_Press                                                                                                                                  end_time = 67,
+     Mill the lathed part in 161 u time by                                                                                                             duration:              duration:                 duration:                                                                                                                                       machine = ...)
+     3mm depth with 1000 RPM milling...                                                                                                                19 units;              21 units;                 104 units;
+                                                                                                                                                                                                                                                                                                                                                     Process Lock Mechanism for
+                              lathe                                        lathe::=
+ lathe                 metal bar           Pushdown Automaton                             Lifecycles of the                         Constraint Programming for
+                                                                                                                               for Product Flow Traversal                     Intermediate Products                     Scheduling Optimization                                                                                                      Program Reference
+                 metal bar                      time                         /*interface_0*/
+         metal_bar ::=
+
+                                                                             slot ::= MAT
+              pred ::= Bandsawing
+                                                                                                                                                                                                    P1 1 P1 2 P1 3 P1 4
+                              19u                                            duration ::= INT
+          refname ::=
+                                                      carbide                machine ::= Lathe_M
+
+                                 ADINTWS                                     parameters ::= ...
+      metal_bar_0
+
+                                                                                                        succ ::= Operation
+                                                                                                                                                                                                                          Lathe      S metal_bar_0 E S ... E S           ...       E
+                                                                                broaching               vol ::= REAL MEAS
+                                                                                                                                                                    milling                                                                  P1 1 P1 2 P1 3 P1 4                                                                                     Broaching  S ... E       S lathed_part_0 E  S       ...     E
+                                                                           broach ::=
+                    lathed part                                                                                                                        P1 1 P1 2 P1 3 P1 4                                                                                     Machine
+                                                                             /*interface_2*/
+                                                                                                 broached_c_0                                                                                                                                           Drilling
+                                                                             slot: PROD
+              lathed_part ::=
+                                                                                                                       P1 1 P1 2 P1 3 P1 4                                                                                     P ss re
+                              broach                                         duration: INT
+             pred ::= Lathe
+                                  drilled_c  drilling   lathed_part_1                            P1 1 P1 2 P1 3 P1 4  P1 1 P1 2 P1 3 P1 4                                                                                     Milling    S  ...   ES       ...      E     S broached_c_0 E
+                                                                             machine: Broaching
+        refname ::=                                                    ...     lathed_part_0                                                                                                                                                         Machine                                       E
+                                                                             parameters ::= ...                                drilled_c_0 | drilling
+                                                                                                      "lathed_part_0"
+                                                        broaching
+                 lathed part              time                                                          succ ::= Broaching                                                                                                                                                                                                                                         S     ...  ES  lathed_part_1
+
+                                     21u                            depth                             | Milling | ...
+         broached_c_0 | broaching  metal_bar_0
+                                                                                                                               lathed_part | lathe
+                                          5mm                                                                                                                                                                                                                                                                                                                   time
+
+                                                                                                                                                                    lathe                     drilling      milling                          P1 1 P1 2 P1 3 P1 4
+
+                                                                                                                               metal_bar | bandsawing
+
+                                          Constraint Abstraction                                                                                       Constraint Generation                                            JSP Solver                                                                                                                      Schedule Grounding
+
+No. Operation Operation Description                                        No. Operation Machine Duration Material Tooling                  /*resource constraints*/
+                                                   Optimal Schedule Length:                                                                                                     lathed part broached c.
+                                                                                                                                                                                                                        ...
+                                                                                                                         lathe broaching drilling
+1 Lathe          The vertical lathe turns a metal                          1 Lathe          Vertical      19 units Metal Bar Carbide =      exec(lathe, Lathe_M) = True;
+                                               Machine 0: job_0_task_1                                                                                                      lathed part broached c.
+                 bar in 19u time with ADINTWS...                                            Lathe                                  ADINTWS  exec(drilling, Drill_P) = True;
+
+                                           job_2_task_1 [0, 19]                                                                                                         lathe broaching drilling
+                                                                                                                                                                                                                        [20, 52]...                                                                                                                  lathed part broached c.
+2 Broaching component in 21u time with... Broach the lathed into a         2 Machine Broaching Broaching  21 units Lathed      Depth =      /*precedence constraints*/
+                                                 Machine 1: job_4_task_3                                                                                                      lathe broaching drilling
+                                                                                                                     Part      5mm                                                                                      job_0_task_2 [0, 45]
+                                                                                                                                            dep(lathe, broaching) = True;
+                                              [46, 67]...
+                                                                                                                     Product Flow with
+3 Drilling       Drill the component in 104u time                          3 Drilling Drill Press         104 units Broached Depth =        dep(broaching, drilling) = True;
+                                           ...                                                                                                                          Concurrency Management
+                 by a 10mm drill in 500 RPM...                                                                       Component 10mm         dep(lathe, milling) = True; 
+
+                                                                                                                                                                                                                          Schedule Resolved by
+4 Milling Rough  Mill the lathed part in 161 u time                        4 Milling Rough  Vertical Milling 161 units Lathed  Depth =          DSL Program for Resource                                                        JSP Solver
+                 by 3mm depth with 1000 RPM...                                              Machine                            3mm, ...        and Precedence Constraints
+                                                                                                          Part
+
+         Semi-Structured                                                                    Fully-Structured
+
+           Route Sheet                                                                        Route Sheet
+
+B
+
+Fig. 1. Illustration of the proposed constraint-centric architecture. (A) This panel presents a running example that illustrates the complete information
+flow, transitioning from two formats of procedures to a grounded production plan (depicted in the top and bottom rows). It also outlines the three modules
+involved: constraint abstraction, constraint generation, and schedule grounding, along with their corresponding core working mechanisms (shown in the
+middle row). The DSL program specified for the manufacturing scenario is highlighted as the primary driving force of the architecture. (B) This panel provides
+an intuitive visualization of the procedural transmission of information throughout the architecture's process. Progressing from left to right, the sequence of
+states includes the original procedures, fully-structured route sheet, generated constraint, JSP-solver-generated schedule, and ultimately, the production plan.
+The information is color-coded according to its type, such as operation name, machine, duration, and unspecified information, to enhance understanding.
+
+processing requirements [16]. Second, the inherently dynamic                                                                                                                        application to manufacturing constraint specification faces sev-
+nature of modern production necessitates constant updates                                                                                                                           eral fundamental challenges: (i) the intrinsic ambiguity of NL-
+of constraints [17]. Third, manufacturing knowledge exists                                                                                                                          based raw manufacturing data such as route sheets [27]; (ii) the
+in heterogeneous formats across different sources, ranging                                                                                                                          non-deterministic nature of generative models like LLMs [28];
+from semi-structured route sheets to Natural Language (NL)                                                                                                                          and (iii) the lack of fine-grained domain-specific knowledge
+instructions [18], [19], creating significant barriers to efficient                                                                                                                 regarding the specific product categories and factories in the
+constraint extraction. While researchers have made consid-                                                                                                                          training data of LLMs [29]. While such characteristics might
+erable progress improving JSP solver efficiency, the manual                                                                                                                         be acceptable or even beneficial in creative applications like
+constraint specification process has emerged as the critical                                                                                                                        artwork composition, manufacturing systems demand abso-
+bottleneck in APS implementation. Consequently, there is a                                                                                                                          lute precision, reliability, and detailed domain expertise [30].
+growing need to automate the constraint specification process,                                                                                                                      Specifically, generated constraints must strictly align with
+and furthermore the entire workflow--from abstracting het-                                                                                                                          factory resources and product-specified production procedure,
+erogeneous constraint rules to generating solver specifications                                                                                                                     while production plans must precisely define execution config-
+and ultimately grounding the resulting schedules back to                                                                                                                            urations. This fundamental mismatch between manufacturing's
+interpretable production plans.                                                                                                                                                     reliability requirements on constraints and the capabilities
+                                                                                                                                                                                    of pure LLM-based solutions suggests the necessity of an
+   With the rapid advancement of Generative Artificial In-                                                                                                                          external architecture atop the LLM-based workflow to regulate
+telligence (GenAI) techniques, leveraging Large Language                                                                                                                            the LLM performance in the manufacturing scenarios.
+Models (LLMs) to automate constraint specification based
+on heterogenous manufacturing data and knowledge appears                                                                                                                               To address these challenges, this paper proposes a
+promising. Recent studies have demonstrated LLMs' capabil-                                                                                                                          constraint-centric architecture that regulates the LLM to per-
+ity to solve abstract optimization problems from mathematical                                                                                                                       form automated reliable constraint specification from raw
+word problem-style NL descriptions [20], [21], suggesting                                                                                                                           manufacturing knowledge and data. The architecture defines a
+their potential applicability for specifying the constraints [22],                                                                                                                  hierarchical structural space that systematically organizes man-
+[23], [24], [25], [26]. However, despite LLMs' strengths in                                                                                                                         ufacturing constraints across three distinct levels [31]. The top
+information extraction and NL understanding, their direct                                                                                                                           level captures global operation dependencies and resource re-
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING             3
+
+lationships. The middle level handles the context-specific exe-     columns detailing machine names and operation durations.
+cution configurations, while the bottom level manages detailed      Therefore, to accurately capture such information within the
+scheduling parameters and production specifications. This           production procedures, the first module compiles the unstruc-
+hierarchical space is gradually constructed upon a domain-          tured or semi-structured descriptions into programs of the
+specific representation, implemented through Domain-Specific        corresponding DSL of the specific production scenario.
+Languages (DSLs) [32] for their properties that naturally align
+with manufacturing constraints [33], [34]--(i) the compact             Subsequently, the second module works on the fine-grained
+domain-specific features to avoid redundancy of constraint          route sheet and specifies the constraints for JSP. This is
+representation [35]; (ii) the support of flexible, syntactical      implemented as verification over the DSL programs, gener-
+combination of constraints [36]; and (iii) the maintenance of       ating resource constraint programs and precedence constraint
+reliability by structural constraint representation [37]--serving   programs. These programs are then transformed into a format
+as an appropriate supplementary of LLMs [38]. To further            compatible with off-the-shelf JSP solvers.
+adapt the proposed architecture across different manufacturing
+scenarios, such as varied factory configurations and diverse           Finally, the third module grounds the resulting schedule,
+production procedures [39], and avoid the labor-intensive,          output by the JSP solvers, into production plans that are
+case-specific, and costly DSL crafting [40], [41], [42], we         ready for further interpretation and execution by the Computer
+present an automated algorithm to efficiently adapt the ar-         Numerical Control (CNC) systems within the factory envi-
+chitecture according to specific manufacturing configurations.      ronment. This step completes the concrete semantics of the
+Comprehensive experiments are conducted to verify our ad-           operations and their corresponding execution configurations,
+vantages over pure LLM-based approaches.                            transforming the semanticless schedule produced by the JSP
+                                                                    solvers. This is achieved by referencing the DSL programs.
+   In this work, we address the automatic, entire-workflow
+constraint specification for production scheduling, based on        B. Constraint Abstraction from the Production Procedures
+a domain-specific representation to regulate LLM outputs, to
+achieve a balance between the generative power of GenAI                The first module takes the production procedures as input
+and the guardrail of reliability. Our contributions are three-      and outputs a fully structured representation of the target pro-
+fold: (i) we introduce and formulate the constraint-centric         duction procedures, specifically the complete manufacturing
+architecture for reliable constraint specification (Sec. II); (ii)  route sheet. This desired route sheet must accurately capture
+we develop an automatic adapter for customizing the proposed        the operation name, required machine, standard duration, and
+architecture across various production scenarios (Sec. III);        execution configurations for each step. Given the intrinsic
+(iii) we integrate the architecture into the GenAI pipeline for     ambiguity of NL [27], achieving this objective necessitates
+constraint specification, evaluate the pipeline on diverse man-     the precise parsing of NL-based descriptions and the fine-
+ufacturing scenarios (Sec. IV), and demonstrate the usability       grained representation of procedural knowledge. In precision-
+and scalability of the proposed architecture (Sec. V).              demanding scenarios like manufacturing, any deviation from
+                                                                    the provided procedures or the factory's conditions is inadmis-
+       II. THE CONSTRAINT-CENTRIC ARCHITECTURE                      sible. To ensure both preciseness and usability, we opt to uti-
+                                                                    lize domain-specific representation for production procedures,
+   In this section, we introduce the constraint-centric architec-   implemented through DSLs.
+ture for entire-life-cycle constraint specification (see Fig. 1).
+Starting from an overview of the architecture (Sec. II-A), we          The working mechanism of this module can be formally
+describe the three modules, including abstraction from the          expressed as CAP = ( | , L), where  = {1, 2, . . . , ||}
+route sheets (Sec. II-B), specification for JSP (Sec. II-C), and    represents the given set of production procedures, which
+instantiation for interpretable production plan (Sec. II-D).        outline the steps for producing specific products k; L de-
+                                                                    notes the DSL tailored to the manufacturing scenario and
+A. Architecture Overview                                            the factory. The outcome  = {J , M} represents the set
+                                                                    of fully structured manufacturing route sheets, where J =
+   The primary utility of the architecture lies in its ability to   {J1, J2, . . . , J|J |} indicates the production procedures repre-
+take new-coming production procedures as input and generate         sented as DSL programs, and M = {M1, M2, . . . , M|M|}
+a corresponding scheduled production plan as output, tailored       denotes the factory, equipped with a concrete set of machines.
+to the specific context of a concrete factory within a manu-
+facturing domain. The overall input to the architecture can be         The corresponding DSL L = {Lo, Lp} is indicated by a pair
+classified into two types: (i) NL-based production documents,       of dual program views: the operation-centric program view Lo
+which specify the target production procedure step-by-step          and the product-flow-centric program view Lp. This design
+in textual form; or (ii) semi-structured manufacturing route        choice arises from the understanding that both operations and
+sheets, which contain extracted columns detailing the oper-         product flows are critical elements in production procedures,
+ation name and NL-based operation descriptions. According           yet they cannot be tracked simultaneously because they are
+to the Standard Operating Procedure (SOP) in manufacturing,         intricately intertwined with each other. When focusing on
+production procedure descriptions must be transformed into          operations, the context becomes the input and output products;
+fully-structured manufacturing route sheets, which serve as the     conversely, when focusing on products, the context shifts to
+foundation for scheduling. These route sheets typically include     the operations that yield and consume them, respectively. By
+                                                                    adopting a dual representation of these two views, we are able
+                                                                    to track the detailed execution of operations and the detailed
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING                 4
+
+transition of product flows in parallel, resulting in a precise         tial N -predecessors-to-M -successors relationships within the
+and reliable model of the production procedure.                         product flow. If the product is transferred directly from the
+                                                                        predecessor to the successor, the pipe forms a linear structure.
+   The operation-centric program view focuses on the ex-                In cases where two products are produced by two different
+ecution context of an operation. It captures the availabil-             predecessors and consumed by one successor, the pipe forms
+ity of necessary materials as the precondition, the required            a "Y-shaped" structure. This syntax can express any "N -to-
+machines, and their corresponding execution configurations              M -intersection-shaped" relationships along the product flow,
+as the program body, along with the expected output as                  i.e., N products produced by N different predecessors and
+the postcondition. This view serves as an interface between             consumed by M different successors. Consequently, the pipe
+the semantic identifier and the grounded instances of the               structure syntax provides a guardrail for accurately mod-
+operations, interpreting the purpose of the operation indicated         eling product flows of varying complexity. The semantics
+by the procedure in terms of a specific execution context. For          p = (, pred, succ, prop, ) specifies the permissible as-
+example, a milling operation can be performed on either a               signments of the fields and their corresponding values within
+vertical or a horizontal milling machine, depending on the              the structural space defined by Sp, where   , pred  pred,
+scale of the input material and the dimensions of the product.          succ  succ, prop  prop, and   . Please refer to Sec. III
+                                                                        for the automated design of such DSLs.
+   In contrast, the product-flow-centric program view empha-
+sizes the states of the product as it progresses through the               We implement the translation from the original procedures 
+various operations, effectively modeling the product flow.              to the fully structured route sheets  inspired by the practice
+Each flow unit is produced by a predecessor operation and               of Shi et al. [38], to guarantee the completeness of syntax,
+consumed by a successor operation. A critical property of               the correctness of semantics, and the reliance of execution.
+the product flow is its spatial-temporal continuity, whereby            Given an original description of production procedure k  
+the transitions between the states of the product are largely           for translation, we first parse the NL sentences by an off-
+driven by specific operations. This view acts as a pipe [43],           the-shelf tool and extract the actions accordingly [45]. Then,
+passing products along the temporal dimension and tracking              the extracted actions are matched with the operation set  of
+the invariance of the entire procedure. For instance, to produce        the DSL, according to both exact match score and semantic
+a part incorporating two different types of metal materials, the        similarity. Afterwards, we extract the arrays of entities related
+raw material input to the production line must consist of the           to the extracted action E by an off-the-shelf LLM-based
+two required materials; these materials cannot appear from              tool [46], where we regard the output labels to the entities
+nowhere but must be passed down the product flows.                      and relations as pseudo-labels because they can possibly be
+                                                                        noisy. On this basis, we can formulate the objective of this
+   The operation-centric program view, denoted as Lo =                  DSL program synthesis tasks as
+{So, o}, is characterized by the syntactic language feature
+set So and the semantic language feature set o. The syntax                                        arg min D(  )
+So = (, , prec, post, exec) defines a structural space for                                             L(),E (2)
+encapsulating the precondition prec, postcondition post, and
+execution exec within the interface structure of the operation.                             s.t. L = {So, Sp, o, p},
+Utilizing this syntax, an operation with the semantic identifier
+ is referenced through an interface  to a set of execution              where L() = {L() |   So,   Sp, L()  o p}
+contexts, represented as                                                denotes the set of all possible DSL program patterns generated
+                                                                        by the procedures described by . The divergence function
+               {(prec, post, exec)}.                         (1)        D(·  ·) possesses three indicators: (i) the selected program
+                                                                        patterns should be as close as possible to the text span; (ii)
+The operation  can be grounded to a corresponding instance              the selected program pattern should be as similar as possible
+                                                                        with the extracted subject-verb-object structure parsed from
+in any compatible execution context, echoing the idea of mod-           NL description; and (iii) as many pseudo-labeled entities as
+                                                                        possible should be mapped to the semantics space.
+ular design [44]. The semantics o = (, prec, post, exec)
+                                                                        C. Constraint Generation for JSP Formulation
+specifies the permissible assignments of the fields and their
+                                                                           The second module processes fully structured route sheets,
+corresponding values within the structural space defined by So,         derived from the original set of production procedures, and
+where   , prec  prec, post  post, and exec  exec.                       produces a specified set of constraints that formulates the
+                                                                        JSP. This specification is subsequently converted into a format
+Refer to Sec. III for the automated design of such DSLs.                compatible with off-the-shelf JSP solvers, which are then
+                                                                        utilized to determine the optimal schedule for the production
+The product-flow-centric program view, denoted as Lp =                  procedures. The constraint generation mainly necessitates two
+                                                                        types of constraints: resource constraints and precedence con-
+{Sp, p}, is characterized by the syntactic language feature             straints. Ensuring the accuracy of the constraint generation is
+                                                                        paramount to guaranteeing that the schedules generated by the
+set Sp and the semantic language feature set p. The syntax              JSP solver are both meaningful and correct. This specification
+Sp = (, pred, succ, prop, pred, succ) defines a structural
+
+space for encapsulating a selected set of key properties of
+
+the product prop, the predecessor pred, and the successor
+
+succ within the interface structure of the product, which is
+
+inherited from the operation-centric program view. Using this
+
+syntax, a product with the semantic identifier  is represented
+
+as   (pred, succ, prop). Additionally, there is a special
+
+syntactic  feature  tpred,  succ  that  captures  the  pipe  structure
+
+                              t
+
+·, · of the product flow at the unit level t, indicating poten-
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING           5
+
+is achieved through contextualized DSL program verification,      operations. Alongside the deterministic PDA-based verifier,
+based on the DSL programs representing the route sheet.           We employ state-of-the-art LLMs to track and monitor the
+                                                                  two actions of the PDA, kill and define, through instruction-
+   The working mechanism of this module can be formally           following in-context learning [48], [49].
+expressed as CGP = (Con | ). Here we look into the
+resulting route sheets  = {J , M} from the previous                  The specified constraints, along with the route sheets, are
+module. These route sheets outline the production procedure       converted into the input format for the JSP solver, specifically
+J = O1, O2, . . . , O|J| for each target product, detailing       using the widely adopted OR-Tools JSP solver1. Within the
+the execution sequence of involved operations. The complete       JSP solver framework, the manufacturing scheduling problem
+set of operations from all procedures, denoted as OJ =            is modeled as a job shop environment comprising M machines
+{O1, O2, . . . , O|OJ |}, forms a partially ordered set that in-  and N jobs. Each job consists of a series of operations that
+dicates the inter-dependency relationships among operations.      may have inter-dependencies and require specific machine
+If the precondition of Oi, namely the availability of input ma-   types, as indicated by precedence and resource constraints,
+terials required for Oi's execution, includes the postcondition   respectively. Each operation must be assigned to a machine
+of Oj, which is the output product following the execution        and processed within a specified execution duration, so as to
+of Oj, then Oi is dependent on Oj, denoted as dep(Oi, Oj).        fulfill the objective of optimizing the overall manufacturing
+Furthermore, an operation Oi must be executed on a specific       process [50], [51]. With these parameters, the JSP can be ef-
+machine Mj, represented by the relationship exec(Oi, Mj).         fectively solved using constraint programming techniques [52],
+                                                                  [53]. The resulting schedules specify the exact time-machine-
+   Using the aforementioned notations, we can represent the       operation arrangements for production.
+underlying JSP for the production scenario with J , M, and
+O. To solve the JSP, it is necessary to specify (i) the set       D. Schedule Grounding into Production Plans
+of resource constraints R = {(Oi, Mj) | Oi  O, Mj 
+M, exec(Oi, Mj) = True}; and (ii) the set of precedence con-         The third module converts the schedules generated by
+straints P = {(Oi, Oj) | Oi, Oj  O, dep(Oi, Oj) = True}.          the JSP solver into interpretable production plans within the
+The objectives of the JSP may include maximizing throughput,      factory environment. This module is essential for integrating
+minimizing response time, or balancing resource utilization.      off-the-shelf JSP solvers into the entire architecture, as it
+As the objective is independent of constraint specification and   involves translating the physical meanings of route sheets and
+thus falls outside the scope of this work, we exclude it from     constraints from their DSL representations into a format com-
+the problem definition for succinctness. In summary, we define    patible with the solver's input. Consequently, it is necessary
+the constraint generation problem as the task of specifying the   to recontextualize the schedules to their physical meanings
+resource and precedence constraints Con = {R, P}, given the       for practical application. The execution configurations in the
+description of procedures and the actual condition of factories.  grounded production plans must match those in the route
+                                                                  sheets, and the execution timing must adhere precisely to the
+   We specify Con from  through DSL program verification,         generated schedules. To ensure reliability, this grounding is
+adapted from the methodology of Shi et al. [38]. The DSL          achieved through symbolic DSL program referencing.
+programs are verified by associating operations with product
+flows in a reciprocal manner. Product flow indicates the             The working mechanism of this module can be formally
+transfer of product flow units among operations, reflecting       expressed as SGP = (Exe(J , M) | JSP(Con, )), where
+how one operation influences subsequent ones. The program         JSP(Con, ) denotes the output of the JSP solver. Meanwhile,
+verifier traverses the DSL program in execution order, utilizing  Exe(J , M) = (Oi, Mj, t1), . . . , (Ok, Ml, t|Exe(J ,M)|) de-
+the product locality revealed from the actual distribution of     notes the grounded production plans that meticulously arrange
+operations and product flow units. This process determines the    operations and machines within the temporal dimension. The
+reachability and life cycle of product flow units, in accordance  incorporation of timing necessitates that the DSL program
+with the theory of compilation introduced by Aho and Ull-         representation comprises a concurrent mechanism [54]. Specif-
+man [47]. For the implementation of the verifier, a Pushdown      ically, an operation must wait to start until all operations
+Automaton (PDA) with a random access memory is employed           producing the intermediate products required by its precon-
+to record reachable product flow units as an operation context,   dition have been completed. Given that our DSL, which
+defining (i.e., the product is produced by certain operations or  adopts the product-flow-centric view, possesses the syntactic
+the raw material is purchased) and killing (i.e., the product     feature to model product-based transitive relationships among
+is consumed by certain operations) product flow units at each     operations, it seamlessly facilitates the interpretation of the
+operation point along the computation. During every transition    predecessor and successor of a product flow unit as process
+between operations, the killed products are removed from the      locks, serving as a guardrail for the correctness of the produc-
+memory, and the defined products are added to it. After a         tion plans. Furthermore, the DSL program verifier introduced
+product flow unit is killed, the pair of operations that defined  in Sec. II-C functions as an additional assurance of correctness.
+it and killed it is added to the set of precedence constraints    It traverses the dependency graph to verify the absence of
+P. At each operation point, the pair of the operation and the     breakpoints in the product flow along the temporal dimension.
+machine specified in its execution configuration is added to the  With this dual-guardrail mechanism, we can directly reference
+set of resource constraints R. The accepting state of the PDA
+is reached if the memory is empty at the end of execution,           1The JSP solver is implemented using the OR-Tools library, with documen-
+meaning all products defined in operations are killed by other    tation available at https://developers.google.com/optimization/scheduling.
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING                                                                            6
+
+the DSL programs using their semanticless identifiers within      the existing factory level. Consequently, we find ourselves in a
+the JSP solver, thereby benefiting from the determinism of        dilemma: GPLs, which are easily accessible, are unsuitable for
+symbolic representations. Subsequently, we can verify the         constraint specification due to their overwhelming complexity,
+correctness of the resulting production plans.                    whereas DSLs, which simplify specialized language features,
+                                                                  inherently lack generalizability across different manufacturing
+         III. AUTOMATED ADAPTATION ALGORITHM                      scenarios. To address this dilemma, rather than waiting for
+                                                                  a universally applicable GPL to emerge, a more practical
+   In this section, we present the automated production sce-      solution might involve automating the design of DSLs for
+nario adaptation of the proposed constraint-centric architec-     constraint specification. Therefore, the automated production
+ture. Initially, we explore the significance of such adaptation   scenario adaptation of our constraint-centered architecture is
+within the manufacturing context (Sec. III-A). We then define     an essential requirement to fully unleash its potential of
+the problem of adapting the desired architecture by means of      usability for the broader manufacturing community.
+DSL design (Sec. III-B; refer to Fig. 2A). Afterwards, we
+introduce approaches for the automated design of the DSL          B. The Production Scenario Adaptation Problem
+from the operation-centric program view (Sec. III-C; also
+refer to Fig. 2A) and the product-flow-centric program view       We conceptualize the problem of the automated adapta-
+(Sec. III-D; refer to Fig. 2B) respectively.
+                                                                  tion for the constraint-centric architecture within a speci-
+A. Why Automated Production Scenario Adaptation?
+                                                                  fied  manufacturing  scenario  as  DAP  =    ({Lo  ,  L    }  |  ).
+   While it is theoretically possible to automate the entire
+workflow described in Sec. II for generating grounded pro-                                                                p
+duction plans, a crucial challenge remains: full automation
+is contingent upon the availability of predefined constraint-     The objective is to design a DSL with language features
+centric architectures, i.e., the corresponding DSLs for con-
+straint specification. However, the origin of these DSLs poses    accommodating  both  the  operation-centric  program       view  L
+a problem, as they are not readily available like off-the-
+shelf General-Purpose Languages (GPLs). In current practices,                                                                        o
+most DSLs are manually designed through the collaborative         and the product-flow-centric program view Lp. The input 
+efforts of computer scientists and manufacturing experts, a
+process that is both time-consuming and labor-intensive. This     constitutes a generalized set of original procedures, which
+may be acceptable for specific applications requiring only
+a single DSL library [55], [56], [57], as DSL design is a         may either be novel procedures from a recently established
+once-and-for-all endeavor there. Unfortunately, from a broader
+perspective of the holistic manufacturing community, DSLs for     manufacturing scenario or historical procedure data from a
+constraint specification in manufacturing encompass multiple
+categories of target products, diverse requirements of the        long-standing manufacturing scenario. The prior knowledge
+Original Equipment Manufacturers (OEMs), varied production
+environments across factories, and an ever-expanding range        of operations and product flows, represented by p() and
+of overall application scenarios. This scenario specificity im-
+plies that the distributions of operations, machines, materials,  p(), includes the fundamental syntax of the field-value struc-
+intermediate products, execution configurations, and inter-
+dependency relationships vary significantly among different       tures and the elementary taxonomies, derived according to
+scenarios. Although it is conceivable that we could derive a
+comprehensive set of language features covering all potential     the general commonsense of manufacturing. Specifically, the
+manufacturing scenarios, namely the so-called one-size-fits-
+all general architecture, such an endeavor would result in a      problem essentially seeks to fit the joint distribution models
+system of prohibitively complexity, rendering it intractable for
+both machine and human end-users.                                 p(, , prec, post, exec) and p(, pred, succ, prop, ), using
+
+   The highly varied and frequently evolving demands for           as the domain-specific corpus, and leveraging the prior
+DSLs are difficult to meet through human effort alone. Even
+if we manage to manually craft these DSLs, the advancement        knowledge p() and p().
+in automated production planning and scheduling would be
+compromised. This would merely shift human labor from             C. Automated Operation-Centric DSL Design
+one part of the workflow to another, and even potentially
+increase the overall labor required. Maintaining a joint cohort      The key challenge in the automated design of the operation-
+of experienced manufacturing experts and computer scientists      centric program view is to aggregate all possible execution
+for DSL design at a higher level than the current factory could   contexts for an operation, and then generalize the contexts to
+prove more costly than simply sustaining experts who work at      the interface. If we keep each use case as one single instance
+                                                                  of the interface, which can be in hundreds regarding one
+                                                                  operation, the generalization is meaningless. Since there is no
+                                                                  prior knowledge about the interface in advance, we develop
+                                                                  the algorithm following the idea of non-parametric modeling,
+                                                                  i.e., Dirichlet Process Mixture Model (DPMM), resulting in
+                                                                  flexible identification of interface instances.
+
+                                                                     As we must handle information coming in different granu-
+                                                                  larities, from interface structures (i.e., the main body describ-
+                                                                  ing the execution of a specific operation within a production
+                                                                  procedure) to values of parameters (i.e., the configuration of
+                                                                  machines and consumption of materials within an operation),
+                                                                  we choose to model the operations in a hierarchical fashion.
+                                                                  Compared with the flattened spectral clustering approach de-
+                                                                  veloped by Shi et al. [40], which compresses all information
+                                                                  of an operation into an embedding vector, our modeling
+                                                                  is competent in considering information at different levels
+                                                                  comprehensively. We carefully adopt the prerequisite that the
+                                                                  interface is generated subject to the operation, preconditions,
+                                                                  postconditions, and execution configurations are generated
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING                                                                                                                                  7
+
+A  Automated Design of Semantics                                                                          Semantic Feature of Operation            Semantic Feature of Product Flow
+
+                                                                       #1 LATHE Sample1, Sample2, ...
+      rough_milling ::= Interface_0 |         lathed_part ::= lathe <FlowUnit>
+                                                                     #2 MILLING Sample3, Sample4, ...                  Interface_1
+                broaching | milling | rough_milling
+
+                    Samples with Semantic Identifiers                                                    Interface_0 ::= Precond(SlotArgNum:             | refined_milling | ...
+                                                                                                            1, SlotArg: [broached_c, ...])
+           FlowUnit(ComponentType: Metal,
+                                                                                   #1 LATHE #2 MILLING     Postcond(EmitArgNum: 1, EmitArg:          UnitArgType: PROD, Vol: [0.01m,
+                                                                                                                   [machined_c, ...])
+             0.05m, 0.1m, 0.5m, 1m], Container:
+   Domain Ontology                                       #1 LATHE       #1 LATHE Itfc1, Itfc2, ...
+                Execution(Machine:
+   from the Orders                                       #2 MILLING    #2 MILLING Itfc1, Itfc2, ...                                                       conveyor_belt, <Cond>)
+
+                                                                                                         Vertical_Milling_M, Duration: 161u)
+         Cond(Iron_content: [50%, 80%],
+                    Non-parametric Modeling                          Spectrum of Interfaces             Interface_1 ::= ...Execution(Machine:       Temperature: range(80°C, 150°C),
+
+                                                                                                              Horizontal_Milling_M, ...)
+
+                   Status: parted)...
+
+
+
+B Prior of Product Flow Structure                                    Automated Design of Syntax                                                    Syntax of Product Flow Structure
+
+             <PredStructure> ::=                                                                                                    ...             Domain_#4 ::= ((Pred_1: broaching,
+              <Pred> <FlowUnit>                                                                                                                    FlowUnit_1: (...), Succ: drilling),
+   | <Pred> <PredStructure> <FlowUnit>                                                                                              ...            (Pred_2: hobbing, FlowUnit_2: (...),
+
+                       | <>
+
+                                                                                                                                 Succ: drilling))
+                                                                                                                                                    | (Pred: ..., FlowUnit: ..., Succ:
+             <SuccStructure> ::=
+              <Succ> <FlowUnit>                                                                                                                                       ...)
+
+   | <Succ> <SuccStructure> <FlowUnit>                                                                                                                | ((Pred: ..., FlowUnit_1: ...,
+
+                       | <>
+                                                                                                                             Succ_1: ...), (Pred: ...,
+                                                                                                                                                      FlowUnit_2: ..., Succ_2: ...))
+                                                                     Prior Syntax Model                 E-Step (Bottom-Up)  M-Step (Top-Down)
+
+Fig. 2. Illustration of the algorithms for the automated production scenario adaptation of the architecture. (A) This diagram illustrates the framework
+of non-parametric modeling for the automated design of semantic features within both operation-centric and product-flow-centric program view DSLs. (B)
+This diagram depicts the framework of the EM algorithm for the automated design of syntactic features within product-flow-centric program view DSL.
+
+subject to the interface, and the value of configuration pa-                                            enhances the generality of the operation-centric program view
+rameters, denoted as exec-v, are generated subject to their                                             by consolidating functionally-identical interfaces, maintaining
+corresponding fields. Thus, we have the model                                                           a concise and representative set of operations.
+
+       p(, , prec, post, exec, exec-v)                                                                  D. Automated Product-Flow-Centric DSL Design
+     =p(exec-v | , , exec)p(exec | , )p(prec | , ) (3)
+                                                                                                           One of the primary challenges in the automated design of
+       p(post | , )p( | )p().                                                                           the product-flow-centric program view lies in selecting proper
+                                                                                                        descriptive properties of a product flow unit component. There
+Within each iteration of the DPMM process, we sample the                                                exists false positive cases, where properties are attributed to
+variables level-by-level. Since the structures of preconditions,                                        components with the same semantic identifier but in different
+postconditions, and the selection of devices and configuration                                          phases, e.g., we consider Aluminum Alloy with the property
+parameters are discrete, we sample them directly from the                                               dimensions when it comes in flake and with the property vol-
+Dirichlet Process (DP). As permissible values of parameters                                             ume when it comes in powder. There also exists false negative
+can be discrete, e.g., an array of specific values, common                                              cases, where exact same components are regarded as different
+in temperature preparation; continuous, e.g., an interval with                                          ones due to different reference names, e.g., Aluminum Sheet,
+minimum and maximum values, common in power setting; or                                                 6061 Alloy Plate, and Metal Sheet can refer to the same thing.
+mixed, e.g., an array of specific values with random perturba-                                          To alleviate false positive and false negative results, we discard
+tions around the mean, common in tooling accuracy control,                                              the design choice of the interface in the operation-centric view,
+we conduct the sampling by integrating Gaussian Process (GP)                                            which tends to cover the possibly richest context, and thereby
+with DP, obtaining                                                                                      have the non-parametric model
+
+            exec-v | , , exec                                                                                                            p(, pred, succ, prop, prop-v)
+              DP (, H(exec), , ) × GP (m, K), (4)
+                                                                                                                            =p(prop-v | prop, )p(prop | )                       (5)
+where , H, m, and K are corresponding hyperparameters.
+                                                                                                                                         p(pred | )p(succ | )p(),
+   While clustering similar interface instances aggregates tar-
+get operations, there may remain redundant interfaces due to                                            where prop-v denotes the values of property parameters. The
+minor discrepancies. These discrepancies often arise from dif-
+ferences in parameter values or naming conventions that do not                                          challenges in building up this model and the corresponding
+fundamentally alter the operation's functionality. To alleviate
+such redundancies, we implement a unification process for                                               strategies are similar to those in Sec. III-C.
+the interfaces. Specifically, interface instances associated with
+the same operation are considered equivalent if they have the                                           The other primary challenge in the automated design
+same number of slots and emits, and share the same fields
+in their execution configuration parameters. By abstracting                                             of the product-flow-centric program view is construct-
+away differences in parameter values and names, we unify
+these interfaces into a single, generalized interface, akin to                                          ing the model of . This model is not captured by
+the algorithm proposed by Martelli et al. [58]. Unification                                             p(, pred, succ, prop, prop-v), yet it remains crucial for com-
+
+                                                                                                        pleting the design of Sp. Leveraging existing knowledge on
+
+                                                                                                        programming language design, our method utilizes a bidirec-
+
+                                                                                                        tional optimization strategy to formulate the most appropriate
+
+                                                                                                        flow-structure-syntax                      S    of  the  target  DSLs,  ensuring
+
+                                                                                                                                                     p
+                                                                                                        that it compactly satisfies the characteristics dictated by .
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING         8
+
+Inspired by the methodology introduced in Shi et al. [40], the  A. Datasets for Experimentation
+algorithm utilizes an Expectation-Maximization (EM) frame-
+work, where the E-Step abstracts syntax from  and the M-           The scarcity of datasets that closely replicate real-world
+Step derives syntax from programming language principles.       manufacturing environments significantly hinders the evalu-
+                                                                ation of our constraint-centric architecture. To bridge this gap,
+   The algorithm models latent syntactic constraint assign-     we propose the augmentation of existing datasets with syn-
+ments Z = {z1, . . . , z||} for each procedure   . A            thetic data, ensuring the retention of realistic elements in the
+filter set  = {1, . . . , |Z|}, is designed to determine if a   process. This approach involves the utilization of ten classical
+segment of procedure description, i.e., a local set of product  JSPs sourced from well-established Operations Research (OR)
+flow units with predecessor and successor operations, aligns    literature [59], [60], [61], [62], [63], [64], [65], [66], [67],
+with the N -predecessors-to-M -successors relationships within  [68]. These JSPs, originally comprising only machine IDs and
+the product flow, coming with the belief function p(|). The     durations, serve as the foundation for our dataset enhancement.
+observational likelihood is computed as
+                                                                   To transform abstract JSP descriptions into comprehensive
+                                                                datasets, we employ a cutting-edge LLM2, which extends
+                                                                the sparse JSP data by generating detailed production pro-
+p( | Z, ) = p(i | zi, zi ).                              (6)    cedure descriptions and semi-structured route sheets in NL.
+                                                                This transformation aligns the synthetic data with the style
+i=1                                                             and complexity of realistic production procedures, thereby
+                                                                enhancing the practical value of the augmented dataset.
+Hence, the overall joint distribution of the model is given by
+                                                                   The augmentation process begins with a dependency graph
+p(, Z,  | ) = p( | Z, )p(Z | )p( | ). (7)                       traversal to ascertain the global dependency set across an array
+                                                                of device types. This step is crucial for understanding the inter-
+   Programming language designers leverage a general set of     dependency relationships and operation sequences within the
+syntactic production rules as the prior p(Z | ) for syntax      manufacturing setup. Subsequently, a mapping arrangement is
+specification. Following this common practice, we initialize    established between the machine IDs and the corresponding
+with the recursive grammar                                      devices. Each JSP is treated as a distinct production scenario
+                                                                requiring a DSL for accurate constraint specification. The
+PredS ::= pred prop | pred PredS prop |  ,                      dependency set for each machine arrangement is meticulously
+SuccS ::= succ prop | succ SuccS prop |  , (8)                  configured to be a superset of the JSP's dependency set,
+                                                                adhering to an initial assumption of ordered and linear job de-
+where pred PredS prop and succ SuccS prop are                   pendencies. Non-monotonic dependencies (i.e., circular steps)
+recursion bodies. This recursive grammar accommodates hy-       are identified and eliminated to prevent operational conflicts.
+potheses involving arbitrary N -predecessors-to-M -successors
+relationships, naturally beginning with the simplest linear        Following the establishment of device mappings and depen-
+structure and progressively increasing in complexity. Addi-     dency configurations, the generation of synthetic data begins.
+tionally, we construct the prior belief function p( | ) with    This phase involves the specification of materials, products,
+a series of sliding-window-based filters f :   R. This          and the execution configurations of devices. Through this data
+approach provides a relaxed lower bound for predicting the      synthesis process, we obtain a dataset that not only reflects the
+existence of an atomic product-flow structure.                  complexity of real-world manufacturing tasks but also serves
+                                                                as a controllable probe for the three respective modules within
+   In each E-Step, we obtain the posterior of latent variables  our architecture and its baseline counterparts. This supports
+p(Z | , , ) applying Bayes' theorem, which is imple-            our experimental setups, enabling a thorough evaluation of our
+mented by scanning the filters over all procedure descriptions  system's performance across various scenarios. It illustrates
+in . To note, as the spaces of prior and observation are not    that our approach effectively harnesses the advantages of both
+intractably large, we simply employ the naive version of E-     GenAI techniques and DSL-based structural representation,
+Step without variational approximations.                        thereby achieving a balance between the capability of gen-
+                                                                eration and the guardrail of reliability [69].
+   In each M-Step, we first maximize the coverage of the
+sampled atomic structure  by maximizing                         B. Baseline Approaches
+
+Q(^ , ) = EZ|, log p(, Z, ^ | ) ,                        (9)       To establish a robust evaluation framework, we imple-
+                                                                ment two alternative approaches based on state-of-the-art
+where ^ is the updated , resulting in the structural change     methods for formalizing NL-described optimization problems
+of . These two steps alternate iteratively until convergence,   with LLM prompt engineering techniques [23], [22]. These
+ensuring the syntactic features are aligned with the scenario.  approaches, termed MULTI-STAGE-LLM (MSL) and TWO-
+                                                                STAGE-LLM (TSL), serve as baselines to benchmark the
+                   IV. EXPERIMENTAL SETUPS                      utility of our proposed constraint-centric architecture (Ours).
+
+   In this section, we describe the experimental setups of         2We use the OpenAI GPT-4o model for this purpose.
+this study. We first introduce the datasets for experimenta-
+tion (Sec. IV-A) and the baseline approaches for evaluation
+(Sec. IV-B). Afterwards, we describe the protocols for the
+five experiments, including the complete pipeline experiment
+(Sec. IV-C), three experiments validating the three modules of
+our constraint-centric architecture (Secs. IV-D to IV-F), and
+the production scenario adaptation experiment (Sec. IV-G).
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING              9
+
+   The MSL approach adopts a three-module-sequence that              the precision and accuracy of specific data elements or only
+mirrors the structural alignment of our constraint-centric archi-    on overall textual similarity. Furthermore, the results are
+tecture, facilitating a direct comparative analysis. Initially, the  quantitatively analyzed using three specific variants of the
+workflow transforms NL-based descriptions or semi-structured         EMKVP metric: Precision, Recall, and F1 Score. EMKVP-
+route sheets into fully structured route sheets. Subsequently,       Precision measures the proportion of correct field-value pairs
+the fully structured route sheets are converted into matrices,       among all specified pairs, providing insight into the accuracy
+in a format matchable for the JSP solver. The final module           of the resulting production plans. EMKVP-Recall assesses
+integrates the schedules generated by the JSP solver with the        the proportion of correctly specified field-value pairs out
+fully structured route sheet, and then grounds these schedules       of all pairs that should have been specified, reflecting the
+into interpretable production plans. All of these three modules      completeness of the information captured. Lastly, EMKVP-F1
+are implemented by LLM prompt engineering. 3                         Score combines both precision and recall to offer a balanced
+                                                                     view of overall performance.
+   In contrast to the MSL, the TSL approach simplifies the
+workflow by reducing the number of transformation stages,            D. Protocol for the Constraint Abstraction Evaluation
+potentially increasing computational efficiency but at the risk
+of reduced fidelity in the constraint translation process. The          The primary objective of this experiment is to validate
+first stage bypasses the separate structuring step of the route      the effectiveness of the constraint abstraction module (CAM)
+sheet and directly converts the NL-based descriptions or semi-       within our constraint-centric architecture. This module is cru-
+structured route sheets into JSP solver formatted matrices.          cial for ensuring that ambiguities in NL parsing are managed
+The second stage involves the integration of the JSP-generated       effectively and that the precision required for fine-grained pro-
+schedules with the input procedures, and then grounds these          cedural knowledge representation is maintained. By isolating
+integrated schedules into finalized production plans. Both           this component, we aim to demonstrate the indispensable role
+modules are implemented by LLM prompt engineering.                   of DSLs as mechanisms that guide and regulate the behavior
+                                                                     of LLMs within our system. The experimental setup involves
+C. Protocol for the Complete Pipeline Evaluation                     using identical input data as employed in the complete pipeline
+                                                                     experiment. The outputs generated from this input are fully-
+   The major objective of this experiment is to validate the         structured route sheets, which are subsequently transformed
+utility of our constraint-centric architecture within realis-        into JSON format for consistency and ease of analysis. This
+tic manufacturing scenarios. This experiment is critical in          standardized format allows for direct comparison between
+demonstrating the practical utility of our approach as the           the outputs from the CAM of Ours (Ours-CAM) and those
+primary outcome of this study. The experimental protocol             from the first module of MSL (MSL-I). Similar to Sec. IV-C,
+involves a comparative analysis of Ours against two baseline         the evaluation metrics include BLEU, EMKVP-Precision,
+approaches, MSL and TSL. These methods are evaluated                 EMKVP-Recall, and EMKVP-F1. These metrics are chosen
+across ten realistic manufacturing scenarios as detailed in          for their ability to quantitatively measure the consistency
+Sec. IV-A. To ensure a fair comparison, the base LLM model           between the resulting route sheets and the groundtruth fully-
+for all three approaches is kept identical. The input to these       structured route sheets derived from synthetic data under the
+pipelines consists of procedures described either in NL or as        supervision of manufacturing experts.
+semi-structured route sheets. We keep the proportion of both
+input forms identical throughout the experiment. The output          E. Protocol for the Constraint Generation Evaluation
+from each system is formatted into JSON-style scripts, which
+align with the script formats used for CNC system execution,            The primary objective of this experiment is to validate the
+allowing for a standardized method of comparison.                    utility of the constraint generation module (CGM) within our
+                                                                     constraint-centric architecture. This module is significant for
+   The evaluation of these scripts is conducted using the Exact      ensuring the correctness of the constraints for JSP formulations
+Match of Key-Value Pairs (EMKVP) and Bilingual Evaluation            and for converting these constraints into a format compatible
+Understudy (BLEU) metrics, which are well-established in the         with JSP solvers without any loss of information.
+literature for assessing the quality of procedural knowledge
+representation and information retrieval [70], [71], against            We have designed two versions of this experiment. The
+the ground truth production plans derived from the synthetic         first version assesses the CGM in Ours (Ours-CGM) and the
+dataset under the supervision of manufacturing experts. Given        second module in MSL (MSL-II) to highlight the critical
+that direct comparisons using cosine similarity score across         role of DSL program verification over the dual-program-view
+entire sentences could lead to inaccuracies due to semantic          representation. This approach is instrumental in capturing the
+discrepancies in similar-looking instructions, we adopt a more       relationships between operations and machines, as well as
+granular approach. By converting all results into a standardized     among operations, in both Ours and MSL. The second version
+JSON-style format, comparisons are made between field-value          tests the integration of the first two modules, CAM & CGM,
+pairs rather than entire sentences using the EMKVP metric.           to explore the trade-offs involved in using two sequential
+Meanwhile, procedure-level consistencies are assessed through        modules with accumulated error transmission between them
+the BLEU metric. This hybrid method effectively alleviates           (i.e., Ours-CAM-CGM and MSL-I-II) versus employing a
+concerns related to the metrics by focusing either only on           single module without an explicit fully-structured route sheet
+                                                                     as an intermediate result to work with (i.e., TSL-I). For the
+   3We implement these LLMs with the OpenAI GPT-4o model.
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING            10
+
+CGM-only version, we use the groundtruth fully-structured          of our constraint-centric architecture across various manufac-
+route sheet as the input for both Ours-CGM and MSL-II to           turing scenarios. This characteristic is central to the broader
+eliminate accumulated errors and truly isolate the CGM. For        impact of our architecture on the entire manufacturing commu-
+the CAM & CGM version, we use the same input as in the             nity, as it results from a trade-off between compromised gen-
+complete pipeline experiment for Ours-CAM-CGM, MSL-I-II,           erality and enhanced domain-specificity--the generalizability
+and TSL-I. The output for both versions is the set of constraint   is thus alternatively amortized by the automated production
+generation matching the input format of the JSP solver.            scenario adaptation capability, as discussed in Sec. III-A.
+
+   Given that the scheduling optimization method used in the          This meta-study comprises two components. The first in-
+JSP solver is deterministic, it is unnecessary to assess the       volves observing the convergence of our algorithms for auto-
+correctness of the schedules generated by the JSP solver.          mated adaptation across the ten selected production scenarios.
+Therefore, we adhere to established literature on benchmarking     Each of the ten testing groups is initialized without any
+the formalization of NL-described optimization [21], incor-        external prior knowledge, except for what is already integrated
+porating three evaluation metrics: constraint-level accuracy       into the algorithms, such as the syntactic prior of recursion.
+(Constraint-Acc), compiler error rate (Compiler-ER), and run-      The algorithms in these ten groups are expected to perform
+time error rate (Runtime-ER). Constraint-Acc is calculated         uniformly well, without case-specific bias. With these auto-
+using the Intersection over Union (IoU) metric between the         matically designed DSLs tailored for each scenario, the second
+specified constraints and the groundtruth constraints, encom-      component involves validating the utility of the scenario-
+passing both resource and precedence constraints. This metric      adapted architecture driven by the corresponding DSL for each
+indicates the consistency between the intended procedures and      scenario. This includes all previous experiments, such as the
+the interpretations by the pipelines. Both Compiler-ER and         complete pipeline experiment and the three experiments on the
+Runtime-ER concern the interactions between the pipeline and       individual modules of our architecture. It is expected that these
+the JSP solver. The former captures the proportion of testing      experiments will not exhibit significant differences across the
+procedures that fail to compile in the JSP solver, potentially     various scenarios. In addition, we utilize the Variance-to-Mean
+due to syntactic-level issues in the formatted set of constraints  Ratio (VMR) metric, which is suitable for one-approach-
+provided as input. The latter measures the proportion of testing   multiple-domain evaluation [72], to evaluate the quantitative
+procedures encountering errors during the execution of the         results of Ours, MSL, and TSL across the ten scenarios. This
+JSP solver, which are caused by semantic-level errors in the       metric, where higher values are more desirable, reflects the
+formatted set of constraints, such as internal logic errors,       simultaneous achievement of both outstanding and consistent
+unsolvable models, or non-linear constraints.                      performance across the different scenarios.
+
+F. Protocol for the Schedule Grounding Evaluation                                   V. RESULTS AND DISCUSSIONS
+
+   The major objective of this experiment is to validate the          In this section, we analyze the results of the five experiments
+usefulness of the schedule grounding module (SGM) within           described in Sec. IV and discuss the insights revealed by them,
+our constraint-centric architecture. This module is essential      including the complete pipeline experiment (Sec. V-A), three
+for ensuring the accurate recovery of fine-grained procedure       experiments validating the utilities of the three modules of
+knowledge from the semantically void schedules produced            our constraint-centric architecture (Secs. V-B to V-D), and the
+by the JSP solver. By isolating this component, we aim             production scenario adaptation experiment (Sec. V-E).
+to demonstrate the pivotal role of the DSL dual program
+view in managing the concurrent programming nature of the          A. The Complete Pipeline Evaluation
+grounded production plans. We input the groundtruth specified
+set of constraints into the JSP solver to obtain the schedule.        Through paired samples t-test, we find that Ours signifi-
+This schedule, which remains consistent across different runs,     cantly outperforms the alternative approaches MSL and TSL
+serves as the input for the SGM in Ours (Ours-SGM), the third      across the four evaluation metrics (Ours outperforms MSL,
+module of MSL (MSL-III), and the second module of TSL              measured by BLEU: t(18) = 47.448, µd < 0, p < .0001;
+(TSL-II). The outputs generated from this input are grounded       measured by EMKVP-Precision: t(18) = 39.143, µd < 0, p <
+production plans, which are subsequently converted into JSON       .0001; measured by EMKVP-Recall: t(18) = 39.528, µd <
+format for consistency and ease of analysis. This standardized     0, p < .0001; measured by EMKVP-F1: t(18) = 46.215, µd <
+format facilitates direct comparison across the three pipelines.   0, p < .0001; Ours outperforms TSL, measured by BLEU:
+Consistent with Sec. IV-C, the evaluation metrics include          t(18) = 60.806, µd < 0, p < .0001; measured by EMKVP-
+BLEU, EMKVP-Precision, EMKVP-Recall, and EMKVP-F1.                 Precision: t(18) = 15.003, µd < 0, p < .0001; measured by
+These metrics are selected for quantitatively assessing the        EMKVP-Recall: t(18) = 7.071, µd < 0, p < .0001; measured
+consistency between the resulting production plans and the         by EMKVP-F1: t(18) = 9.891, µd < 0, p < .0001; see
+same ground truth used in the complete pipeline experiment.        Fig. 3A). These comparisons demonstrate the suitability of
+                                                                   our architecture for constraint specification. In addition, we
+G. Protocol for the Automated Adaptation Evaluation                find that the baseline approach equipped with an explicit fully-
+                                                                   structured route sheet as an intermediate workspace (i.e., MSL)
+   The primary objective of this meta-study experiment, build-     outperforms its counterpart without such workspace (i.e., TSL)
+ing upon the previous experiments, is to evaluate the scalability  (measured by BLEU: t(18) = 13.612, µd < 0, p < .0001;
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING                                                                                                           11
+
+A BLEU         **** ****             EMKVP-Precision                     EMKVP-Recall                                           EMKVP-F1
+1.0
+                                 1.0 **** ****                       1.0 **** ****                                          1.0 **** ****
+
+0.5                              0.5                                 0.5                                                    0.5
+
+0.0                              0.0                                 0.0                            EMKVP-Recall            0.0
+
+         Ours                                                                                  1.0  ****                             Ours
+
+B                                                                                              0.5
+
+                                                                                               0.0
+                                                                                                       Ours MSL TSL
+
+               MSL        TSL         Ours  MSL               TSL         Ours                 MSL                   TSL                              MSL  TSL
+
+Fig. 3. Results of the complete pipeline evaluation. (A) Comparison of Ours with MSL and TSL across four evaluation metrics over ten scenarios. (B)
+Showcases of the grounded production plans generated by Ours, MSL, and TSL, respectively.
+
+A BLEU                                EMKVP-Precision                     EMKVP-Recall                                             EMKVP-F1
+
+1.0             ***              1.0                       *         1.0                       ***                          1.0 ****
+
+0.5                              0.5                                 0.5                                                    0.5
+
+ 0.0  Ours-CAM            MSL-I  0.0                          MSL-I  0.0                                             MSL-I  0.0                            MSL-I
+B
+                                                 Ours-CAM                            Ours-CAM                                               Ours-CAM
+
+Fig. 4. Results of the constraint abstraction evaluation. (A) Comparison of Ours-CAM with MSL-I across four evaluation metrics over ten scenarios. (B)
+Showcases of the fully-structured route sheets generated by Ours-CAM and MSL-I, and TSL, respectively.
+
+measured by EMKVP-Precision: t(18) = 5.873, µd < 0, p <              B. The Constraint Abstraction Evaluation
+.0001; see Fig. 3A). Looking into the resulting production
+plans, we find that Ours effectively captures fine-grained exe-         Through paired samples t-test, we find that Ours-CAM sig-
+cution configurations, such as the "feed rate" and "tool type".      nificantly outperforms the alternative approach MSL-I across
+In contrast, MSL partially fails to capture this information, and    the four evaluation metrics (measured by BLEU: t(18) =
+TSL fails entirely. Among the three approaches, only Ours            6.487, µd < 0, p < .0001; measured by EMKVP-Precision:
+accurately maintains the consistency between start time, end         t(18) = 2.481, µd < 0, p < .05; measured by EMKVP-Recall:
+time, and duration. The pure LLM-based counterparts even             t(18) = 7.342, µd < 0, p < .0001; measured by EMKVP-F1:
+make errors in this aspect, and TSL generates production plans       t(18) = 28.851, µd < 0, p < .0001; see Fig. 4A). Notably,
+that are irrelevant. These observations are illustrated by the       the EMKVP-Precision of MSL-I may be distorted to a certain
+examples presented in Fig. 3B.                                       extent due to its correspondingly low recall--many fields
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING                                                                                 12
+
+A Constraint-Acc                              Runtime-ER                B Constraint-Acc                       Runtime-ER
+
+1.0                      ****          1.0                              1.0                             1.0
+
+0.5                                    0.5                              0.5                             0.5
+
+0.0                                    0.0                              0.0                             0.0
+
+               Ours-CGM        MSL-II                 Ours-CGM  MSL-II       Ours-C.C. MSL-I-II  TSL-I       Ours-C.C. MSL-I-II  TSL-I
+C
+
+D
+
+Fig. 5. Results of the constraint generation evaluation. (A) Comparison of Ours-CGM with MSL-II across the evaluation metrics Constraint-Acc and
+Runtime-ER over ten scenarios, within the isolated version of the experiment. Results for Compiler-ER are not visualized because the error cases are minor
+and consistent across the baseline approaches. Consequently, we have omitted the corresponding plots for the sake of brevity. This design choice aligns with
+the discussion by Xiao et al. [23]. (B) Comparison of Ours-CAM-CGM with MSL-I-II and TSL-I across two evaluation metrics over ten scenarios, within the
+incorporated version of the experiment. (C) Gantt chart visualizations of the JSP-solver-generated schedules, derived from the specified constraints, as generated
+by Ours-CGM and MSL-II, respectively. The Gantt chart visualization effectively illustrates the differences in modeling fidelity of the JSP specification across
+three approaches. The y-axis represents the various machine types involved in production, revealing that schedules derived from the baseline approaches utilize
+fewer machines, primarily due to the absence of resource constraints. The x-axis depicts the total production duration, showing that the baseline approaches
+generate shorter time horizons, likely resulting from omissions in the specification of steps, operations, or machines--a consequence of lacking both resource
+and precedence constraints. The occupied area within the chart indicates the total machine occupation time. Notably, our approach's schedule contains more
+unoccupied areas, demonstrating that more machines must remain idle due to procedural requirements--this clearly illustrates that precedence constraints are
+modeled with greater precision in Ours compared to the baselines. (D) Gantt chart visualizations of the JSP-solver-generated schedules, derived from the
+specified constraints, as generated by Ours-CAM-CGM, MSL-I-II, and TSL-I, respectively. Applying the same criteria as (C), the JSP specification modeled by
+the two baseline approaches demonstrates reduced fidelity, primarily attributable to their failure to incorporate resource constraints and precedence constraints.
+
+remain unspecified, thus significantly limiting the set of field-       t(18) = 30.201, µd < 0, p < .0001; measured by Runtime-
+value pairs available for evaluation and excluding a substantial        ER: t(18) = -19.562, µd < 0, p < .0001; Ours-CAM-CGM
+number of false negative samples from consideration. These              outperforms TSL-I, measured by Constraint-Acc: t(18) =
+comparisons demonstrate the capability of Ours-CAM for NL               30.201, µd < 0, p < .0001; measured by Runtime-ER:
+parsing and fine-grained procedural knowledge representation.           t(18) = -19.562, µd < 0, p < .0001; see Fig. 5B).
+Upon examining the resulting route sheets, we observe that              These comparisons suggest that, despite the accumulated
+Ours-CAM effectively captures fine-grained execution config-            errors transmitted between the sequential modules of Ours-
+urations, surpassing MSL-I in this regard. This achievement             CAM-CGM, the benefits conferred by the explicit, structural
+lays a robust foundation for subsequent processing. These               intermediate workspace architecture outweigh the drawbacks
+observations are exemplified by the cases presented in Fig. 4B.         of the cumulative errors, which are mitigated by TSL-I. An
+                                                                        examination of the schedules produced by the JSP solvers
+C. The Constraint Generation Evaluation                                 reveals that the baseline approaches fail to accurately specify
+                                                                        neither resource nor precedence constraints. This inadequacy
+   In the isolated version of the experiment, through paired            results in schedules characterized by a high rate of task loss
+samples t-test, we find that Ours-CGM significantly out-                and unreliable dependency relationships, as depicted in the
+performs MSL-II on the Constraint-Acc metric (t(18) =                   Gantt charts displaying decreased thread rows and job blocks
+11.072, µd < 0, p < .0001; see Fig. 5A). These results                  (see Fig. 5C for Ours-CGM vs. MSL-II; see Fig. 5D for Ours-
+support that Ours-CGM excels constraint generation through              CAM-CGM vs. MSL-I-II vs. TSL-I). The higher Runtime-
+DSL program verification over the dual program views.                   ER observed in the baseline models corroborates this issue,
+                                                                        as evidenced by the substantial presence of "undefined" and
+   In the incorporated version of the experiment, through               "null" values in their formatted constraints. These findings
+paired samples t-test, we find that Ours-CAM-CGM sig-                   substantiate the rationale underpinning the design of our DSL-
+nificantly outperforms the alternative approaches MSL-I-II              based constraint-centric architecture against pure LLMs.
+and TSL-I across the three evaluation metrics (Ours-CAM-
+CGM outperforms MSL-I-II, measured by Constraint-Acc:
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING                                                                                                                                                                                                                                 13
+
+       BLEU                                         EMKVP-Precision                                                                        EMKVP-Recall                                                        EMKVP-F1
+
+1.0                    ****                                                                                    ****                                  ****         **                                                                                ***
+             ****                                                                                    ****                                                                                                                                ****
+                                               1.0                                                                                    1.0                                                                 1.0
+
+0.5                                            0.5                                                                                    0.5                                                                 0.5
+
+0.0                          TSL-II            0.0                                                                   TSL-II           0.0                                       TSL-II                    0.0                                                      TSL-II
+
+          Ours-SGM MSL-III                               Ours-SGM MSL-III                                                                       Ours-SGM MSL-III                                                    Ours-SGM MSL-III
+
+Fig. 6. Results of the schedule grounding evaluation. This figure presents the comparison of Ours-SGM with MSL-III and TSL-II across four evaluation
+metrics over ten scenarios.
+
+A Operation DSL Semantics                           B Product-flow DSL Syntax                                                                   C Complete Pipeline Evaluation across Domains
+     0
+                                                                                                                                                   0.6
+
+Log Likelihood-1                                                                            0.3                                                 0.5
+                                                                        Probability Update
+-2           Domain ta71     Domain ta76                                                    0.2          Domain ta71     Domain ta76            0.4
+             Domain ta72     Domain ta77                                                                 Domain ta72     Domain ta77
+-3           Domain ta73     Domain ta78                                                    0.1          Domain ta73     Domain ta78
+      1      Domain ta74     Domain ta79                                                                 Domain ta74     Domain ta79
+             Domain ta75     Domain ta80                                                    0.0          Domain ta75     Domain ta80
+                                                                                                  0
+                                                                                                                                                0.3     ain ta71      ain ta72     ain ta73     ain ta74     ain ta75     ain ta76     ain ta77     ain ta78     ain ta79     ain ta80
+
+             10                           100                                                        25              50         75         100       Dom          Dom           Dom          Dom          Dom          Dom          Dom          Dom          Dom          Dom
+             Iteration
+                                                                                                                     Iteration
+
+Fig. 7. Results of the production scenario adaptation evaluation. (A) Convergence curve of the non-parametric model for the automated design of
+semantic features within operation-centric program view DSLs. (B) Convergence curve of the EM algorithm for the automated design of syntactic features in
+product-flow-centric program view DSL. (C) Comparison of Ours with MSL and TSL on ten scenarios respectively integrating the four evaluation metrics.
+
+D. The Schedule Grounding Evaluation                                                                                                  closely with the characteristics of their respective scenarios.
+                                                                                                                                      These algorithms adeptly capture the unique language features
+   Through paired samples t-test, we find that Ours-SGM                                                                               inherent to each scenarios, preserve the common ones, and
+significantly outperforms the alternative approaches MSL-                                                                             prune out those deemed unnecessary.
+III and TSL-II across the four evaluation metrics (Ours-
+SGM outperforms MSL-III, measured by BLEU: t(18) =                                                                                       In the second component of this meta-study, the null hypoth-
+58.332, µd < 0, p < .0001; measured by EMKVP-Precision:                                                                               esis posits that the performance of Ours in uncorrelated with
+t(18) = 42.726, µd < 0, p < .0001; measured by EMKVP-                                                                                 the choice of scenario. Utilizing the Kruskal-Wallis H-Test, we
+Recall: t(18) = 36.001, µd < 0, p < .0001; measured by                                                                                determine that the null hypothesis should be accepted based on
+EMKVP-F1: t(18) = 43.236, µd < 0, p < .0001; Ours-                                                                                    the complete pipeline experiment (H(9) = 2.605, p = .978;
+SGM outperforms TSL-II, measured by BLEU: t(18) =                                                                                     see Fig. 7C). This indicates a lack of evidence supporting a
+79.089, µd < 0, p < .0001; measured by EMKVP-Precision:                                                                               correlation between performance and scenario. Furthermore,
+t(18) = 8.705, µd < 0, p < .0001; measured by EMKVP-                                                                                  we observe that the results from Ours demonstrate a high
+Recall: t(18) = 3.422, µd < 0, p < .01; measured by                                                                                   mean and low variance, resulting in a trend where the VMR
+EMKVP-F1: t(18) = 5.273, µd < 0, p < .0001; see Fig. 6A).                                                                             of Ours significantly surpasses that of TSL but does not
+These comparisons highlight the effectiveness of Ours-SGM                                                                             significantly exceed that of MSL. This is because a substantial
+in schedule grounding, particularly through the dual program                                                                          portion of MSL's results exhibit both low mean and low
+view of the DSL in managing the concurrent programming                                                                                variance, whereas TSL's results display both low mean and
+nature of grounded production plans. In contrast, even when                                                                           high variance, indicating a greater degree of uncertainty. This
+provided with groundtruth schedules, the baseline approaches                                                                          difference of uncertainty aligns with the insights derived from
+perform poorly in maintaining consistency among start time,                                                                           the route sheet as an intermediate workspace. These results
+end time, and duration, let alone their effectiveness on address-                                                                     suggest that our constraint-centric architecture delivers both
+ing the issue of occupation caused by product transitions.                                                                            exceptional and consistent performance across various scenar-
+                                                                                                                                      ios, thereby meeting the requirements of the manufacturing
+E. The Automated Adaptation Evaluation                                                                                                community. The findings further reveal the potential of our
+                                                                                                                                      architecture to democratize the automatic, entire-workflow
+   In the first component of this meta-study, we present the                                                                          constraint specification for production planning and scheduling
+trends observed from the behaviors of the automated design                                                                            for all manufacturing practitioners, ranging from OEMs to
+algorithms. The automated design algorithm of both operation-                                                                         Small and Medium-sized Enterprises (SMEs).
+centric and product-flow-centric program view DSL semantics
+converges on ten scenarios respectively, as illustrated by the                                                                                                  VI. CONCLUSION
+likelihood curve yielded by the non-parametric model in
+Fig. 7A. The automated design algorithm of product-flow-                                                                                 This paper addresses the critical challenge of automat-
+centric program view DSL syntax converges on ten scenarios                                                                            ing constraint specification from heterogeneous raw data in
+respectively, as illustrated by the likelihood curve generated by                                                                     smart manufacturing by introducing a constraint-centric ar-
+the EM in Fig. 7B. Given the case-specificity, the automated                                                                          chitecture that effectively regulates LLMs through domain-
+design algorithms effectively tailor the resulting DSLs to align                                                                      specific representations. Our three-level hierarchical structure
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING                        14
+
+successfully balances the generative capabilities of LLMs                      [14] F. Zhang, Y. Mei, S. Nguyen, and M. Zhang, "Survey on genetic
+with manufacturing reliability requirements. The automated                           programming and machine learning techniques for heuristic design in
+adaptation algorithm enables efficient customization across                          job shop scheduling," IEEE Transactions on Evolutionary Computation,
+different production scenarios, making the architecture broadly                      vol. 28, no. 1, pp. 147-167, 2023.
+applicable for various manufacturing practices. Experimental
+results demonstrate the architecture's superiority over pure                   [15] J. Li, X. Li, L. Gao, and Q. Liu, "A flexible job shop scheduling problem
+LLM-based approaches in maintaining precision while re-                              considering on-site machining fixtures: A case study from customized
+ducing reliance on human expert intervention. This work                              manufacturing enterprise," IEEE Transactions on Automation Science
+advances the practical implementation of smart manufacturing                         and Engineering, 2024.
+by providing a robust framework for automated constraint
+specification that meets the demands of modern production                      [16] Z. Tian, X. Jiang, W. Liu, and Z. Li, "Dynamic energy-efficient
+environments. Future research could explore the architecture's                       scheduling of multi-variety and small batch flexible job-shop: A case
+adaptation boundary to more complex manufacturing scenarios                          study for the aerospace industry," Computers & Industrial Engineering,
+and its integration with other smart manufacturing systems.                          vol. 178, p. 109111, 2023.
+
+                        ACKNOWLEDGMENT                                         [17] L. Zhao, J. Fan, C. Zhang, W. Shen, and J. Zhuang, "A drl-based reactive
+                                                                                     scheduling policy for flexible job shops with random job arrivals," IEEE
+   Q. Xu is a visiting student at Peking University from                             Transactions on Automation Science and Engineering, 2023.
+University of Science and Technology of China. The authors
+would like to thank Jiawen Liu for the assistance in figure                    [18] T. Wang, J. Zhao, Q. Xu, W. Pedrycz, and W. Wang, "A dynamic
+drawing and the reviewers for insightful suggestions.                                scheduling framework for byproduct gas system combining expert
+                                                                                     knowledge and production plan," IEEE Transactions on Automation
+                             REFERENCES                                              Science and Engineering, vol. 20, no. 1, pp. 541-552, 2022.
+
+ [1] A. Kusiak, "Smart manufacturing," International Journal of Production     [19] H. Zhang and U. Roy, "A semantics-based dispatching rule selection
+      Research, vol. 56, no. 1-2, pp. 508-517, 2018.                                 approach for job shop scheduling," Journal of Intelligent Manufacturing,
+                                                                                     vol. 30, no. 7, pp. 2759-2779, 2019.
+ [2] C. J. Conti, A. S. Varde, and W. Wang, "Human-robot collaboration
+      with commonsense reasoning in smart manufacturing contexts," IEEE        [20] R. Ramamonjison, H. Li, T. Yu, S. He, V. Rengan, A. Banitalebi-
+      Transactions on Automation Science and Engineering, vol. 19, no. 3,            Dehkordi, Z. Zhou, and Y. Zhang, "Augmenting operations research with
+      pp. 1784-1797, 2022.                                                           auto-formulation of optimization models from problem descriptions,"
+                                                                                     in Annual Conference on Empirical Methods in Natural Language
+ [3] E. C. Balta, M. Pease, J. Moyne, K. Barton, and D. M. Tilbury,                  Processing, 2022.
+      "Digital twin-based cyber-attack detection framework for cyber-physical
+      manufacturing systems," IEEE Transactions on Automation Science and      [21] R. Ramamonjison, T. Yu, R. Li, H. Li, G. Carenini, B. Ghaddar, S. He,
+      Engineering, vol. 21, no. 2, pp. 1695-1712, 2023.                              M. Mostajabdaveh, A. Banitalebi-Dehkordi, Z. Zhou, et al., "Nl4opt
+                                                                                     competition: Formulating optimization problems based on their natural
+ [4] L. Chen, Z. Lu, A. Xiao, Q. Duan, J. Wu, and P. C. Hung, "A resource            language descriptions," in NeurIPS 2022 Competition Track, 2023.
+      recommendation model for heterogeneous workloads in fog-based smart
+      factory environment," IEEE Transactions on Automation Science and        [22] A. Ahmaditeshnizi, W. Gao, and M. Udell, "Optimus: Scalable opti-
+      Engineering, vol. 19, no. 3, pp. 1731-1743, 2022.                              mization modeling with (mi) lp solvers and large language models," in
+                                                                                     International Conference on Machine Learning, 2024.
+ [5] J. J. Browne, D. Dubois, K. Rathmill, S. Sethi, and K. Stecke, "Classi-
+      fication of flexible manufacturing systems," The FMS magazine, vol. 2,   [23] Z. Xiao, D. Zhang, Y. Wu, L. Xu, Y. J. Wang, X. Han, X. Fu, T. Zhong,
+      no. 2, pp. 114-117, 1984.                                                      J. Zeng, M. Song, et al., "Chain-of-experts: When llms meet complex
+                                                                                     operations research problems," in International Conference on Learning
+ [6] H.-H. Hvolby and K. Steger-Jensen, "Technical and industrial issues             Representations, 2023.
+      of Advanced Planning and Scheduling (APS) systems," Computers in
+      Industry, vol. 61, no. 9, pp. 845-851, 2010.                             [24] C. Huang, Z. Tang, D. Ge, S. Hu, R. Jiang, B. Wang, Z. Wang, and
+                                                                                     X. Zheng, "Orlm: A customizable framework in training large models
+ [7] S. Dauzère-Pérès, J. Ding, L. Shen, and K. Tamssaouet, "The flexible job        for automated optimization modeling," Operations Research, 2025.
+      shop scheduling problem: A review," European Journal of Operational
+      Research, vol. 314, no. 2, pp. 409-432, 2024.                            [25] C. Jiang, X. Shu, H. Qian, X. Lu, J. Zhou, A. Zhou, and Y. Yu,
+                                                                                     "Llmopt: Learning to define and solve general optimization problems
+ [8] H. Xiong, S. Shi, D. Ren, and J. Hu, "A survey of job shop scheduling           from scratch," in International Conference on Learning Representations,
+      problem: The types and models," Computers & Operations Research,               2025.
+      vol. 142, p. 105731, 2022.
+                                                                               [26] Y. Zhang, Q. Kang, W. Y. Yu, H. Gong, X. Fu, X. Han, T. Zhong,
+ [9] K. Gao, Z. Cao, L. Zhang, Z. Chen, Y. Han, and Q. Pan, "A review on             and C. Ma, "Decision information meets large language models: The
+      swarm intelligence and evolutionary algorithms for solving flexible job        future of explainable operations research," in International Conference
+      shop scheduling problems," IEEE/CAA Journal of Automatica Sinica,              on Learning Representations, 2025.
+      vol. 6, no. 4, pp. 904-916, 2019.
+                                                                               [27] B. Russell, "Vagueness," The Australasian Journal of Psychology and
+[10] B. Cunha, A. M. Madureira, B. Fonseca, and D. Coelho, "Deep                     Philosophy, vol. 1, no. 2, pp. 84-92, 1923.
+      reinforcement learning as a job shop scheduling solver: A literature
+      review," in Hybrid Intelligent Systems: 18th International Conference    [28] S. Ouyang, J. M. Zhang, M. Harman, and M. Wang, "An empirical
+      on Hybrid Intelligent Systems, pp. 350-359, Springer, 2020.                    study of the non-determinism of chatgpt in code generation," ACM
+                                                                                     Transactions on Software Engineering and Methodology, 2024.
+[11] Y.-J. Yao, Q.-H. Liu, X.-Y. Li, and L. Gao, "A novel milp model for job
+      shop scheduling problem with mobile robots," Robotics and Computer-      [29] V. G. Cannas, M. P. Ciano, M. Saltalamacchia, and R. Secchi, "Artificial
+      Integrated Manufacturing, vol. 81, p. 102506, 2023.                            intelligence in supply chain and operations management: a multiple case
+                                                                                     study research," International Journal of Production Research, vol. 62,
+[12] D. B. Fontes, S. M. Homayouni, and J. C. Fernandes, "Energy-efficient           no. 9, pp. 3333-3360, 2024.
+      job shop scheduling problem with transport resources considering speed
+      adjustable resources," International Journal of Production Research,     [30] Y.-Z. Shi, M. Xu, J. E. Hopcroft, K. He, J. B. Tenenbaum, S.-C. Zhu,
+      vol. 62, no. 3, pp. 867-890, 2024.                                             Y. N. Wu, W. Han, and Y. Zhu, "On the complexity of Bayesian
+                                                                                     generalization," in International Conference on Machine Learning, 2023.
+[13] D. B. Fontes, S. M. Homayouni, and J. F. Gonçalves, "A hybrid particle
+      swarm optimization and simulated annealing algorithm for the job shop    [31] Y.-Z. Shi, Q. Xu, F. Meng, L. Ruan, and Q. Wang, "Abstract Hardware
+      scheduling problem with transport resources," European Journal of              Grounding towards the Automated Design of Automation Systems," in
+      Operational Research, vol. 306, no. 3, pp. 1140-1157, 2023.                    International Conference on Intelligent Robotics and Applications, 2024.
+
+                                                                               [32] M. Fowler, Domain-specific languages. Pearson Education, 2010.
+                                                                               [33] A. Tarski, Introduction to Logic and to the Methodology of Deductive
+
+                                                                                     Sciences. Dover Publications, 1946.
+                                                                               [34] S. J. Russell and P. Norvig, Artificial intelligence a modern approach.
+
+                                                                                     Prentice Hall Press, 2010.
+                                                                               [35] G. Karsai, H. Krahn, C. Pinkernell, B. Rumpe, M. Schindler, and
+
+                                                                                     S. Völkel, "Design guidelines for domain specific languages," in OOP-
+                                                                                     SLA Workshop on Domain-Specific Modeling (DSM' 09), 2009.
+                                                                               [36] N. Chomsky, Syntactic Structures. Mouton de Gruyter, 1957.
+                                                                               [37] J. E. Hopcroft, R. Motwani, and J. D. Ullman, Introduction to Automata
+                                                                                     Theory, Languages, and Computation. Addison-Wesley Longman Pub-
+                                                                                     lishing Co., Inc., 1996.
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING                             15
+
+[38] Y.-Z. Shi, F. Meng, H. Hou, Z. Bi, Q. Xu, L. Ruan, and Q. Wang,                [63] E. Balas and A. Vazacopoulos, "Guided local search with shifting
+      "Expert-level protocol translation for self-driving labs," in Advances in           bottleneck for job shop scheduling," Management Science, vol. 44, no. 2,
+      Neural Information Processing Systems, 2024.                                        pp. 262-275, 1998.
+
+[39] M. Mernik, J. Heering, and A. M. Sloane, "When and how to develop              [64] J. Carlier and É. Pinson, "An algorithm for solving the job-shop
+      domain-specific languages," ACM Computing Surveys (CSUR), vol. 37,                  problem," Management Science, vol. 35, no. 2, pp. 164-176, 1989.
+      no. 4, pp. 316-344, 2005.
+                                                                                    [65] A. S. Jain and S. Meeran, "Deterministic job-shop scheduling: Past,
+[40] Y.-Z. Shi, H. Hou, Z. Bi, F. Meng, X. Wei, L. Ruan, and Q. Wang,                     present and future," European Journal of Operational Research,
+      "AutoDSL: Automated domain-specific language design for structural                  vol. 113, no. 2, pp. 390-434, 1999.
+      representation of procedures with constraints," in Annual Meeting of the
+      Association for Computational Linguistics, 2024.                              [66] E. Nowicki and C. Smutnicki, "A fast taboo search algorithm for the
+                                                                                          job shop problem," Management Science, vol. 42, no. 6, pp. 797-813,
+[41] Y.-Z. Shi, M. Liu, F. Meng, Q. Xu, Z. Bi, K. He, L. Ruan, and                        1996.
+      Q. Wang, "Hierarchically Encapsulated Representation for Protocol
+      Design in Self-Driving Labs," in International Conference on Learning         [67] I. Sabuncuoglu and M. Bayiz, "Job shop scheduling with beam search,"
+      Representations, 2025.                                                              European Journal of Operational Research, vol. 118, no. 2, pp. 390-412,
+                                                                                          1999.
+[42] Y.-Z. Shi, M. Liu, H. Ma, Q. Xu, H. Qu, K. He, L. Ruan, and Q. Wang,
+      "Targeted control of fast prototyping through domain-specific interface,"     [68] R. H. Storer, S. D. Wu, and R. Vaccari, "New search spaces for sequenc-
+      in International Conference on Machine Learning, 2025.                              ing problems with application to job shop scheduling," Management
+                                                                                          Science, vol. 38, no. 10, pp. 1495-1509, 1992.
+[43] M. Gabbrielli, S. Martini, and S. Giallorenzo, Programming languages:
+      principles and paradigms. Springer, 2010.                                     [69] Y.-Z. Shi, H. Li, L. Ruan, and H. Qu, "Constraint representation
+                                                                                          towards precise data-driven storytelling," in IEEE Visualization and
+[44] H. Abelson and G. J. Sussman, Structure and interpretation of computer               Visual Analytics Gen4DS Workshop, 2024.
+      programs. The MIT Press, 1996.
+                                                                                    [70] H. Schütze, C. D. Manning, and P. Raghavan, Introduction to informa-
+[45] M. Honnibal and M. Johnson, "An improved non-monotonic transition                    tion retrieval. Cambridge University Press Cambridge, 2008.
+      system for dependency parsing," in Annual Conference on Empirical
+      Methods in Natural Language Processing, 2015.                                 [71] K. Papineni, S. Roukos, T. Ward, and W.-J. Zhu, "Bleu: a method for
+                                                                                          automatic evaluation of machine translation," in Annual Meeting of the
+[46] T. Xie, Q. Li, Y. Zhang, Z. Liu, and H. Wang, "Self-improving for                    Association for Computational Linguistics, 2002.
+      zero-shot named entity recognition with large language models," in
+      Proceedings of the 2024 Conference of the North American Chapter              [72] Y.-Z. Shi, S. Li, X. Niu, Q. Xu, J. Liu, Y. Xu, S. Gu, B. He, X. Li,
+      of the Association for Computational Linguistics, 2024.                             X. Zhao, et al., "PersLEARN: Research Training through the Lens
+                                                                                          of Perspective Cultivation," in Annual Meeting of the Association for
+[47] A. V. Aho and J. D. Ullman, The theory of parsing, translation, and                  Computational Linguistics, 2023.
+      compiling. Prentice-Hall Englewood Cliffs, NJ, 1972.
+                                                                                                                   Yu-Zhe Shi is presently a graduate student in the
+[48] T. Brown, B. Mann, N. Ryder, M. Subbiah, J. D. Kaplan, P. Dhariwal,                                           Department of Computer Science and Engineering
+      A. Neelakantan, P. Shyam, G. Sastry, A. Askell, et al., "Language                                            at the Hong Kong University of Science and Tech-
+      models are few-shot learners," in Advances in Neural Information                                             nology. He is also affiliated with the Laboratory
+      Processing Systems, 2020.                                                                                    of Human-Robot Systems at Peking University. His
+                                                                                                                   research primarily focuses on the automatic design,
+[49] J. Wei, M. Bosma, V. Zhao, K. Guu, A. W. Yu, B. Lester, N. Du, A. M.                                          translation, synthesis, and deployment of domain-
+      Dai, and Q. V. Le, "Finetuned language models are zero-shot learners,"                                       specific representations, aiming to facilitate inter-
+      in International Conference on Learning Representations, 2022.                                               action, collaboration, coordination, and communica-
+                                                                                                                   tion between humans and machines.
+[50] R. L. Graham, "Bounds for certain multiprocessing anomalies," Bell
+      System Technical Journal, vol. 45, no. 9, pp. 1563-1581, 1966.                                               Qiao Xu received the B.Eco. degree in Finance
+                                                                                                                   from Huazhong University of Science and Tech-
+[51] R. L. Graham, E. L. Lawler, J. K. Lenstra, and A. R. Kan, "Optimiza-                                          nology (HUST) in 2024. He is currently pursuing
+      tion and approximation in deterministic sequencing and scheduling: a                                         the M.Eng. degree in the School of Software En-
+      survey," in Annals of discrete mathematics, Elsevier, 1979.                                                  gineering at University of Science and Technology
+                                                                                                                   of China (USTC). His research interests include
+[52] P. Baptiste, C. Le Pape, and W. Nuijten, Constraint-based scheduling:                                         AI4Science and spatiotemporal data mining.
+      applying constraint programming to scheduling problems. Springer
+      Science & Business Media, 2001.                                                                              Yanjia Li received the B.Sc. degree (First Class
+                                                                                                                   Honors) in Computer Science and Data Science
+[53] P. Baptiste, P. Laborie, C. Le Pape, and W. Nuijten, "Constraint-based                                        and Technology from the Hong Kong University of
+      scheduling and planning," in Foundations of artificial intelligence, vol. 2,                                 Science and Technology (HKUST) in 2021. She is
+      pp. 761-799, Elsevier, 2006.                                                                                 currently pursuing the M.Phil. degree in Computer
+                                                                                                                   Science at HKUST. Her research interests include
+[54] K. M. Chandy, "Parallel program design," in Opportunities and Con-                                            assortment optimization, supply chain management,
+      straints of Parallel Computing, Springer, 1989.                                                              and production scheduling.
+
+[55] M. Voelter and E. Visser, "Product line engineering using domain-
+      specific languages," in 2011 15th IEEE International Software Product
+      Line Conference, 2011.
+
+[56] K. Meixner, F. Rinker, H. Marcher, J. Decker, and S. Biffl, "A domain-
+      specific language for product-process-resource modeling," in 2021 26th
+      IEEE International Conference on Emerging Technologies and Factory
+      Automation (ETFA), 2021.
+
+[57] M. Hofmann, L. Albaugh, T. Wang, J. Mankoff, and S. E. Hudson,
+      "Knitscript: A domain-specific scripting language for advanced machine
+      knitting," in Proceedings of the 36th Annual ACM Symposium on User
+      Interface Software and Technology, 2023.
+
+[58] A. Martelli and U. Montanari, "An efficient unification algorithm,"
+      ACM Transactions on Programming Languages and Systems (TOPLAS),
+      vol. 4, no. 2, pp. 258-282, 1982.
+
+[59] E. Taillard, "Benchmarks for basic scheduling problems," European
+      Journal of Operational Research, vol. 64, no. 2, pp. 278-285, 1993.
+
+[60] J. Adams, E. Balas, and D. Zawack, "The shifting bottleneck procedure
+      for job shop scheduling," Management Science, vol. 34, no. 3, pp. 391-
+      401, 1988.
+
+[61] D. Applegate and W. Cook, "A computational study of the job-shop
+      scheduling problem," ORSA Journal on Computing, vol. 3, no. 2,
+      pp. 149-156, 1991.
+
+[62] C. Bierwirth, "A generalized permutation approach to job shop schedul-
+      ing with genetic algorithms," Operations Research Spektrum, vol. 17,
+      no. 2, pp. 87-92, 1995.
+IEEE TRANSACTIONS ON AUTOMATION SCIENCE AND ENGINEERING                              16
+
+Mingchen Liu received the B.Eng. degree from
+the School of Software, Huazhong University of
+Science and Technology (HUST) in 2024. He is
+currently pursuing the M.Eng. degree in the School
+of Computer Science and Technology at HUST. His
+research interests include AI4Science and Computa-
+tional Cognitive Science.
+
+                               Huamin Qu is a chair professor in the Department
+                               of Computer Science and Engineering (CSE) at the
+                               Hong Kong University of Science and Technology
+                               (HKUST) and also the Dean of the Academy of
+                               Interdisciplinary Studies (AIS) of HKUST. He ob-
+                               tained a BS in Mathematics from Xi'an Jiaotong
+                               University, China, an MS and a PhD in Computer
+                               Science from the Stony Brook University. His main
+                               research interests are in visualization and human-
+                               computer interaction, with focuses on urban in-
+                               formatics, social network analysis, E-learning, text
+visualization, and explainable artificial intelligence (XAI). For more informa-
+tion, please visit http://huamin.org/.
+
+                               Lecheng Ruan received the B.S. honor degree from
+                               the School of Mechatronic Engineering, Harbin In-
+                               stitute of Technology in 2015, and the Ph.D. degree
+                               from the Department of Mechanical and Aerospace
+                               Engineering, University of California, Los Angeles
+                               in 2020. He is now directing the Center of Intelli-
+                               gence in the Laboratory of Human-Robot Systems,
+                               Peking University. His research interests include
+                               perception, control and knowledge representation of
+                               robotic systems.
+
+                               Qining Wang (Senior Member, IEEE) received
+                               his Ph.D. degree from Peking University, Beijing,
+                               China, in 2009, where he is currently a Full Pro-
+                               fessor in the College of Engineering. He serves as
+                               the Vice-Dean of the College of Engineering, Peking
+                               University, China. He has authored/co-authored over
+                               200 scientific papers in international journals and
+                               refereed conference proceedings. His research inter-
+                               ests include wearable robotics and human-machine
+                               interfaces.
+

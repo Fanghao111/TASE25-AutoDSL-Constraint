@@ -1,0 +1,38 @@
+[2026-07-01 21:36:09] Phase 0a: AutoDSL op + prod parallel
+[2026-07-01 21:36:09] [deepseek-v3] FB pipeline start
+[2026-07-01 21:36:09] [qwen3-235b] FB pipeline start
+[2026-07-01 21:36:09] [qwen3-30b] FB pipeline start
+[2026-07-01 21:36:09] [qwen3-4b] FB pipeline start
+[2026-07-01 22:17:00] [qwen3-4b] FB pipeline done rc=0
+[2026-07-01 22:17:00] [qwen3-4b] waiting AutoDSL
+[2026-07-01 22:17:31] AutoDSL done: op_rc=0 prod_rc=1
+[2026-07-01 22:17:32] AutoDSL FAILED (op=0 prod=1); DSL pipeline will not start
+[2026-07-01 22:17:36] [qwen3-4b] DSL pipeline start
+[2026-07-01 22:26:01] [qwen3-30b] FB pipeline done rc=0
+[2026-07-01 22:26:01] [qwen3-30b] waiting AutoDSL
+[2026-07-01 22:26:01] [qwen3-30b] DSL pipeline start
+[2026-07-01 22:26:52] [deepseek-v3] FB pipeline done rc=0
+[2026-07-01 22:26:52] [deepseek-v3] waiting AutoDSL
+[2026-07-01 22:26:52] [deepseek-v3] DSL pipeline start
+[2026-07-01 22:38:09] [qwen3-235b] FB pipeline done rc=0
+[2026-07-01 22:38:09] [qwen3-235b] waiting AutoDSL
+[2026-07-01 22:38:09] [qwen3-235b] DSL pipeline start
+[2026-07-01 23:02:40] [deepseek-v3] DSL pipeline done rc=1
+[2026-07-01 23:02:40] [deepseek-v3] eval start
+[2026-07-01 23:08:41] [deepseek-v3] eval done
+[2026-07-01 23:53:39] [qwen3-4b] DSL pipeline done rc=0
+[2026-07-01 23:53:39] [qwen3-4b] eval start
+[2026-07-02 00:16:34] [qwen3-30b] DSL pipeline done rc=0
+[2026-07-02 00:16:34] [qwen3-30b] eval start
+[2026-07-02 00:23:05] [qwen3-4b] eval done
+[2026-07-02 00:43:49] [qwen3-30b] eval done
+[2026-07-02 02:06:55] [qwen3-235b] DSL pipeline done rc=0
+[2026-07-02 02:06:55] [qwen3-235b] eval start
+[2026-07-02 02:42:17] [qwen3-235b] eval done
+[2026-07-02 02:42:17] All per-model pipelines + eval done
+[2026-07-02 02:42:17] Phase 3: GT ceiling from_gt_schedule + eval graph_from_gt/ground_from_gt
+[2026-07-02 02:43:49] GT ceiling done
+[2026-07-02 02:43:49] Phase 4: comparison report
+[2026-07-02 02:43:49] ALL DONE
+[05:35:03] deepseek-v3 DSL rerun rc=0
+[06:04:53] deepseek-v3 eval rerun done

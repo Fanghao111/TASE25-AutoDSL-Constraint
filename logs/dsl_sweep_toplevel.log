@@ -1,0 +1,14 @@
+==== [deepseek-v3] DSL pipeline + evaluation ====
+WARNING: [deepseek-v3] pipeline exited 1 — skipping evaluation
+==== [qwen3-235b] DSL pipeline + evaluation ====
+WARNING: [qwen3-235b] pipeline exited 1 — skipping evaluation
+==== [qwen3-30b] DSL pipeline + evaluation ====
+Filtered to 10 instance(s): ['instance ta71', 'instance ta72', 'instance ta73', 'instance ta74', 'instance ta75', 'instance ta76', 'instance ta77', 'instance ta78', 'instance ta79', 'instance ta80']
+  0%|          | 0/10 [00:00<?, ?it/s]orders2dsl_program ing...
+
+Processing Orders:   0%|          | 0/100 [00:00<?, ?it/s][AWARNING: [qwen3-30b] pipeline exited 1 — skipping evaluation
+==== [qwen3-4b] DSL pipeline + evaluation ====
+Filtered to 10 instance(s): ['instance ta71', 'instance ta72', 'instance ta73', 'instance ta74', 'instance ta75', 'instance ta76', 'instance ta77', 'instance ta78', 'instance ta79', 'instance ta80']
+  0%|          | 0/10 [00:00<?, ?it/s]orders2dsl_program ing...
+
+Processing Orders:   0%|          | 0/100 [00:00<?, ?it/s][A

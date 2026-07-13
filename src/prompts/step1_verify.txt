@@ -1,19 +1,51 @@
-You are given a natural language description and a structured JSON extraction. Verify the JSON against the original text.
+You are given ONE natural-language sentence describing ONE manufacturing step, and the structured JSON extraction of that same step. Verify the JSON against the sentence and return the CORRECTED single step.
 
-Check for:
-1. MISSING information: anything in the description not captured in the JSON
-2. FABRICATED information: anything in the JSON not present in the description
-3. INCORRECT values: any values that don't match the original description
-4. STRUCTURAL completeness: every step must have operation, machine, duration, precondition, postcondition
+# Output shape (STRICT)
 
-If issues are found, return the CORRECTED JSON (same schema structure). If the JSON is already correct, return it unchanged.
+Output ONE JSON object with EXACTLY these 6 keys and no others:
 
-Do NOT change the schema structure. Only fix values or add/remove content.
+```
+{
+  "operation": "<string>",
+  "machine": "<string>",
+  "duration": "<string with units>",
+  "precondition": [ {"component": "...", "component_type": "...", "container": "..."} ],
+  "postcondition": [ {"component": "...", "component_type": "...", "container": "..."} ],
+  "parameters": { "<key>": "<value>" }
+}
+```
 
-Original description:
----ORDER---
+- Do NOT wrap the result in a `"steps"` array. Return the step object directly.
+- Do NOT return multiple objects, do NOT repeat the object.
+- Do NOT include markdown code fences or any other text.
+- If nothing needs to change, return the input JSON verbatim.
 
-Extracted JSON:
----EXTRACTED---
+# What to correct
 
-Output ONLY the corrected JSON object. Do NOT wrap in markdown code blocks. Do NOT include any other text.
+Only fix these three kinds of mistakes WITHIN this single step:
+
+- **INCORRECT value**: a scalar in the JSON contradicts the sentence (wrong `machine`, wrong `duration` number/unit, wrong `operation`, wrong parameter value). Replace with the value stated in the sentence.
+- **FABRICATED value**: a value in the JSON is not present in the sentence. Remove it (for `parameters` remove the key; for `precondition`/`postcondition` remove the item).
+- **MISSING value**: the sentence explicitly names a value the JSON omits. Add it to the corresponding field.
+
+Do NOT:
+- Change formatting/casing of values that are already correct.
+- Rewrite anything just because you could phrase it "better".
+- Split this step into multiple steps or merge with another step (there is no other step to consider — you only see one).
+- Reason out loud in the output.
+
+# Duration convention
+
+Duration numbers in the sentence are authoritative. If the sentence says "processing for N minutes", the duration is `"N minutes"` — even if the sentence mentions unrelated numbers (cycle time in seconds, feed rates, RPM). Do not swap a duration for an unrelated number that happened to appear nearby.
+
+# Inputs
+
+Description of this step:
+---STEP_NL---
+
+Extracted JSON for this step:
+---STEP_JSON---
+
+# Output
+
+Output ONLY the corrected single-step JSON object (no `steps` wrapper). No markdown, no explanation, no prefix/suffix.

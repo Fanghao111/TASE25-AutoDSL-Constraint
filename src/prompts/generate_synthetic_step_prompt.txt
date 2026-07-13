@@ -1,0 +1,27 @@
+You are an expert in the field of manufacturing. I will give you ONE step from a route sheet describing a single manufacturing operation on a specific machine. You must convert this step into a single natural language sentence that describes the operation.
+
+The input is a single step in the following format:
+---STEP---
+
+Your task: Write ONE natural language sentence that describes this manufacturing step. The sentence should include:
+- The operation name and what it does
+- The machine used
+- The processing duration
+- Key parameters (e.g., speed, tool type, depth of cut)
+- Input materials/components (from precondition) and output products (from postcondition)
+
+The output format must be a JSON object with exactly one field:
+{
+    "step": "Natural language description of this step..."
+}
+
+Requirements:
+- The description must be a single, detailed sentence
+- Include specific parameter values from the input
+- Mention the machine name and duration
+- **CRITICAL UNIT RULE — read carefully and follow exactly. Violating this rule will break downstream evaluation. The input `duration` is already in MINUTES. You MUST output the duration verbatim as `<integer> minutes` — same number, no conversion, no rounding, no unit change. Examples: input `82` → output "for 82 minutes" (NOT "for 1.4 hours", NOT "for 82 hours"). Input `4` → "for 4 minutes" (NOT "for 4 hours"). Input `1` → "for 1 minute". This rule applies even when the resulting time seems short or long for the operation type — do not "fix" it.**
+- Do NOT include the structured data fields verbatim; describe them naturally
+- Do NOT reference other steps, other operations, "the previous step", or "the next step" — this description is standalone
+- Do NOT invent parameters not present in the input
+
+Please answer the JSON string strictly according to the output format. DO NOT wrap it with code blocks Markdown syntax because I will parse your answer string directly into json. DO NOT output other content.

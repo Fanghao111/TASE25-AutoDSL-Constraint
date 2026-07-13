@@ -1,0 +1,150 @@
+{
+  "part_name": "Custom Machined Gear Assembly",
+  "route_sheet": [
+    {
+      "machine": "Bandsaw",
+      "duration": "37 minutes",
+      "precondition": [
+        {
+          "component": "Metal Bar",
+          "component_type": "MetalBar",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "postcondition": [
+        {
+          "component": "Lathed Part",
+          "component_type": "LathedPart",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "operation": "Sawing",
+      "parameters": {
+        "Saw speed": "Optimum speed for material",
+        "Blade type": "High durability material specific",
+        "Cutting width": "Wide enough for lathing process"
+      }
+    },
+    {
+      "machine": "Vertical Lathe",
+      "duration": "95 minutes",
+      "precondition": [
+        {
+          "component": "Lathed Part",
+          "component_type": "LathedPart",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "postcondition": [
+        {
+          "component": "Milled Part",
+          "component_type": "MilledPart",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "operation": "Turning",
+      "parameters": {
+        "Rotation speed": "High for precision finish",
+        "Tool type": "Carbide insert",
+        "Feed rate": "Controlled for surface quality"
+      }
+    },
+    {
+      "machine": "Broaching Machine",
+      "duration": "76 minutes",
+      "precondition": [
+        {
+          "component": "Milled Part",
+          "component_type": "MilledPart",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "postcondition": [
+        {
+          "component": "Broached Component",
+          "component_type": "BroachedComponent",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "operation": "Broaching",
+      "parameters": {
+        "Broach type": "Progressive cutting profile",
+        "Feed rate": "Precisely controlled",
+        "Depth of cut": "Full form in single pass"
+      }
+    },
+    {
+      "machine": "Hobbing Machine",
+      "duration": "36 minutes",
+      "precondition": [
+        {
+          "component": "Broached Component",
+          "component_type": "BroachedComponent",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "postcondition": [
+        {
+          "component": "Hobbied Gear",
+          "component_type": "HobbiedGear",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "operation": "Gear Hobbing",
+      "parameters": {
+        "Hobbing speed": "Synchronized with gear ratio",
+        "Feed rate": "Matched to tooth profile",
+        "Gear profile": "Involute standard"
+      }
+    },
+    {
+      "machine": "Grinding Machines",
+      "duration": "6 minutes",
+      "precondition": [
+        {
+          "component": "Hobbied Gear",
+          "component_type": "HobbiedGear",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "postcondition": [
+        {
+          "component": "Ground Part",
+          "component_type": "GroundPart",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "operation": "Surface Grinding",
+      "parameters": {
+        "Grinding wheel type": "Aluminum oxide fine grain",
+        "Wheel speed": "High for finish",
+        "Feed rate": "Minimal to prevent overheating"
+      }
+    },
+    {
+      "machine": "Wire EDM (Electrical Discharge Machine)",
+      "duration": "33 minutes",
+      "precondition": [
+        {
+          "component": "Ground Part",
+          "component_type": "GroundPart",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "postcondition": [
+        {
+          "component": "Precision Finished Part",
+          "component_type": "PrecisionFinishedPart",
+          "container": "ConveyorBelt"
+        }
+      ],
+      "operation": "Wire Electrical Discharge Machining",
+      "parameters": {
+        "Electrical parameters": "Precisely controlled for fine cut",
+        "Wire type": "Brass-coated wire",
+        "Cutting speed": "Low for accuracy"
+      }
+    }
+  ],
+  "instance_description": "instance ta80"
+}

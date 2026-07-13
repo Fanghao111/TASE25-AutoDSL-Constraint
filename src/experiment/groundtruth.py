@@ -25,35 +25,25 @@ class GroundTruth:
 
     def get_grounded_route_sheet(self):
         if len(self.route_sheets) == 0:
-            route_sheet_all = read_json("data/route_sheet_reduce.json")
+            route_sheet_all = read_json("preprocess/route_sheet_reduce.json")
             self.route_sheets = [route_sheet for route_sheet in route_sheet_all if route_sheet[0]["instance_description"] == self.instance_description][0]
             write_json(self.dump_dir_path + "route_sheets.json", self.route_sheets)
         return self.route_sheets
 
     def get_grounded_or_matrix(self):
         if len(self.or_matrix) == 0:
-            pre_indexes_all = []  # Store dependencies for every route sheet.
-            
+            # JSP standard linear precedence: task i depends on task i-1 within
+            # each job (conjunctive arcs). Matches Taillard/OR-Tools convention
+            # and lets solver find the true benchmark optimum. Semantic
+            # precondition/postcondition matching produced a much sparser DAG
+            # that let unrelated steps run in parallel, pushing GT makespan far
+            # below BKS — see notes on 2026-07-09 for the correctness argument.
+            pre_indexes_all = []
             for route_sheet_data in self.route_sheets:
-                pre_indexes_job = []
-                
-                for i, step in enumerate(route_sheet_data.get("route_sheet", [])):
-                    pre_indexes = []
-                    current_precondition_types = {pre["component_type"] for pre in step["precondition"]}
-                    
-                    for j in range(i):
-                        previous_step = route_sheet_data["route_sheet"][j]
-                        previous_postcondition_types = {post["component_type"] for post in previous_step["postcondition"]}
-                        
-                        # Record a dependency when a precondition is produced earlier.
-                        if current_precondition_types & previous_postcondition_types:
-                            pre_indexes.append(j)
-                    
-                    pre_indexes_job.append(pre_indexes)
-                
-                pre_indexes_all.append(pre_indexes_job)
+                steps = route_sheet_data.get("route_sheet", [])
+                pre_indexes_all.append([[i - 1] if i > 0 else [] for i in range(len(steps))])
             
-            jssp_mapped_all = read_json("data/jssp_mapped.json")
+            jssp_mapped_all = read_json("preprocess/jssp_mapped.json")
             jssp_mapped = [jssp for jssp in jssp_mapped_all if jssp["description"] == self.instance_description][0]
 
             for i, job in enumerate(jssp_mapped["data"]):

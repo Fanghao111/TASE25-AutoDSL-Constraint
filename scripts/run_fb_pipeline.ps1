@@ -12,9 +12,9 @@ New-Item -ItemType Directory -Force -Path logs | Out-Null
 $env:LLM_BASE_URL   = 'http://localhost:8000/v1'
 $env:LLM_MODEL      = 'deepseek-v3'
 $env:OPENAI_API_KEY = 'dummy'
-if (-not $env:LLM_MAX_WORKERS) { $env:LLM_MAX_WORKERS = '96' }
+if (-not $env:LLM_MAX_WORKERS) { $env:LLM_MAX_WORKERS = '64' }
 
-$pyArgs = @('-u', 'main.py', '--mode', 'fb_pipeline', '--type', 'CPE_CAE_CSE-2')
+$pyArgs = @('-u', 'main.py', '--mode', 'fb_pipeline', '--type', 'full')
 if ($args.Count -gt 0) {
   $pyArgs += '--instances'
   $pyArgs += $args

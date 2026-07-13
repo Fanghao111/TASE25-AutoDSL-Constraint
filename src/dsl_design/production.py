@@ -52,8 +52,9 @@ class Production:
                     pattern["FlowUnit"]["component"] = name
                     pattern["FlowUnit"]["component_type"] = metadata["component_type"]
                     
-                    if metadata["container"]:
-                        pattern["FlowUnit"]["container"].append(metadata["container"])
+                    container = metadata.get("container") or metadata.get("Container")
+                    if container:
+                        pattern["FlowUnit"]["container"].append(container)
                     
                     # Add a successor when the current postcondition is reused later as a precondition.
                     for other_job in self.domain_data:
@@ -110,11 +111,7 @@ class Production:
         updates = [[] for _ in range(len(structure_candidates))]
 
         actual_product_structure_raw = self.__extract_actual_product_structure()
-        actual_product_structure = {}
-
-        for i in range(30):
-            for j in range(30):
-                actual_product_structure[f"{i+1}-{j+1}"] = 0
+        actual_product_structure = defaultdict(int)
         
         total_structure_num = 0
         for structure in actual_product_structure_raw:
@@ -122,6 +119,11 @@ class Production:
             succs_count = len(structure["succs"])
             actual_product_structure[f"{pres_count}-{succs_count}"] += 1
             total_structure_num += 1
+
+        if total_structure_num == 0:
+            self.EM_updates = updates
+            self.EM_results = []
+            return
 
         actual_product_structure_weights = [
             actual_product_structure.get(f"{pres}-{succ}", 0) / total_structure_num
@@ -131,6 +133,9 @@ class Production:
             # E-step
             weights_new = [weight * actual_weight for weight, actual_weight in zip(weights, actual_product_structure_weights)]
             weights_new_sum = sum(weights_new)
+            if weights_new_sum == 0:
+                # No candidate structure matched — keep current weights, stop iterating.
+                break
             weights_new = [weight / weights_new_sum for weight in weights_new]
             for i in range(len(structure_candidates)):
                 update = abs(weights_new[i] - weights[i])

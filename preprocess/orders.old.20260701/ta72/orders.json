@@ -1,0 +1,1117 @@
+[
+  {
+    "part_name": "Precision Mechanical Component",
+    "steps": [
+      "The turning operation shapes the metal bar into a lathed part using a horizontal lathe for 98 minutes, with parameters including a rotation speed of 1500 RPM, a carbide tool, and a feed rate of 0.1 mm/rev.",
+      "The screwing operation processes the lathed part into a screwed component using screw machines for 53 minutes, with parameters including an M6 screw size, metric thread type, and a production rate of 60 units/hour.",
+      "The drilling operation creates a drilled component from the metal bar using a drill press for 11 minutes, with parameters including a 10 mm drill size, a spindle speed of 1000 RPM, and a feed rate of 0.2 mm/rev.",
+      "The milling operation transforms the lathed part into a milled part using a vertical milling machine for 24 minutes, with parameters including a milling speed of 1200 RPM, an end mill tool, and a depth of cut of 2 mm.",
+      "The finishing milling operation refines the milled part into the finished machined component using a horizontal milling machine for 40 minutes, with parameters including a milling speed of 1500 RPM, a linear tool path, and a surface finish of Ra 0.8.",
+      "The broaching operation processes the lathed part into a broached component using a broaching machine for 42 minutes, with parameters including a keyway broach type, a feed rate of 5 mm/min, and a depth of cut of 1 mm.",
+      "The gear shaping operation shapes the broached component into a shaped gear using a gear shaper for 86 minutes, with parameters including a spur gear type, 32 teeth, and a shaping speed of 100 strokes/min.",
+      "The honing operation refines the honed cylinder into the precision finished part using a honing machine for 82 minutes, with parameters including a honing grit size of 320, a cycle time of 10 minutes, and a bore size of 50 mm."
+    ]
+  },
+  {
+    "part_name": "Custom Mechanical Component",
+    "steps": [
+      "The metal bar is cut into a lathed part using a bandsaw for 65 minutes, with a medium saw speed, a carbon steel blade, and a cutting width of 5 mm.",
+      "The lathed part is broached into a broached component using a broaching machine for 60 minutes, with an internal broach type and a high precision level.",
+      "The broached component is shaped into a hobbied gear using a hobbing machine for 44 minutes, at a hobbing speed of 250 RPM, a feed rate of 0.05 mm/rev, and a gear profile of module 2.",
+      "The sheet metal is cut into a cut sheet metal using a laser cutter for 50 minutes, with a laser power of 1500 watts, a cutting speed of 20 mm/sec, and oxygen gas assist.",
+      "The metal bar is turned into a lathed part using a vertical lathe for 39 minutes, at a rotation speed of 1500 RPM, with a carbide insert tool, and a feed rate of 0.1 mm/rev.",
+      "The metal bar is drilled into a drilled component using a drill press for 75 minutes, with a drill size of 10 mm, a spindle speed of 1200 RPM, and a feed rate of 0.05 mm/rev.",
+      "The broached component is shaped into a shaped gear using a gear shaper for 3 minutes, with a spur gear type, 24 teeth, and a shaping speed of 150 strokes/min.",
+      "The lathed part is milled into a milled part using a vertical milling machine for 28 minutes, at a milling speed of 2000 RPM, with an end mill tool, and a depth of cut of 2 mm.",
+      "The milled part is planed into a planed part using a planer for 95 minutes, with a planing depth of 0.5 mm, a feed rate of 0.1 mm/stroke, and a fine surface finish.",
+      "The planed part is ground into a ground part using a grinding machine for 51 minutes, with an aluminum oxide grinding wheel, a wheel speed of 5000 RPM, and a feed rate of 0.05 mm/rev.",
+      "The ground part is precision finished into a precision finished part using a wire EDM machine for 93 minutes, with fine finishing mode, auto deburring settings, and deionized water dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Component",
+    "steps": [
+      "The metal bar is sawed using a bandsaw for 64 minutes with a carbon steel blade at 300 RPM and a cutting width of 2 mm, resulting in a lathed part.",
+      "The lathed part is turned on a vertical lathe for 86 minutes at 2500 RPM using a high-speed steel tool with a feed rate of 0.1 mm/rev, producing a broached component.",
+      "The broached component is processed on a broaching machine for 52 minutes with a keyway broach, a feed rate of 0.5 m/min, and a depth of cut of 3 mm, yielding a shaped gear.",
+      "The shaped gear is shaped on a gear shaper for 37 minutes to create a spur gear with 20 teeth at a shaping speed of 100 teeth/min, resulting in a hobbied gear.",
+      "The hobbied gear is hobbed using a hobbing machine for 24 minutes at 150 RPM with a feed rate of 0.3 m/min and a helical gear profile, producing the final machined component."
+    ]
+  },
+  {
+    "part_name": "Precision Mechanical Component",
+    "steps": [
+      "The metal bar undergoes turning on a Vertical Lathe for 16 minutes, where it is shaped into a lathed part using a carbide tool at 500 RPM with a feed rate of 0.2 mm/rev.",
+      "The lathed part is milled on a Vertical Milling Machine for 86 minutes, transforming it into a milled part using an end mill tool at 2000 RPM with a depth of cut of 2 mm.",
+      "The milled part is planed on a Planer for 71 minutes, resulting in a planed part with a planing depth of 1.5 mm, a feed rate of 0.3 mm/pass, and a surface finish of 0.8 Ra.",
+      "The planed part is ground on Grinding Machines for 21 minutes, refining it into a ground part using a ceramic grinding wheel at 3000 RPM with a feed rate of 0.1 mm/pass.",
+      "The ground part is wire-cut on a Wire EDM (Electrical Discharge Machine) for 80 minutes, producing a precision finished part using a brass wire at medium power with a cutting speed of 120 mm/min."
+    ]
+  },
+  {
+    "part_name": "Machined Component",
+    "steps": [
+      "The metal bar is cut into a lathed part using a bandsaw with a medium saw speed, high-speed steel blade, and 5mm cutting width for 16 minutes.",
+      "The lathed part is turned on a vertical lathe with a rotation speed of 750 RPM, a carbide tool, and a feed rate of 0.5 mm/rev for 42 minutes.",
+      "The lathed part undergoes roughing milling on a vertical milling machine with a milling speed of 1200 RPM, an end mill tool, and a depth of cut of 2 mm for 89 minutes.",
+      "The milled part is shaped on a shaper with a stroke length of 150 mm, a shaping speed of 50 strokes/min, and a single point tool for 80 minutes.",
+      "The shaped part is precisely finished using a wire EDM with optimized electrical parameters, a brass wire, and a cutting speed of 5 mm/min for 79 minutes."
+    ]
+  },
+  {
+    "part_name": "Sheet Metal Assembly",
+    "steps": [
+      "The shearing operation cuts the sheet metal using a shear (sheet metal) machine for 73 minutes, with a shear angle of 5 degrees, a cutting speed of 3 m/min, and a straight blade, transforming the sheet metal into sheared sheet metal.",
+      "The punching operation shapes the sheet metal using a punch press machine for 26 minutes, with a punch size of 10 mm, a stroke speed of 50 strokes/min, and die alignment precision of 0.01 mm, producing the finished sheet metal product.",
+      "The laser cutting operation precisely cuts the sheet metal using a laser cutter machine for 79 minutes, with a laser power of 500 W, a cutting speed of 10 mm/min, and nitrogen gas assist, resulting in the cut sheet metal.",
+      "The turning operation shapes the metal bar using a horizontal lathe machine for 48 minutes, with a rotation speed of 1500 rpm, a carbide tool, and a feed rate of 0.1 mm/rev, creating the lathed part.",
+      "The milling operation refines the lathed part using a vertical milling machine for 45 minutes, with a milling speed of 1000 rpm, a flat end mill tool, and a depth of cut of 2 mm, producing the milled part.",
+      "The shaping operation further processes the milled part using a shaper machine for 62 minutes, with a stroke length of 100 mm, a shaping speed of 20 strokes/min, and a form tool, resulting in the shaped part.",
+      "The grinding operation finishes the planed part using a grinding machine for 40 minutes, with an aluminum oxide grinding wheel, a wheel speed of 1800 rpm, and a feed rate of 0.05 mm/pass, producing the ground part."
+    ]
+  },
+  {
+    "part_name": "Complex Gear Component",
+    "steps": [
+      "The metal bar is turned into a lathed part using a Horizontal Lathe for 57 minutes, operating at a rotation speed of 500 RPM with a carbide insert tool and a feed rate of 0.2 mm per revolution.",
+      "The lathed part is milled into a milled part using a Vertical Milling Machine for 91 minutes, with a milling speed of 1000 RPM, an end mill tool, and a depth of cut of 2 mm.",
+      "The milled part undergoes finishing milling using a Horizontal Milling Machine for 96 minutes, executing a linear tool path at a milling speed of 1200 RPM to achieve a surface finish of Ra 0.8.",
+      "The lathed part is broached into a broached component using a Broaching Machine for 13 minutes, using a keyway broach with a precision level of 0.05 mm.",
+      "The broached component is shaped into a gear using a Gear Shaper for 81 minutes, producing an involute spur gear with 20 teeth at a shaping speed of 150 strokes per minute."
+    ]
+  },
+  {
+    "part_name": "Sheet Metal Component",
+    "steps": [
+      "The shearing operation cuts sheet metal into the desired shape using a Shear (Sheet Metal) machine for 76 minutes with a shear angle of 15 degrees, a cutting speed of 0.5 m/s, and a high carbon steel blade, transforming raw sheet metal into sheared sheet metal.",
+      "The punching operation creates holes in the sheared sheet metal using a Punch Press machine for 60 minutes with a punch size of 20 mm, a stroke speed of 30 strokes/min, and die alignment precision of 0.1 mm, resulting in a finished sheet metal product.",
+      "The milling operation refines the finished sheet metal product on a Vertical Milling Machine for 26 minutes using a diagonal cross-hatch milling pattern with a tolerance of 0.01 mm, producing a milled part as the final output."
+    ]
+  },
+  {
+    "part_name": "Custom Mechanical Component",
+    "steps": [
+      "The Lathe Turning operation shapes a metal bar into a lathed part using a Horizontal Lathe for 51 minutes, with parameters including a rotation speed of 1200 RPM, a carbide insert tool, and a feed rate of 0.1 mm/rev.",
+      "The Precision Turning operation refines the lathed part into a finished machined component on a CNC Turning Center for 60 minutes, using CNC Program #101, calibrated tool offsets, and a spindle speed of 1500 RPM.",
+      "The Milling Operation processes the lathed part into a milled part using a Vertical Milling Machine for 60 minutes, with a milling speed of 1200 RPM, an end mill tool, and a depth of cut of 5 mm.",
+      "The Broaching operation transforms a metal bar into a broached component on a Broaching Machine for 61 minutes, using a standard broach, a feed rate of 0.5 mm/stroke, and a depth of cut of 1.5 mm.",
+      "The Gear Shaping operation shapes a broached component into a spur gear with 20 teeth using a Gear Shaper for 3 minutes, with a shaping speed of 300 strokes per minute.",
+      "The Surface Grinding operation refines a planed part into a ground part using a Grinding Machine for 34 minutes, with an aluminum oxide grinding wheel, a wheel speed of 1800 RPM, and a feed rate of 0.02 mm per second."
+    ]
+  },
+  {
+    "part_name": "Complex Mechanical Assembly",
+    "steps": [
+      "The turning operation shapes the metal bar into a lathed part using a Vertical Lathe for 54 minutes, with a rotation speed of 1500 RPM, a high-speed steel tool, and a feed rate of 0.1 mm/rev.",
+      "The broaching operation refines the lathed part into a broached component on a Broaching Machine for 18 minutes, employing a linear broach and achieving high precision.",
+      "The gear hobbing operation transforms the broached component into a hobbied gear using a Hobbing Machine for 86 minutes, with a hobbing speed of 200 RPM, a feed rate of 0.05 mm/rev, and creating a spur gear profile.",
+      "The horizontal milling operation finalizes the milled part into a finished machined component on a Horizontal Milling Machine for 62 minutes, using a milling speed of 1000 RPM, a linear tool path, and producing a fine surface finish."
+    ]
+  },
+  {
+    "part_name": "Precision Component",
+    "steps": [
+      "The metal bar is cut using a bandsaw for 60 minutes with a saw speed of 750 RPM, a bi-metal blade, and a cutting width of 3 mm, resulting in a lathed part.",
+      "A metal bar is lathed on a horizontal lathe for 77 minutes with a rotation speed of 1200 RPM, a carbide insert tool, and a feed rate of 0.1 mm/rev, producing a lathed part.",
+      "The lathed part is milled on a vertical milling machine for 50 minutes with a milling speed of 1800 RPM, an end mill tool, and a depth of cut of 2 mm, resulting in a milled part.",
+      "The milled part undergoes finish milling on a horizontal milling machine for 29 minutes with a milling speed of 1500 RPM, a parallel tool path, and a surface finish of Ra 0.8 micron, producing a finished machined component.",
+      "The milled part is planed on a planer for 58 minutes with a planing depth of 0.5 mm, a feed rate of 1.0 mm/rev, and a surface finish of Ra 0.6 micron, resulting in a planed part.",
+      "The planed part is ground on a grinding machine for 9 minutes using an aluminum oxide grinding wheel with a wheel speed of 3450 RPM and a feed rate of 0.2 mm/rev, producing a ground part.",
+      "The ground part is precisely cut using a wire EDM machine for 16 minutes in fine finishing mode with automatic deburring settings and de-ionized water as the dielectric fluid, resulting in a precision finished part.",
+      "The lathed part is turned on a CNC turning center for 61 minutes using CNC program V1.2, tool offsets of 0.002 mm, and a spindle speed of 2200 RPM, producing a finished machined component."
+    ]
+  },
+  {
+    "part_name": "Custom Precision Component",
+    "steps": [
+      "The sawing operation cuts a metal bar using a bandsaw for 58 minutes, with a bi-metal blade at standard saw speed and a cutting width of 0.5 mm, producing a lathed part.",
+      "The rough turning operation shapes the metal bar using a vertical lathe for 91 minutes, with a carbide tool, a rotation speed of 1500 RPM, and a feed rate of 0.2 mm/rev, resulting in a lathed part.",
+      "The roughing milling operation processes the lathed part using a horizontal milling machine for 96 minutes, with a milling speed of 400 m/min, a linear tool path, and a surface finish of Ra 1.6, creating a milled part.",
+      "The planing operation smooths the milled part using a planer for 84 minutes, with a planing depth of 2 mm, a feed rate of 0.5 mm/rev, and a surface finish of Ra 1.2, producing a planed part.",
+      "The EDM finishing operation refines the planed part using a wire EDM machine for 53 minutes, in high precision mode with light deburring settings and deionized water as the dielectric fluid, resulting in a precision-finished part."
+    ]
+  },
+  {
+    "part_name": "Complex Mechanical Component",
+    "steps": [
+      "The metal bar is turned on a horizontal lathe for 54 minutes using a carbide tool at a rotation speed of 1200 RPM and a feed rate of 0.2 mm/rev to produce the lathed part.",
+      "The lathed part is broached on a broaching machine for 77 minutes using a keyway broach with high precision to create the broached component.",
+      "The broached component is shaped into a 36-tooth spur gear on a gear shaper for 16 minutes at a shaping speed of 1000 RPM to produce the shaped gear.",
+      "The lathed part is milled on a vertical milling machine for 29 minutes using an end mill at a milling speed of 1500 RPM and a depth of cut of 5 mm to create the milled part.",
+      "The milled part is planed on a planer for 84 minutes with a planing depth of 1 mm, a feed rate of 0.3 mm/stroke, and a fine surface finish to produce the planed part.",
+      "The planed part is ground on a grinding machine for 10 minutes using a cylindrical grinding wheel at a wheel speed of 2500 RPM and a feed rate of 0.05 mm/pass to create the ground part.",
+      "The ground part undergoes electrical discharge machining on a wire EDM for 90 minutes in fine finishing mode with automatic deburring and deionized water as the dielectric fluid to produce the precision-finished part."
+    ]
+  },
+  {
+    "part_name": "Precision Machined Component",
+    "steps": [
+      "The metal bar is cut into a lathed part using a bandsaw for 28 minutes, with the saw speed set to medium, a bi-metal blade, and a cutting width of 3 mm.",
+      "The metal bar is shaped into a lathed part using a vertical lathe for 89 minutes, with a rotation speed of 1500 RPM, a carbide tool, and a feed rate of 0.2 mm/rev.",
+      "The lathed part is turned into a finished machined component using a CNC turning center for 23 minutes, with CNC program Program_01, automatic tool offsets, and a spindle speed of 2000 RPM.",
+      "The lathed part is milled into a milled part using a vertical milling machine for 32 minutes, with a milling speed of 1000 RPM, an end mill tool, and a depth of cut of 5 mm.",
+      "The planed part is ground into a ground part using a grinding machine for 64 minutes, with a ceramic grinding wheel, a wheel speed of 2500 RPM, and a feed rate of 0.1 mm/pass."
+    ]
+  },
+  {
+    "part_name": "Custom Part A",
+    "steps": [
+      "The sheet metal is laser cut for precise shapes using a Laser Cutter for 92 minutes with high laser power, medium cutting speed, and nitrogen gas assist, transforming sheet metal into cut sheet metal.",
+      "The cut sheet metal is milled into a finished sheet metal product using a Vertical Milling Machine for 29 minutes with a spiral milling pattern and a tolerance of 0.02 mm.",
+      "A metal bar is broached internally using a Broaching Machine for 75 minutes with a slow feed rate and a depth of cut of 0.5 mm, resulting in a broached component.",
+      "The broached component is shaped into a gear using a Gear Shaper for 80 minutes to create a 24-tooth spur gear at medium shaping speed.",
+      "The shaped part is precision-finished using a Wire EDM (Electrical Discharge Machine) for 86 minutes with standard electrical parameters, copper wire, and high cutting speed to produce a precision-finished part."
+    ]
+  },
+  {
+    "part_name": "Screwed Component",
+    "steps": [
+      "The metal bar undergoes turning on the horizontal lathe for 5 minutes, using a high-speed steel tool at 1200 RPM and a feed rate of 0.2 mm/rev, transforming it into a lathed part.",
+      "The lathed part is processed on screw machines for 75 minutes, where it is screwed using an M10 screw with ISO metric thread at a production rate of 50 units per hour, resulting in a screwed component.",
+      "The lathed part is milled on a vertical milling machine for 85 minutes, using a carbide end mill at 2000 RPM with a depth of cut of 5 mm, producing a milled part.",
+      "The milled part is planed on a planer for 31 minutes, with a planing depth of 2 mm, a feed rate of 300 mm/min, and a surface finish of 0.8 microns, creating a planed part.",
+      "The planed part is ground on a grinding machine for 29 minutes, using an aluminum oxide grinding wheel at 1800 RPM and a feed rate of 0.1 mm/min, resulting in a ground part.",
+      "The ground part is precision-cut on a wire EDM machine for 70 minutes, using a brass wire at high current and a cutting speed of 100 mm/min, producing a precision-finished part."
+    ]
+  },
+  {
+    "part_name": "Complex Mechanical Component",
+    "steps": [
+      "The metal bar is turned into a lathed part using a Vertical Lathe for 13 minutes, operating at a rotation speed of 600 RPM with a carbide tool and a feed rate of 0.1 mm/rev.",
+      "The lathed part is milled into a milled part using a Vertical Milling Machine for 21 minutes, with a milling speed of 800 RPM, an end mill tool, and a depth of cut of 2 mm.",
+      "The milled part is planed into a planed part using a Planer for 24 minutes, with a planing depth of 1 mm, a feed rate of 0.2 mm/rev, and a fine surface finish.",
+      "The planed part is ground into a ground part using a Grinding Machine for 27 minutes, equipped with an aluminum oxide grinding wheel rotating at 1500 RPM and a feed rate of 0.05 mm/rev.",
+      "The ground part is precision-finished into a final part using a Wire EDM (Electrical Discharge Machine) for 75 minutes, operating in fine finishing mode with automatic deburring settings and deionized water as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Finished Part Production",
+    "steps": [
+      "The lathing operation shapes a metal bar into a lathed part using a horizontal lathe for 91 minutes, with a rotation speed of 400 RPM, a carbide tool, and a feed rate of 0.2 mm/rev.",
+      "The broaching operation creates precise features on the lathed part using a broaching machine for 68 minutes, employing a keyway broach and maintaining a high precision level.",
+      "The gear shaping operation forms a spur gear with 40 teeth from the broached component using a gear shaper for 15 minutes, operating at a shaping speed of 50 RPM.",
+      "The electrical discharge machining operation achieves high precision on the shaped part using a wire EDM for 60 minutes, with optimized electrical parameters, a brass wire, and a cutting speed of 0.5 mm/min."
+    ]
+  },
+  {
+    "part_name": "Complex Machined Component",
+    "steps": [
+      "The metal bar is turned into a lathed part using a Vertical Lathe for 53 minutes, with a rotation speed of 1200 RPM, a carbide tool, and a feed rate of 0.5 mm/rev.",
+      "The lathed part is milled into a milled part using a Vertical Milling Machine for 16 minutes, with a milling speed of 2500 RPM, an end mill tool, and a depth of cut of 2 mm.",
+      "The milled part is planed into a planed part using a Planer for 81 minutes, with a planing depth of 0.2 mm, a feed rate of 1.5 mm/rev, and a surface finish of Ra 1.6.",
+      "The planed part is ground into a ground part using Grinding Machines for 7 minutes, with an aluminum oxide grinding wheel, a wheel speed of 6000 RPM, and a feed rate of 0.1 mm/pass.",
+      "The milled part undergoes precision milling into a ground part using Stewart Platform Mills for 62 minutes, with high milling precision, an advanced tool configuration, and enabled vibration damping.",
+      "The ground part is finished into a precision finished part using a Wire EDM (Electrical Discharge Machine) for 26 minutes, in fine finishing mode, with automatic deburring settings, and deionized water as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Mechanical Component",
+    "steps": [
+      "The metal bar is cut into a lathed part using a bandsaw for 68 minutes with a saw speed of 150 RPM, a bi-metal blade, and a cutting width of 3 mm.",
+      "The metal bar is turned into a lathed part using a horizontal lathe for 97 minutes with a rotation speed of 1200 RPM, a carbide insert tool, and a feed rate of 0.1 mm/rev.",
+      "The lathed part is milled into a milled part using a vertical milling machine for 28 minutes with a milling speed of 800 RPM, an end mill tool, and a depth of cut of 5 mm.",
+      "The milled part is planed into a planed part using a planer for 93 minutes with a planing depth of 2 mm, a feed rate of 0.05 mm/tooth, and a surface finish of Ra 1.6.",
+      "The planed part is ground into a ground part using a grinding machine for 93 minutes with an aluminum oxide grinding wheel, a wheel speed of 1800 RPM, and a feed rate of 0.02 mm/pass.",
+      "The ground part is precisely cut into the final precision finished part using a wire EDM for 21 minutes with electrical parameters of 50 V and 12 A, a brass wire, and a cutting speed of 0.05 mm/min."
+    ]
+  },
+  {
+    "part_name": "ManufacturedComponent",
+    "steps": [
+      "Shearing is performed using a Shear (Sheet Metal) machine for 43 minutes, where sheet metal is cut into sheared sheet metal by setting a specific shear angle, cutting speed, and selecting a blade type.",
+      "Turning is carried out on a Vertical Lathe for 68 minutes, where a metal bar is transformed into a lathed part by setting the lathe rotation speed, selecting a tool type, and specifying the feed rate.",
+      "Milling is executed on a Vertical Milling Machine for 12 minutes, where a lathed part is processed into a milled part by adjusting the milling speed, selecting a milling tool, and determining the depth of cut.",
+      "Planing is conducted on a Planer for 21 minutes, where a milled part is turned into a planed part by setting the planing depth, adjusting the feed rate, and ensuring the desired surface finish.",
+      "Grinding is performed using Grinding Machines for 41 minutes, where a planed part is refined into a ground part by selecting the grinding wheel type, setting the wheel speed, and adjusting the feed rate."
+    ]
+  },
+  {
+    "part_name": "Finished Machined Component",
+    "steps": [
+      "The metal bar is turned into a lathed part using a horizontal lathe for 66 minutes, with a rotation speed of 1200 RPM, a carbide insert tool, and a feed rate of 0.05 mm/rev.",
+      "The lathed part is broached into a broached component using a broaching machine for 40 minutes, with a keyway broach and high precision settings.",
+      "The broached component is shaped into a spur gear with 24 teeth using a gear shaper for 49 minutes, operating at a speed of 150 strokes per minute.",
+      "The shaped gear undergoes precision turning in a CNC turning center for 38 minutes, running CNC Program_001 with fine tool adjustments and a spindle speed of 2000 RPM, resulting in the finished machined component."
+    ]
+  },
+  {
+    "part_name": "Mechanical Component",
+    "steps": [
+      "The sawing operation is performed using a bandsaw for 55 minutes to cut a metal bar into a lathed part, with parameters including a standard saw speed, an HSS blade, and a cutting width of 3 mm.",
+      "The turning operation is carried out on a horizontal lathe for 6 minutes to shape a metal bar into a lathed part, using a rotation speed of 1500 RPM, a carbide insert tool, and a feed rate of 0.1 mm/rev.",
+      "The broaching operation is executed on a broaching machine for 54 minutes to process a lathed part into a broached component, with an internal broach type and a high precision level.",
+      "The shaping operation is performed on a gear shaper for 85 minutes to create a shaped gear from a broached component, with parameters including a spur gear type, 24 teeth, and a shaping speed of 100 strokes per minute.",
+      "The milling operation is conducted on a vertical milling machine for 28 minutes to mill a lathed part into a milled part, using a milling speed of 1800 RPM, an end mill tool, and a depth of cut of 0.5 mm.",
+      "The planing operation is carried out on a planer for 51 minutes to plane a milled part into a planed part, with parameters including a planing depth of 0.25 mm, a feed rate of 0.2 mm/rev, and a fine surface finish.",
+      "The grinding operation is performed on grinding machines for 91 minutes to grind a planed part into a ground part, using a ceramic grinding wheel, a wheel speed of 2400 RPM, and a feed rate of 0.1 mm/min.",
+      "The wire cutting operation is executed on a wire EDM (Electrical Discharge Machine) for 10 minutes to finish a ground part into a precision finished part, with parameters including fine finishing mode, required deburring settings, and deionized water as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Complex Mechanism Assembly",
+    "steps": [
+      "The turning operation shapes the metal bar into a lathed part using a Horizontal Lathe for 74 minutes, with a rotation speed of 1200 RPM, a carbide tool, and a feed rate of 0.2 mm/rev.",
+      "The vertical turning operation further processes the metal bar into a lathed part using a Vertical Lathe for 70 minutes, with a rotation speed of 1100 RPM, an HSS tool, and a feed rate of 0.25 mm/rev.",
+      "The vertical milling operation transforms the lathed part into a milled part using a Vertical Milling Machine for 47 minutes, with a milling speed of 1500 RPM, an endmill tool, and a depth of cut of 5 mm.",
+      "The planing operation refines the milled part into a planed part using a Planer for 12 minutes, with a planing depth of 2 mm, a feed rate of 0.3 mm/rev, and a fine surface finish.",
+      "The grinding operation smooths the planed part into a ground part using Grinding Machines for 3 minutes, with an aluminium oxide grinding wheel, a wheel speed of 3000 RPM, and a feed rate of 0.05 mm/cycle.",
+      "The electrical discharge machining operation produces a precision-finished part from the ground part using a Wire EDM for 75 minutes, with fine finishing mode, automatic deburring settings, and oil-based dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Component",
+    "steps": [
+      "The lathing operation shapes the metal bar into a lathed part using a horizontal lathe for 35 minutes, with a rotation speed of 1200 RPM, a carbide insert tool, and a feed rate of 0.15 mm/rev.",
+      "The milling operation processes the lathed part into a milled part using a vertical milling machine for 95 minutes, with a milling speed of 1500 RPM, an end mill tool, and a depth of cut of 0.5 mm.",
+      "The shaping operation refines the milled part into a shaped part using a shaper for 79 minutes, with a stroke length of 200 mm, a shaping speed of 60 strokes/min, and a single-point tool.",
+      "The EDM operation precisely finishes the shaped part into a precision finished part using a wire EDM machine for 48 minutes, with electrical parameters set to 50V, a brass wire, and a cutting speed of 1.5 mm/min."
+    ]
+  },
+  {
+    "part_name": "Complex Machinery Component",
+    "steps": [
+      "The metal bar is turned into a lathed part using a horizontal lathe for 72 minutes, with a rotation speed of 1200 RPM, a carbide tool, and a feed rate of 0.2 mm/rev.",
+      "The lathed part is milled into a milled part using a vertical milling machine for 57 minutes, with a milling speed of 1500 RPM, an end mill tool, and a depth of cut of 2 mm.",
+      "The milled part is planed into a planed part using a planer for 50 minutes, with a planing depth of 1 mm, a feed rate of 0.3 mm/rev, and a surface finish of Ra 0.8.",
+      "The planed part is ground into a ground part using a grinding machine for 58 minutes, with an aluminum oxide grinding wheel, a wheel speed of 1800 RPM, and a feed rate of 0.02 mm/rev.",
+      "The ground part is precision-finished into a precision-finished part using a wire EDM for 67 minutes, with fine finishing mode, auto deburring settings, and deionized water as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Assembly",
+    "steps": [
+      "The metal bar is sawed into a lathed part using a bandsaw for 54 minutes, with the saw speed set to medium, a metal blade type, and standard cutting width.",
+      "The metal bar is turned into a lathed part on a vertical lathe for 91 minutes, with a rotation speed of 1500 RPM, a carbide tool type, and a feed rate of 0.1 mm/rev.",
+      "The lathed part is broached into a broached component on a broaching machine for 11 minutes, using an internal keyway broach type and achieving high precision.",
+      "The broached component is shaped into a shaped gear on a gear shaper for 63 minutes, creating a spur gear with 50 teeth at a shaping speed of 200 teeth per minute.",
+      "The broached component is hobbied into a hobbied gear on a hobbing machine for 27 minutes, with a hobbing speed of 150 mm/min, a feed rate of 0.5 mm/cut, and a helical gear profile.",
+      "The lathed part is milled into a milled part on a vertical milling machine for 22 minutes, with a milling speed of 1200 RPM, an end mill tool type, and a depth of cut of 3 mm.",
+      "The sheet metal is sheared into a sheared sheet metal on a shear machine for 7 minutes, with a shear angle of 5 degrees, a cutting speed of 3 m/min, and a guillotine blade type."
+    ]
+  },
+  {
+    "part_name": "Sheet Metal Component",
+    "steps": [
+      "The punching operation uses a punch press for 11 minutes to shape the sheet metal, with parameters set to punch size default, stroke speed medium, and die alignment aligned, transforming the sheet metal into a finished sheet metal product.",
+      "The cutting operation uses a laser cutter for 41 minutes to slice through the sheet metal, utilizing high laser power, fast cutting speed, and enabled gas assist, resulting in a cut sheet metal product.",
+      "The turning operation uses a vertical lathe for 18 minutes to shape the metal bar, with medium rotation speed, standard tool type, and medium feed rate, producing a lathed part.",
+      "The drilling operation uses a drill press for 28 minutes to bore holes into the metal bar, with a standard drill size, high spindle speed, and medium feed rate, creating a drilled component."
+    ]
+  },
+  {
+    "part_name": "Precision Component",
+    "steps": [
+      "The punching operation uses a Punch Press to transform sheet metal from a conveyor belt into a finished sheet metal product on a conveyor belt, with a medium punch size, high stroke speed, and precise die alignment, for 17 minutes.",
+      "The turning operation on a Horizontal Lathe shapes a metal bar from a mobile robot into a lathed part on a mobile robot, with a rotation speed of 1000 RPM, a carbide tool, and a feed rate of 0.1 mm/rev, for 40 minutes.",
+      "The vertical turning operation on a Vertical Lathe refines a lathed part from a mobile robot into another lathed part on a mobile robot, with a rotation speed of 1200 RPM, a high-speed steel tool, and a feed rate of 0.15 mm/rev, for 44 minutes.",
+      "The planing operation on a Planer processes a lathed part from a mobile robot into a planed part on a mobile robot, with a planing depth of 0.2 mm, a slow feed rate, and a fine surface finish, for 72 minutes.",
+      "The grinding operation on Grinding Machines smooths a planed part from a mobile robot into a ground part on a mobile robot, using a diamond grinding wheel at 5000 RPM and a feed rate of 0.02 mm/pass, for 86 minutes.",
+      "The EDM cutting operation on a Wire EDM precisely finishes a ground part from a mobile robot into a precision finished part on a mobile robot, in fine finishing mode with automated deburring and synthetic dielectric fluid, for 7 minutes."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Assembly",
+    "steps": [
+      "The sawing operation uses the Bandsaw for 94 minutes to cut a metal bar into a lathed part with optimal saw speed, a bi-metal blade, and a cutting width of 5 mm.",
+      "The turning operation on the Horizontal Lathe for 13 minutes shapes the lathed part using a carbide tool at 1500 RPM and a feed rate of 0.1 mm/rev.",
+      "The milling process is performed on the Vertical Milling Machine for 20 minutes, using an end mill at 1000 mm/min to transform the lathed part into a milled part with a depth of cut of 5 mm.",
+      "The shaping operation on the Shaper for 31 minutes forms the milled part into a shaped part using a single-point tool with a stroke length of 200 mm and a shaping speed of 50 strokes/min.",
+      "The gear shaping process on the Gear Shaper for 84 minutes crafts a shaped gear from a broached component using a spur gear type, 20 teeth, and a shaping speed of 60 teeth/min.",
+      "The EDM cutting operation on the Wire EDM for 39 minutes precisely cuts the shaped part into a precision finished part using adaptive electrical parameters, a brass wire, and a cutting speed of 0.5 mm/min.",
+      "The grinding process on the Grinding Machines for 4 minutes refines the planed part into a ground part using a ceramic grinding wheel at 3000 RPM and a feed rate of 0.01 mm/pass."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Assembly",
+    "steps": [
+      "The broaching operation shapes the metal bar into a broached component using a Broaching Machine for 52 minutes, with a standard broach, medium feed rate, and a depth of cut of 5mm.",
+      "The shaping operation forms the broached component into a spur gear with 50 teeth using a Gear Shaper for 52 minutes, operating at a shaping speed of 300 RPM.",
+      "The hobbing operation processes the broached component into a helical gear using a Hobbing Machine for 43 minutes, with a hobbing speed of 250 RPM, a slow feed rate, and a helical gear profile.",
+      "The milling operation refines the lathed part into a milled part using a Vertical Milling Machine for 18 minutes, with high milling speed, an end mill tool, and a depth of cut of 10mm.",
+      "The shaping operation processes the milled part into a shaped part using a Shaper for 8 minutes, with a stroke length of 100mm, a shaping speed of 200 strokes per minute, and a form tool.",
+      "The electrical discharge machining operation precision-finishes the shaped part into a precision-finished part using a Wire EDM for 88 minutes, with high electrical parameters, a brass wire, and a fast cutting speed."
+    ]
+  },
+  {
+    "part_name": "Custom Machined Component",
+    "steps": [
+      "The Horizontal Milling Machine performs Precision Milling on a Milled part for 69 minutes, using a milling speed of 1500 RPM, a linear tool path, and achieving a fine surface finish, transforming it into a Finished machined component.",
+      "The Laser Cutter carries out Laser Cutting on Sheet metal for 98 minutes, operating at 500W laser power, a cutting speed of 20 mm/s, and using nitrogen gas assist, resulting in Cut sheet metal.",
+      "The Honing Machine conducts Honing on a Honed cylinder for 43 minutes, utilizing a honing grit size of 400, a cycle time of 5 minutes, and processing a bore size of 50 mm, producing a Precision finished part.",
+      "The Broaching Machine executes Broaching on a Metal bar for 94 minutes, employing a keyway broach, a feed rate of 0.02 mm/rev, and a depth of cut of 2 mm, creating a Broached component.",
+      "The Screw Machines perform Screwing on a Lathed part for 71 minutes, using an M5 screw size, metric thread type, and a production rate of 100 pcs/hour, yielding a Screwed component.",
+      "The Vertical Milling Machine carries out Vertical Milling on a Lathed part for 82 minutes, with a milling speed of 1200 RPM, an end mill tool, and a depth of cut of 3 mm, producing a Milled part.",
+      "The Drill Press conducts Drilling on a Metal bar for 42 minutes, using a 10 mm drill size, a spindle speed of 1000 RPM, and a feed rate of 0.1 mm/rev, resulting in a Drilled component.",
+      "The Vertical Lathe performs Turning on a Metal bar for 91 minutes, operating at a rotation speed of 800 RPM, using a carbide insert tool, and a feed rate of 0.15 mm/rev, creating a Lathed part.",
+      "The CNC Turning Center executes CNC Turning on a Lathed part for 20 minutes, running G-code XYZ123, setting tool offsets to zero, and using a spindle speed of 1500 RPM, producing a Finished machined component."
+    ]
+  },
+  {
+    "part_name": "Machined Component",
+    "steps": [
+      "The Horizontal Lathe performs Lathe Turning on a Metal bar placed on the ConveyorBelt for 62 minutes, using a Carbide Insert tool, a Rotation speed of 1500 RPM, and a Feed rate of 0.3 mm/rev to produce a Lathed part.",
+      "The Vertical Milling Machine performs Vertical Milling on the Lathed part from the ConveyorBelt for 20 minutes, using an End Mill tool, a Milling speed of 1200 RPM, and a Depth of cut of 2 mm to produce a Milled part.",
+      "The Shaper performs Shaping on the Milled part from the ConveyorBelt for 55 minutes, using a Planer Blade tool, a Stroke length of 150 mm, and a Shaping speed of 80 strokes/min to produce a Shaped part.",
+      "The Wire EDM (Electrical Discharge Machine) performs EDM Cutting on the Shaped part from the ConveyorBelt for 1 minute, using Brass Wire, an Electrical parameter of 60V, and a Cutting speed of 2 mm/min to produce a Precision finished part."
+    ]
+  },
+  {
+    "part_name": "Complex Machine Component",
+    "steps": [
+      "The lathing operation shapes a metal bar into a lathed part using a Vertical Lathe for 34 minutes, with a rotation speed of 600 RPM, a carbide tool, and a feed rate of 0.2 mm/rev.",
+      "The milling operation refines the lathed part into a milled part using a Vertical Milling Machine for 28 minutes, with a milling speed of 1200 RPM, a high-speed steel tool, and a depth of cut of 5 mm.",
+      "The broaching operation processes the milled part into a broached component using a Broaching Machine for 46 minutes, with a keyway broach, a feed rate of 0.1 mm/pass, and a depth of cut of 3 mm.",
+      "The shaping operation creates a spur gear with 24 teeth from the broached component using a Gear Shaper for 20 minutes, at a shaping speed of 300 strokes/min.",
+      "The hobbing operation transforms the broached component into a hobbied gear using a Hobbing Machine for 53 minutes, with a hobbing speed of 1500 RPM, a feed rate of 0.05 mm/rev, and an involute gear profile.",
+      "The grinding operation smooths the milled part into a ground part using Grinding Machines for 54 minutes, with a cylindrical grinding wheel rotating at 1800 RPM and a feed rate of 0.1 mm/min.",
+      "The electrical discharge machining operation achieves a precision finish on the ground part using a Wire EDM for 25 minutes, in precision finishing mode with automatic deburring and deionized water as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Custom Precision Component",
+    "steps": [
+      "The metal bar is cut using a bandsaw for 83 minutes, with a medium saw speed, a bimetal blade, and a cutting width of 4 mm, transforming it into a lathed part, which is then placed on a mobile robot.",
+      "The lathed part undergoes rough turning on a horizontal lathe for 98 minutes, with a rotation speed of 1200 rpm, using a carbide tool and a feed rate of 0.5 mm/rev, and is then transferred to a conveyor belt.",
+      "The lathed part is precision milled on a vertical milling machine for 75 minutes, with a milling speed of 1500 rpm, an end mill tool, and a depth of cut of 2 mm, resulting in a milled part, which is then moved to a mobile robot.",
+      "The milled part is surface planed on a planer for 26 minutes, with a planing depth of 0.5 mm, a feed rate of 0.2 mm/min, and a surface finish of Ra 1.6, producing a planed part, which is then placed on a conveyor belt.",
+      "The planed part is surface ground using a grinding machine for 76 minutes, with an alumina grinding wheel, a wheel speed of 2000 rpm, and a feed rate of 0.1 mm/min, resulting in a ground part, which is then transferred to a mobile robot.",
+      "The ground part undergoes precision finishing using a wire EDM machine for 82 minutes, in high precision mode, with automated deburring and deionized water as the dielectric fluid, producing a precision-finished part, which is then placed on a conveyor belt."
+    ]
+  },
+  {
+    "part_name": "Precision Component Set",
+    "steps": [
+      "The Vertical Lathe performs Lathe Turning for 79 minutes using medium rotation speed, a cutting tool, and a standard feed rate to transform a Metal bar into a Lathed part, both transported on a ConveyorBelt.",
+      "The Vertical Milling Machine executes Vertical Milling for 46 minutes at high milling speed using an end mill with a 5mm depth of cut to convert the Lathed part into a Milled part, both on a ConveyorBelt.",
+      "The Planer carries out Planing for 20 minutes with a 2mm planing depth, a slow feed rate, and a smooth surface finish to turn the Milled part into a Planed part, all moved via ConveyorBelt.",
+      "The Grinding Machines conduct Surface Grinding for 43 minutes using a ceramic grinding wheel at a fast wheel speed and a steady feed rate to transform the Planed part into a Ground part, both on a ConveyorBelt.",
+      "The Wire EDM (Electrical Discharge Machine) performs Wire EDM Finishing for 4 minutes in high precision mode with automatic deburring settings and oil dielectric fluid to convert the Ground part into a Precision finished part, both transported on a ConveyorBelt."
+    ]
+  },
+  {
+    "part_name": "Mechanical Component",
+    "steps": [
+      "The metal bar is sawn into a lathed part using a bandsaw for 74 minutes, with a medium saw speed, a tungsten blade, and a standard cutting width.",
+      "The metal bar is lathed into a lathed part using a vertical lathe for 58 minutes, with a rotation speed of 1500 RPM, a carbide tool, and a feed rate of 0.1 mm/rev.",
+      "The lathed part is rough milled into a milled part using a vertical milling machine for 24 minutes, with a milling speed of 1200 RPM, an end mill tool, and a depth of cut of 5 mm.",
+      "The milled part is shaped into a shaped part using a shaper for 29 minutes, with a stroke length of 100 mm, a shaping speed of 50 strokes/min, and a square cutting tool.",
+      "The shaped part is precision finished into a precision finished part using a wire EDM for 43 minutes, with high precision electrical parameters, a brass wire, and a slow cutting speed."
+    ]
+  },
+  {
+    "part_name": "Complex Machinery Component",
+    "steps": [
+      "The metal bar is sawed using a Bandsaw for 83 minutes at a high saw speed with a bi-metal blade, resulting in a lathed part that is transported by a mobile robot.",
+      "The lathed part undergoes turning on a Vertical Lathe for 62 minutes at a medium rotation speed with a carbide insert tool, producing a lathed part that is then placed on a conveyor belt.",
+      "The lathed part is roughly milled on a Vertical Milling Machine for 35 minutes at a high milling speed using an end mill with a 5mm depth of cut, resulting in a milled part transported by a mobile robot.",
+      "The milled part is planed on a Planer for 71 minutes at a slow feed rate with a 2mm planing depth, achieving a fine surface finish and creating a planed part that is placed on a conveyor belt.",
+      "The planed part is ground using Grinding Machines for 7 minutes with a ceramic grinding wheel rotating at 3000 RPM and a fast feed rate, producing a ground part transported by a mobile robot.",
+      "The ground part is precision-finished using a Wire EDM (Electrical Discharge Machine) for 2 minutes in high precision mode with automatic deburring and deionized water as the dielectric fluid, resulting in the final precision finished part placed on a conveyor belt."
+    ]
+  },
+  {
+    "part_name": "Custom Manufactured Component",
+    "steps": [
+      "The metal bar is sawn into a lathed part using a bandsaw for 30 minutes, with parameters including medium saw speed, a standard blade type, and a cutting width of 2 mm.",
+      "The lathed part is turned into a more refined lathed part using a horizontal lathe for 87 minutes, with parameters including a rotation speed of 1500 RPM, a carbide cut tool type, and a feed rate of 0.5 mm/rev.",
+      "The lathed part is milled into a milled part using a vertical milling machine for 34 minutes, with parameters including a milling speed of 1000 RPM, an end mill tool type, and a depth of cut of 5 mm.",
+      "The milled part is planed into a planed part using a planer for 82 minutes, with parameters including a planing depth of 3 mm, a feed rate of 0.8 mm/rev, and a smooth surface finish.",
+      "The planed part is ground into a ground part using grinding machines for 41 minutes, with parameters including a resin bond grinding wheel type, a wheel speed of 3000 RPM, and a feed rate of 0.2 mm/rev.",
+      "The ground part is precisely shaped into a precision finished part using a wire EDM for 34 minutes, with parameters including optimized electrical settings, a brass wire type, and a high cutting speed."
+    ]
+  },
+  {
+    "part_name": "Custom Manufactured Component",
+    "steps": [
+      "The Broaching Machine performs the Broaching operation, using a Standard broach with a feed rate of 5 mm/min and a depth of cut of 0.5 mm to transform a Metal bar into a Broached component for 74 minutes.",
+      "The Gear Shaper performs the Gear Shaping operation, using a Spur gear design with 20 teeth and a shaping speed of 200 RPM to transform a Broached component into a Shaped gear for 55 minutes.",
+      "The Hobbing Machine performs the Hobbing operation, using a hobbing speed of 120 RPM, a feed rate of 3 mm/rev, and an Involute gear profile to transform a Broached component into a Hobbied gear for 6 minutes.",
+      "The Horizontal Lathe performs the Turning operation, using a rotation speed of 1000 RPM, a Carbide tool, and a feed rate of 0.1 mm/rev to transform a Metal bar into a Lathed part for 12 minutes.",
+      "The Vertical Milling Machine performs the Vertical Milling operation, using a milling speed of 1500 RPM, an End Mill tool, and a depth of cut of 1 mm to transform a Lathed part into a Milled part for 5 minutes.",
+      "The Planer performs the Planing operation, using a planing depth of 0.2 mm, a feed rate of 2 mm/rev, and a fine surface finish to transform a Milled part into a Planed part for 17 minutes.",
+      "The Grinding Machines perform the Grinding operation, using a Diamond grinding wheel, a wheel speed of 2000 RPM, and a feed rate of 0.05 mm/rev to transform a Planed part into a Ground part for 34 minutes.",
+      "The Wire EDM (Electrical Discharge Machine) performs the Electrical Discharge Machining operation, using fine finishing mode, automatic deburring settings, and synthetic dielectric fluid to transform a Ground part into a Precision finished part for 19 minutes."
+    ]
+  },
+  {
+    "part_name": "Engine Component",
+    "steps": [
+      "The metal bar is machined into a lathed part using a horizontal lathe for 51 minutes, with a rotation speed of 1200 RPM, a carbide tool, and a feed rate of 0.2 mm/rev.",
+      "The lathed part undergoes internal broaching with a keyway broach on a broaching machine for 93 minutes, achieving a precision level of 0.01 mm to produce a broached component.",
+      "The broached component is shaped into a spur gear with 32 teeth using a gear shaper for 84 minutes, operating at a shaping speed of 1500 strokes per minute.",
+      "The shaped part is precision-finished using a wire EDM for 87 minutes, with high electrical precision, a brass wire, and a cutting speed of 9 mm/min, resulting in a precision finished part.",
+      "The lathed part is milled vertically on a vertical milling machine for 47 minutes, using an end mill tool at 3000 RPM and a depth of cut of 2 mm to create a milled part.",
+      "The milled part is surface planed on a planer for 57 minutes, with a planing depth of 0.5 mm, a feed rate of 180 mm/min, and a fine surface finish to produce a planed part.",
+      "The planed part is precision ground using a grinding machine for 10 minutes, with a diamond grinding wheel rotating at 2800 RPM and a feed rate of 0.1 mm/rev, resulting in a ground part.",
+      "The ground part undergoes ultra-fine EDM finishing on a wire EDM for 87 minutes, with automatic deburring settings and oil dielectric fluid, to achieve a precision finished part."
+    ]
+  },
+  {
+    "part_name": "Complex Mechanical Component",
+    "steps": [
+      "The turning operation is performed on a metal bar using a Horizontal Lathe for 63 minutes, with a rotation speed of 1200 RPM, a carbide insert tool, and a feed rate of 0.2 mm/rev, resulting in a lathed part.",
+      "The milling operation is conducted on the lathed part using a Vertical Milling Machine for 26 minutes, with a milling speed of 800 RPM, an end mill tool, and a depth of cut of 2 mm, producing a milled part.",
+      "The planing operation is executed on the milled part using a Planer for 8 minutes, with a planing depth of 0.5 mm, a feed rate of 1 mm/rev, and a high surface finish, yielding a planed part.",
+      "The precision milling operation is carried out on the milled part using a Stewart Platform Mills for 43 minutes, with a milling precision of 0.01 mm, a five-axis tool configuration, and active vibration damping, resulting in a ground part.",
+      "The EDM finishing operation is performed on the ground part using a Wire EDM for 43 minutes, in fine finishing mode with auto deburring settings and deionized water as the dielectric fluid, producing a precision finished part."
+    ]
+  },
+  {
+    "part_name": "Custom Machined Component",
+    "steps": [
+      "The metal bar is machined using a Horizontal Lathe for 37 minutes, with a rotation speed of 1000 RPM, a carbide insert tool, and a feed rate of 0.1 mm/rev, transforming it into a lathed part.",
+      "The lathed part undergoes broaching on a Broaching Machine for 24 minutes, using a spline broach with high precision, resulting in a broached component.",
+      "The broached component is processed on a Hobbing Machine for 51 minutes at a hobbing speed of 200 RPM and a feed rate of 5 mm/rev with an involute gear profile, producing a hobbied gear.",
+      "The hobbied gear is surface-ground on Grinding Machines for 83 minutes using an aluminum oxide grinding wheel at 1800 RPM and a feed rate of 0.02 mm/pass, yielding a ground part.",
+      "The ground part is precision-milled on a Vertical Milling Machine for 72 minutes at a milling speed of 1500 RPM with an end mill and a depth of cut of 2 mm, resulting in a milled part.",
+      "The milled part is planed on a Planer for 26 minutes at a planning depth of 1 mm, a feed rate of 3 mm/s, and achieving a fine surface finish, creating a planed part.",
+      "The planed part undergoes precision grinding on Grinding Machines for 83 minutes using a diamond grinding wheel at 2000 RPM and a feed rate of 0.01 mm/pass, producing a ground part."
+    ]
+  },
+  {
+    "part_name": "Precision Engineered Component",
+    "steps": [
+      "The metal bar is cut into a lathed part using a bandsaw for 44 minutes, with a bi-metal blade moving at standard speed and a cutting width of 3 mm.",
+      "The lathed part is turned into a finished lathed component using a horizontal lathe for 82 minutes, with a carbide insert tool rotating at 1500 RPM and a feed rate of 0.1 mm/rev.",
+      "The finished lathed component is screwed into a screwed component using screw machines for 72 minutes, with an M10 screw size, ISO metric thread type, and a production rate of 60 parts/hour.",
+      "The screwed component is broached into a broached component using a broaching machine for 48 minutes, with an internal broach type, a feed rate of 0.5 mm/min, and a depth of cut of 5 mm.",
+      "The broached component is shaped into a shaped gear using a gear shaper for 28 minutes, with a spur gear type, 20 teeth, and a shaping speed of 100 RPM.",
+      "The shaped gear is hobbed into a hobbied gear using a hobbing machine for 62 minutes, with a hobbing speed of 200 RPM, a feed rate of 4 mm/rev, and a standard involute gear profile.",
+      "The hobbied gear is finished into a precision finished part using a wire EDM (Electrical Discharge Machine) for 61 minutes, with low electrical discharge, a brass wire type, and a cutting speed of 2 mm/min."
+    ]
+  },
+  {
+    "part_name": "Precision Component",
+    "steps": [
+      "The metal bar is sawed into a lathed part using a bandsaw for 26 minutes, with a saw speed of 100 m/min, a bi-metal blade, and a cutting width of 5 mm.",
+      "The lathed part undergoes turning on a horizontal lathe for 76 minutes, with a rotation speed of 1200 RPM, a carbide tool, and a feed rate of 0.5 mm/rev.",
+      "The metal bar is drilled into a drilled component using a drill press for 28 minutes, with a drill size of 10 mm, a spindle speed of 800 RPM, and a feed rate of 0.2 mm/rev.",
+      "The metal bar is broached into a broached component using a broaching machine for 23 minutes, with a keyway broach, a feed rate of 0.1 mm/pass, and a depth of cut of 5 mm.",
+      "The broached component is shaped into a shaped gear using a gear shaper for 56 minutes, with a spur gear type, 20 teeth, and a shaping speed of 5 mm/min.",
+      "The milled part is processed into a ground part using a Stewart platform mill for 93 minutes, with high milling precision, an end mill tool configuration, and enabled vibration damping.",
+      "The planed part is ground into a ground part using a grinding machine for 79 minutes, with an abrasive grinding wheel, a wheel speed of 1800 RPM, and a feed rate of 0.02 mm/rev."
+    ]
+  },
+  {
+    "part_name": "Machine Component",
+    "steps": [
+      "The metal bar is cut using a bandsaw for 25 minutes with a carbide blade at high speed, producing a lathed part with a cutting width of 5mm.",
+      "The metal bar is shaped on a horizontal lathe for 70 minutes at 1200 RPM with an insert tool, resulting in a lathed part with a feed rate of 0.2 mm/rev.",
+      "The lathed part is milled on a vertical milling machine for 4 minutes at 500 RPM using an end mill, creating a milled part with a depth of cut of 2mm.",
+      "The milled part is planed on a planer for 72 minutes at a feed rate of 0.1 mm/rev, achieving a fine surface finish with a planing depth of 1mm.",
+      "The planed part is ground on a grinding machine for 40 minutes using a diamond wheel at 1800 RPM, producing a ground part with a feed rate of 0.05 mm/rev.",
+      "The ground part is precisely finished on a wire EDM machine for 40 minutes in precision mode with automatic deburring and mineral oil dielectric fluid, resulting in a precision-finished part."
+    ]
+  },
+  {
+    "part_name": "Complex Component Assembly",
+    "steps": [
+      "The metal bar is cut into a lathed part using a bandsaw for 34 minutes with a medium saw speed, a bi-metal blade type, and a cutting width of 0.5 mm.",
+      "The metal bar is turned on a horizontal lathe for 7 minutes with a rotation speed of 1500 RPM, a standard tool type, and a feed rate of 0.1 mm/rev to produce a lathed part.",
+      "The lathed part is milled on a vertical milling machine for 22 minutes with a milling speed of 1200 RPM, an end mill tool type, and a depth of cut of 2 mm to create a milled part.",
+      "The milled part is planed on a planer for 7 minutes with a planing depth of 1 mm, a feed rate of 0.5 mm/min, and a surface finish of 0.8 Ra to form a planed part.",
+      "The planed part is ground on a grinding machine for 58 minutes using a ceramic grinding wheel type, a wheel speed of 1800 RPM, and a feed rate of 0.1 mm/min to achieve a ground part.",
+      "The ground part undergoes electrical discharge machining on a wire EDM machine for 56 minutes in fine finishing mode, with automatic deburring settings and synthetic dielectric fluid type to produce a precision finished part."
+    ]
+  },
+  {
+    "part_name": "Precision Component",
+    "steps": [
+      "The metal bar is cut into a lathed part using a bandsaw for 75 minutes, with a medium saw speed, a bi-metal blade, and standard cutting width.",
+      "The metal bar is drilled into a drilled component using a drill press for 11 minutes, with a 10 mm drill size, a spindle speed of 500 RPM, and a feed rate of 0.1 mm/rev.",
+      "The lathed part is milled into a milled part using a vertical milling machine for 36 minutes, with high milling speed, an end mill tool, and a depth of cut of 2 mm.",
+      "The milled part is planed into a planed part using a planer for 14 minutes, with a planing depth of 0.5 mm, a feed rate of 5 mm/s, and a smooth surface finish.",
+      "The planed part is ground into a ground part using grinding machines for 30 minutes, with an aluminum oxide grinding wheel, a wheel speed of 3000 RPM, and a feed rate of 0.02 mm/rev.",
+      "The ground part is precisely finished into a precision finished part using a wire EDM for 61 minutes, with standard electrical parameters, a brass wire, and a cutting speed of 0.5 mm/min."
+    ]
+  },
+  {
+    "part_name": "Complex Machined Component",
+    "steps": [
+      "Using a Horizontal Lathe, the turning operation shapes a metal bar into a lathed part for 32 minutes, with a rotation speed of 1200 RPM, a carbide insert tool, and a feed rate of 0.2 mm/rev.",
+      "A Vertical Milling Machine performs roughing milling on the lathed part to create a milled part for 84 minutes, with a milling speed of 1500 RPM, an end mill tool, and a depth of cut of 5 mm.",
+      "The planing operation is carried out on the milled part using a Planer for 90 minutes, achieving a planing depth of 3 mm, a feed rate of 0.1 mm/rev, and a surface finish of 0.8 Ra.",
+      "A Shaper is used to shape the milled part into a shaped part for 9 minutes, with a stroke length of 100 mm, a shaping speed of 40 strokes/min, and a high-speed steel tool.",
+      "Surface grinding is performed on the planed part using Grinding Machines for 28 minutes, employing an aluminum oxide grinding wheel at a speed of 1800 RPM and a feed rate of 0.01 mm/pass.",
+      "The Wire EDM (Electrical Discharge Machine) executes EDM cutting on the ground part to produce a precision-finished part for 45 minutes, using fine finishing mode, automatic deburring settings, and deionized water as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Mechanical Component",
+    "steps": [
+      "The metal bar is sawed into a lathed part using a bandsaw for 24 minutes, with a carbide-tipped blade moving at moderate speed and making a 3 mm wide cut.",
+      "The lathed part undergoes linear broaching on a broaching machine for 47 minutes to produce a broached component, using a keyway broach with high precision.",
+      "A broached component is transformed into a hobbied gear on a hobbing machine for 11 minutes, operating at 500 rpm with a feed rate of 0.05 mm/rev and creating a spur gear profile.",
+      "The broached component is shaped into a helical gear with 24 teeth on a gear shaper for 27 minutes, with a shaping speed of 0.1 m/min.",
+      "A planed part is surface ground on grinding machines for 56 minutes using an aluminum oxide grinding wheel rotating at 2000 rpm and a feed rate of 0.02 mm/pass, resulting in a ground part.",
+      "The ground part is precision finished on a wire EDM machine for 75 minutes, using fine finishing mode, minimal deburring settings, and deionized water as the dielectric fluid, producing a honed cylinder.",
+      "A metal bar is vertically turned into a lathed part on a vertical lathe for 64 minutes, rotating at 750 rpm with a carbide insert tool and a feed rate of 0.1 mm/rev.",
+      "Sheet metal is sheared into cut sheet metal on a shear machine for 93 minutes, using a hardened steel blade at a shear angle of 87 degrees and a cutting speed of 10 m/min."
+    ]
+  },
+  {
+    "part_name": "Complex Gear Assembly",
+    "steps": [
+      "The metal bar is processed using a broaching machine for 29 minutes, where a standard broach with a feed rate of 500 mm/min and a depth of cut of 5 mm is used to create a broached component.",
+      "The broached component is fed into a hobbing machine for 21 minutes, where it is shaped into a hobbied gear using a hobbing speed of 300 RPM, a feed rate of 75 mm/rev, and an involute gear profile.",
+      "A metal bar is turned into a lathed part using a vertical lathe for 36 minutes, operating at a rotation speed of 2500 RPM with a carbide insert tool and a feed rate of 0.2 mm/rev.",
+      "The lathed part is milled into a milled part on a vertical milling machine for 87 minutes, using an end mill tool at a milling speed of 1500 RPM and a depth of cut of 2 mm.",
+      "The broached component is shaped into a shaped gear using a gear shaper for 23 minutes, with a spur gear profile, 48 teeth, and a shaping speed of 1000 mm/min.",
+      "The shaped part is precision-finished using a wire EDM machine for 25 minutes, with electrical parameters of 10A and 220V, a brass wire, and a cutting speed of 2 mm/min to produce the precision finished part."
+    ]
+  },
+  {
+    "part_name": "Complex Mechanical Component",
+    "steps": [
+      "The metal bar is cut into a lathed part using a bandsaw for 7 minutes, with the saw speed set to medium, a carbon steel blade, and a standard cutting width.",
+      "The lathed part is turned on a horizontal lathe for 53 minutes, operating at a high rotation speed with a carbide tool and a feed rate of 5 mm/rev.",
+      "The lathed part is milled into a milled part using a vertical milling machine for 2 minutes, with the milling speed set to fast, an end mill tool, and a depth of cut of 2 mm.",
+      "The milled part is planed into a planed part on a planer for 75 minutes, with a planing depth of 0.5 mm, a medium feed rate, and a smooth surface finish.",
+      "The planed part is ground into a ground part using grinding machines for 27 minutes, with an aluminum oxide grinding wheel, a wheel speed of 3500 RPM, and a feed rate of 0.1 mm/rev.",
+      "The ground part is precisely cut into a precision finished part using a wire EDM for 92 minutes, with fine finishing mode, automatic deburring settings, and synthetic dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Component",
+    "steps": [
+      "The precision component is cut from a metal bar using a bandsaw for 91 minutes, with a saw speed of 1200 m/min, a bi-metal blade, and a cutting width of 5 mm, resulting in a lathed part.",
+      "The lathed part is milled using a vertical milling machine for 89 minutes, with a milling speed of 6000 RPM, an end mill tool, and a depth of cut of 2 mm, resulting in a milled part.",
+      "The milled part is planed using a planer for 90 minutes, with a planing depth of 3 mm, a feed rate of 5 m/min, and a fine surface finish, resulting in a planed part.",
+      "The planed part is ground using a grinding machine for 86 minutes, with a ceramic grinding wheel, a wheel speed of 1800 RPM, and a feed rate of 0.02 mm/rev, resulting in a ground part.",
+      "The ground part is precisely finished using a wire EDM (Electrical Discharge Machine) for 97 minutes, with high electrical precision, a brass wire, and a cutting speed of 5 mm/min, resulting in the final precision finished part."
+    ]
+  },
+  {
+    "part_name": "Custom Mechanical Component",
+    "steps": [
+      "The operation Lathe Turning shapes the metal bar into a lathed part using a Horizontal Lathe for 58 minutes, with a rotation speed of 1200 RPM, a carbide insert tool, and a feed rate of 0.1 mm/rev.",
+      "The operation Vertical Milling machines the lathed part into a milled part using a Vertical Milling Machine for 50 minutes, with a milling speed of 1500 RPM, an end mill tool, and a depth of cut of 2 mm.",
+      "The operation Planing smooths the milled part into a planed part using a Planer for 71 minutes, with a planing depth of 0.5 mm, a feed rate of 5 m/min, and a surface finish of Ra 1.6.",
+      "The operation Grinding refines the planed part into a ground part using Grinding Machines for 19 minutes, with an aluminum oxide grinding wheel, a wheel speed of 3000 RPM, and a feed rate of 0.02 mm/pass.",
+      "The operation Wire EDM Cutting precisely finishes the ground part into a precision finished part using a Wire EDM (Electrical Discharge Machine) for 76 minutes, in fine finishing mode, with automatic deburring settings, and using deionized water as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Assembly",
+    "steps": [
+      "The metal bar is sawn into a lathed part using the Bandsaw machine for 64 minutes, operating at a saw speed of 800 RPM with a bimetal blade and a cutting width of 5 mm.",
+      "The lathed part is milled into a milled part using the Vertical Milling Machine for 17 minutes, with a milling speed of 1500 RPM, an end mill tool, and a depth of cut of 1 mm.",
+      "The milled part is planed into a planed part using the Planer for 86 minutes, with a planing depth of 0.5 mm, a feed rate of 200 mm/min, and a fine surface finish.",
+      "The planed part is ground into a ground part using the Grinding Machines for 32 minutes, with an aluminum oxide grinding wheel, a wheel speed of 3000 RPM, and a feed rate of 100 mm/min.",
+      "The ground part is precisely cut into a precision finished part using the Wire EDM (Electrical Discharge Machine) for 69 minutes, in fine finishing mode with deburring enabled and oil as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Assembly",
+    "steps": [
+      "The bandsaw performs sawing on a metal bar using a carbide blade at high speed and medium cutting width for 66 minutes, producing a lathed part.",
+      "The vertical lathe carries out precision turning on the lathed part with a diamond tool at limited rotation speed and moderate feed rate for 55 minutes, maintaining it as a lathed part.",
+      "The broaching machine executes internal broaching on the lathed part with a keyway broach at micro precision level for 82 minutes, resulting in a broached component.",
+      "The gear shaper shapes the broached component into a spur gear with 20 teeth at high shaping speed for 8 minutes, creating a shaped gear.",
+      "The hobbing machine performs gear hobbing on the broached component at fast hobbing speed and controlled feed rate with an involute gear profile for 98 minutes, producing a hobbied gear.",
+      "The planer planes the milled part to a depth of 0.2 mm at a feed rate of 4 mm/s for 56 minutes, achieving a smooth surface finish and creating a planed part.",
+      "The grinding machines conduct surface grinding on the planed part using a resin bond grinding wheel at high speed and steady feed rate for 29 minutes, resulting in a ground part.",
+      "The wire EDM cuts the ground part with optimized electrical parameters using a brass wire at moderate cutting speed for 98 minutes, producing a precision-finished part."
+    ]
+  },
+  {
+    "part_name": "Precision Mechanical Component",
+    "steps": [
+      "The sheet metal is precision-cut using a Laser Cutter for 32 minutes with high laser power, medium cutting speed, and nitrogen gas assist, transforming it into cut sheet metal.",
+      "The cut sheet metal is punched into shape on a Punch Press for 59 minutes using a standard punch size, high stroke speed, and precision die alignment, resulting in the finished sheet metal product.",
+      "A metal bar is vertically turned on a Vertical Lathe for 20 minutes at 1200 RPM with a carbide tool and medium feed rate, producing a lathed part.",
+      "The lathed part undergoes broaching on a Broaching Machine for 86 minutes using a keyed broach and high precision, resulting in a broached component.",
+      "A honed cylinder is finely honed on a Honing Machine for 95 minutes using fine grit, a consistent cycle time, and a specified bore size to create the precision finished part."
+    ]
+  },
+  {
+    "part_name": "Gear Assembly",
+    "steps": [
+      "The broaching operation uses a Broaching Machine for 71 minutes to shape a metal bar into a broached component, employing a standard broach with a feed rate of 5 mm/min and a depth of cut of 2 mm.",
+      "The gear shaping operation uses a Gear Shaper for 26 minutes to transform the broached component into a shaped spur gear with 24 teeth, operating at a shaping speed of 150 rpm.",
+      "The hobbing operation uses a Hobbing Machine for 20 minutes to create a helical gear from the broached component, with a hobbing speed of 120 rpm, a feed rate of 4 mm/rev, and a helical gear profile.",
+      "The shaping operation uses a Shaper for 6 minutes to refine a milled part into a shaped part, with a stroke length of 100 mm, shaping speed of 200 strokes/min, and a single-point tool.",
+      "The grinding operation uses Grinding Machines for 51 minutes to smooth a planed part into a ground part, using an abrasive grinding wheel with a wheel speed of 3000 rpm and a feed rate of 0.1 mm/min."
+    ]
+  },
+  {
+    "part_name": "Complex Component Assembly",
+    "steps": [
+      "The metal bar is sawed into a lathed part using a bandsaw for 95 minutes, with the saw speed set to optimal, a tungsten carbide blade, and a standard cutting width.",
+      "The lathed part is turned into a finished machined component using a CNC turning center for 51 minutes, with the CNC program loaded, tool offsets calibrated, and spindle speed set to 750 RPM.",
+      "The lathed part is broached into a broached component using a broaching machine for 83 minutes, with a keyway broach type and high precision level.",
+      "The broached component is shaped into a shaped gear using a gear shaper for 73 minutes, with the gear type set to spur, 20 teeth, and a shaping speed of 500 RPM.",
+      "The shaped gear is honed into a precision finished part using a honing machine for 20 minutes, with a fine honing grit size, a cycle time of 10 minutes, and a standard bore size.",
+      "The lathed part is screwed into a screwed component using screw machines for 84 minutes, with an M6 screw size, metric thread type, and high production rate."
+    ]
+  },
+  {
+    "part_name": "Complex Mechanical Component",
+    "steps": [
+      "The Punch Press machine performs the Punching operation for 58 minutes on sheet metal to create a finished sheet metal product, with punch size set to default, stroke speed at medium, and die alignment standard.",
+      "The Bandsaw machine cuts a metal bar into a lathed part through the Sawing operation for 24 minutes, using a high saw speed, bi-metal blade type, and a cutting width of 5 mm.",
+      "The Drill Press machine drills a 10 mm hole into a metal bar during the Drilling operation for 99 minutes, with a spindle speed of 1200 RPM and a feed rate of 0.1 mm/rev.",
+      "The Broaching Machine creates a keyway in a lathed part through the Broaching operation for 78 minutes, ensuring high precision and using a keyway broach type.",
+      "The Hobbing Machine forms a spur gear from a broached component during the Hobbing operation for 80 minutes, with a hobbing speed of 300 RPM, feed rate of 0.05 mm/rev, and a specific gear profile.",
+      "The Vertical Lathe machines a metal bar into a lathed part through the Lathing operation for 10 minutes, with a rotation speed of 700 RPM, a carbide tool type, and a feed rate of 0.2 mm/rev.",
+      "The Screw Machines thread a lathed part into a screwed component during the Threading operation for 85 minutes, producing M10 screw sizes with ISO metric thread type at a rate of 50 pcs/hour.",
+      "The Vertical Milling Machine mills a lathed part into a milled part through the Vertical Milling operation for 92 minutes, with a milling speed of 1500 RPM, an end mill tool type, and a depth of cut of 3 mm.",
+      "The Horizontal Milling Machine further processes a milled part into a finished machined component during the Horizontal Milling operation for 74 minutes, with a milling speed of 1200 RPM, contour tool path, and medium surface finish.",
+      "The Wire EDM (Electrical Discharge Machine) precisely cuts a milled part into a precision finished part through the Wire Cutting operation for 66 minutes, using standard electrical parameters, brass wire type, and medium cutting speed.",
+      "The Grinding Machines finish a planed part into a ground part during the Grinding operation for 7 minutes, using an aluminum oxide grinding wheel type at 2000 RPM and a feed rate of 0.02 mm/rev."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Assembly",
+    "steps": [
+      "The Horizontal Lathe performs Rough Lathe Turning on a Raw Metal Bar from the Conveyor Belt for 9 minutes, using a rotation speed of 500 RPM, a carbide tool, and a feed rate of 0.2 mm/rev to produce a Preliminary Lathed Part.",
+      "The Vertical Lathe executes Fine Lathe Turning on the Preliminary Lathed Part from the Conveyor Belt for 88 minutes, operating at a rotation speed of 400 RPM, using a coated carbide tool, and a feed rate of 0.1 mm/rev to create a Final Lathed and Shaped Part.",
+      "The Broaching Machine carries out Gear Broaching on the Final Lathed and Shaped Part from the Conveyor Belt for 23 minutes, employing a Standard Gear Broach with a precision level of 0.05 mm to produce a Broached Gear Component.",
+      "The Gear Shaper engages in Gear Shaping on the Broached Gear Component from the Conveyor Belt for 92 minutes, shaping a Spur Gear with 20 teeth at a speed of 80 strokes/min to create a Shaped Gear.",
+      "The Wire EDM (Electrical Discharge Machine) conducts Wire Cutting on the Shaped Gear from the Conveyor Belt for 88 minutes, using standard electrical parameters, a brass wire, and a cutting speed of 100 mm²/min to produce a Precision Finished Gear."
+    ]
+  },
+  {
+    "part_name": "Finished Machined Component",
+    "steps": [
+      "The metal bar is processed into a lathed part using a bandsaw for 75 minutes, with the saw speed set to medium, a carbide-tipped blade, and a standard cutting width.",
+      "The lathed part is machined into a milled part using a CNC turning center for 69 minutes, with a G-code setup, calibrated tool offsets, and a spindle speed of 3000 RPM.",
+      "The lathed part is further milled into a milled part using a vertical milling machine for 13 minutes, with a milling speed of 300 RPM, an end mill tool, and a depth of cut of 3 mm.",
+      "The milled part is finished using a horizontal milling machine for 33 minutes, with a milling speed of 250 RPM, a linear tool path, and achieving a fine surface finish."
+    ]
+  },
+  {
+    "part_name": "Complex Machined Component",
+    "steps": [
+      "The broaching operation shapes the metal bar into a broached component using a broaching machine for 70 minutes, with a standard broach type, medium feed rate, and a depth of cut of 0.05 cm.",
+      "The gear shaping process creates a spur gear with 24 teeth from the broached component using a gear shaper for 66 minutes, operating at a shaping speed of 300 RPM.",
+      "The gear hobbing process transforms the broached component into a hobbied gear using a hobbing machine for 18 minutes, with high hobbing speed, low feed rate, and an involute gear profile.",
+      "The lathe turning operation produces a lathed part from the metal bar using a horizontal lathe for 31 minutes, with a rotation speed of 1200 RPM, a cutting tool type, and a moderate feed rate.",
+      "The milling process shapes the lathed part into a milled part using a vertical milling machine for 25 minutes, with a higher milling speed, an end mill tool, and a depth of cut of 0.1 cm.",
+      "The planing operation refines the milled part into a planed part using a planer for 46 minutes, with a planing depth of 0.05 cm, slow feed rate, and achieving a smooth surface finish.",
+      "The electrical discharge machining process precisely finishes the shaped part using a wire EDM machine for 11 minutes, with standard electrical parameters, a copper wire, and fast cutting speed."
+    ]
+  },
+  {
+    "part_name": "Precision Finished Component",
+    "steps": [
+      "The metal bar is cut using a bandsaw for 35 minutes with a bi-metal blade at standard speed to produce a lathed part.",
+      "The lathed part undergoes roughing milling on a vertical milling machine for 29 minutes at 1200 RPM using an end mill with a 5 mm depth of cut to create a milled part.",
+      "The milled part is planed on a planer for 22 minutes with a depth of 2 mm and a feed rate of 0.1 mm/rev to achieve a fine surface finish, resulting in a planed part.",
+      "The planed part is ground on a grinding machine for 27 minutes using an aluminum oxide wheel at 3000 RPM with a feed rate of 0.02 mm/min to produce a ground part.",
+      "The ground part is precision-finished using a wire EDM machine for 95 minutes in fine finishing mode with automatic deburring and deionized water as the dielectric fluid to obtain the precision finished part."
+    ]
+  },
+  {
+    "part_name": "Complex Machined Component",
+    "steps": [
+      "The raw metal bar is cut into a lathed raw part using a bandsaw for 41 minutes, with the saw set to high speed, a carbide-tipped blade, and a standard cutting width.",
+      "The lathed raw part is turned into a lathed finished part on a horizontal lathe for 87 minutes, with the machine operating at 1200 RPM, using a carbide tool and a medium feed rate.",
+      "The lathed finished part is milled into a milled finished part on a vertical milling machine for 31 minutes, with the mill running at a moderate speed, an end mill tool, and a 5 mm depth of cut.",
+      "The milled finished part is planed into a planed part on a planer for 68 minutes, with a planing depth of 2 mm, a slow feed rate, and a fine surface finish.",
+      "The planed part is ground into a ground part on a grinding machine for 67 minutes, using an aluminium oxide grinding wheel at 1800 RPM and a precise feed rate.",
+      "The ground part is precision finished into a precision finished part on a wire EDM machine for 96 minutes, with ultra-fine finishing mode, auto deburring settings, and deionized water as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Complex Mechanical Part",
+    "steps": [
+      "The metal bar is sawn into a lathed part using a bandsaw for 62 minutes, with parameters including a high saw speed, a standard blade type, and a cutting width of 0.5 cm.",
+      "The metal bar is broached into a broached component using a broaching machine for 10 minutes, with parameters including a standard broach type, a medium feed rate, and a depth of cut of 5 mm.",
+      "The broached component is shaped into a shaped gear using a gear shaper for 13 minutes, with parameters including a spur gear type, 20 teeth, and a shaping speed of 100 rpm.",
+      "The metal bar is lathed into a lathed part using a vertical lathe for 75 minutes, with parameters including a rotation speed of 1500 rpm, a carbide tool type, and a feed rate of 0.1 mm/rev.",
+      "The lathed part is processed into a screwed component using screw machines for 28 minutes, with parameters including an M6 screw size, metric thread type, and a production rate of 200 units/hour.",
+      "The milled part is finished into a machined component using a horizontal milling machine for 30 minutes, with parameters including a milling speed of 1000 rpm, a linear tool path, and a high surface finish."
+    ]
+  },
+  {
+    "part_name": "Precision Machined Component",
+    "steps": [
+      "The metal bar is sawed using a bandsaw for 55 minutes at a saw speed of 1200 RPM with a bi-metal blade, cutting a width of 1 mm to produce a lathed part.",
+      "The metal bar is lathed on a horizontal lathe for 40 minutes at a rotation speed of 2000 RPM using a carbide insert tool with a feed rate of 0.1 mm/rev to create a lathed part.",
+      "The metal bar is drilled on a drill press for 96 minutes using a 10 mm drill bit at a spindle speed of 1500 RPM and a feed rate of 0.05 mm/rev to produce a drilled component.",
+      "The lathed part is milled on a vertical milling machine for 98 minutes at a milling speed of 3000 RPM using an end mill with a depth of cut of 2 mm to create a milled part.",
+      "The milled part is planed on a planer for 99 minutes at a planing depth of 1 mm and a feed rate of 0.2 mm/rev to achieve a fine surface finish, resulting in a planed part.",
+      "The planed part is ground on a grinding machine for 9 minutes using an aluminum oxide grinding wheel at a speed of 2400 RPM and a feed rate of 0.02 mm/rev to produce a ground part.",
+      "The ground part is finished on a wire EDM for 10 minutes in high precision mode with minimal deburring settings and deionized water as the dielectric fluid to create a precision finished part."
+    ]
+  },
+  {
+    "part_name": "Precision Finished Part",
+    "steps": [
+      "Lathing is performed using a Vertical Lathe for 59 minutes, where a Metal bar is transformed into a Lathed part by rotating at a defined speed based on material properties, using an appropriate cutting tool, and applying a specified feed rate for effective material removal.",
+      "Broaching is carried out on a Broaching Machine for 11 minutes, where a Lathed part is precision-shaped into a Broached component using a standard tool selection and controlled precision settings.",
+      "Gear Shaping is executed on a Gear Shaper for 73 minutes, where a Broached component is shaped into a Shaped gear with a design-specific number of teeth and controlled shaping speed to meet the specified gear type requirements.",
+      "Electrical Discharge Machining is conducted on a Wire EDM for 22 minutes, where a Shaped part is finely finished into a Precision finished part using optimized electrical parameters, an appropriate wire selection, and a controlled cutting speed for accuracy."
+    ]
+  },
+  {
+    "part_name": "Precision Mechanical Component",
+    "steps": [
+      "The metal bar undergoes turning on a Horizontal Lathe for 60 minutes, using a carbide tool with a rotation speed of 1200 RPM and a feed rate of 0.2 mm/rev, resulting in a lathed part.",
+      "The lathed part is precision finished on a CNC Turning Center for 33 minutes, using pre-calibrated tool offsets, a CNC program (Program001), and a spindle speed of 1500 RPM, producing a finished machined component.",
+      "The lathed part is milled on a Vertical Milling Machine for 46 minutes, using an end mill at a milling speed of 750 RPM and a depth of cut of 5 mm, resulting in a milled part.",
+      "The milled part is shaped on a Shaper for 78 minutes, using an HSS tool with a stroke length of 10 cm and a shaping speed of 3.5 m/min, producing a shaped part.",
+      "The shaped part is cut using a Wire EDM (Electrical Discharge Machine) for 69 minutes, employing brass wire at a cutting speed of 1.5 mm/min with specific electrical parameters, resulting in a precision finished part."
+    ]
+  },
+  {
+    "part_name": "Advanced Component",
+    "steps": [
+      "The metal bar undergoes a turning operation using a horizontal lathe for 42 minutes, with a rotation speed of 1800 RPM, a carbide tool, and a feed rate of 0.1 mm/rev, transforming it into a lathed part.",
+      "The lathed part is milled on a vertical milling machine for 66 minutes, with a milling speed of 500 mm/min, an end mill tool, and a depth of cut of 5 mm, resulting in a milled part.",
+      "The milled part is shaped using a shaper for 80 minutes, with a stroke length of 200 mm, a shaping speed of 30 strokes/min, and an HSS tool, producing a shaped part.",
+      "The shaped part is precision-cut using a wire EDM machine for 43 minutes, with electrical parameters of 120 V and 5 A, a brass wire, and a cutting speed of 20 mm/min, yielding a precision-finished part."
+    ]
+  },
+  {
+    "part_name": "Complex Manufactured Part",
+    "steps": [
+      "The metal bar is sawed into a lathed part using a bandsaw for 53 minutes at high saw speed, with a bi-metal blade and medium cutting width.",
+      "The metal bar is turned into a lathed part on a vertical lathe for 82 minutes at 1000 RPM rotation speed, using a carbide tool and a feed rate of 0.2 mm/rev.",
+      "The lathed part undergoes rough milling on a vertical milling machine for 14 minutes at 1200 RPM milling speed, using an end mill tool with a depth of cut of 5 mm, resulting in a milled part.",
+      "The planed part is surface ground using grinding machines for 51 minutes with an aluminum oxide grinding wheel spinning at 1800 RPM and a feed rate of 0.05 mm/pass, producing a ground part.",
+      "The ground part is finished using a Wire EDM for 10 minutes in fine finishing mode, with automatic deburring settings and deionized water as the dielectric fluid, resulting in a precision-finished part.",
+      "The sheet metal is cut with a laser cutter for 43 minutes at 1500 W laser power, a cutting speed of 500 mm/min, and nitrogen gas assist, producing cut sheet metal."
+    ]
+  },
+  {
+    "part_name": "Complex Component",
+    "steps": [
+      "The operation 'Lathe Turning' shapes a metal bar into a lathed part using a Vertical Lathe for 44 minutes, with parameters set to high rotation speed, a cutting tool, and moderate feed rate.",
+      "The operation 'Broaching' processes the lathed part into a broached component using a Broaching Machine for 31 minutes, employing a flat broach type and achieving high precision.",
+      "The operation 'Gear Shaping' transforms the broached component into a shaped gear using a Gear Shaper for 5 minutes, configured for a spur gear type with 48 teeth and fast shaping speed.",
+      "The operation 'Gear Hobbing' converts the broached component into a hobbied gear using a Hobbing Machine for 62 minutes, with moderate hobbing speed, consistent feed rate, and a standard gear profile.",
+      "The operation 'Shaping' refines a milled part into a shaped part using a Shaper for 23 minutes, with a stroke length of 100 mm, medium shaping speed, and a shaping tool.",
+      "The operation 'Grinding' smooths a planed part into a ground part using Grinding Machines for 12 minutes, utilizing an abrasive grinding wheel with high wheel speed and slow feed rate.",
+      "The operation 'Wire EDM Precision Finishing' finishes a shaped part into a precision finished part using a Wire EDM (Electrical Discharge Machine) for 51 minutes, with standard electrical parameters, a copper wire, and optimized cutting speed."
+    ]
+  },
+  {
+    "part_name": "Custom Component",
+    "steps": [
+      "The metal bar is turned into a lathed part using a Vertical Lathe for 83 minutes, with a rotation speed of 300 RPM, a carbide tool, and a feed rate of 0.2 mm/rev.",
+      "The lathed part is broached into a broached component using a Broaching Machine for 51 minutes, with a keyway broach and high precision.",
+      "The broached component is shaped into a spur gear with 50 teeth using a Gear Shaper for 91 minutes, at a shaping speed of 120 strokes/min.",
+      "The broached component is hobbied into a hobbied gear using a Hobbing Machine for 74 minutes, with a hobbing speed of 950 RPM, a feed rate of 0.1 mm/rev, and an involute gear profile.",
+      "The milled part is finish-milled into a finished machined component using a Horizontal Milling Machine for 63 minutes, at a milling speed of 500 RPM, with a zig-zag tool path and a surface finish of Ra 1.6.",
+      "The planed part is ground into a ground part using a Grinding Machine for 9 minutes, with an aluminum oxide grinding wheel, a wheel speed of 1800 RPM, and a feed rate of 0.02 mm/pass.",
+      "The ground part is precision-finished into a precision finished part using a Wire EDM for 14 minutes, in smoothing mode with light deburring and deionized water as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Complex Mechanical Component",
+    "steps": [
+      "The metal bar is sawed into a lathed part using a bandsaw for 65 minutes, operating at an optimal speed for the material, with an appropriate blade type and a specific cutting width to meet tolerance.",
+      "The lathed part is machined into a finished component using a CNC Turning Center for 28 minutes, running a specific CNC code with calibrated tool offsets and an optimized spindle speed.",
+      "A metal bar is turned into a lathed part using a Horizontal Lathe for 21 minutes, with a defined rotation speed, specified tool type, and a constant feed rate.",
+      "The lathed part is milled into a milled part using a Vertical Milling Machine for 12 minutes, operating at an ideal milling speed, with a designated tool type and a precise depth of cut.",
+      "The milled part undergoes precision horizontal milling using a Horizontal Milling Machine for 77 minutes, with high milling speed, an optimized tool path, and a desired surface finish.",
+      "Sheet metal is cut into a finished sheet metal product using a Laser Cutter for 30 minutes, with a set power level, matching cutting speed, and a chosen gas type for assistance.",
+      "Sheet metal is punched into a finished product using a Punch Press for 16 minutes, with a required punch size, efficient stroke speed, and accurate die alignment.",
+      "A honed cylinder is refined into a precision finished part using a Honing Machine for 97 minutes, with a selected grit size, determined cycle time, and a fixed bore size.",
+      "A metal bar is broached into a broached component using a Broaching Machine for 18 minutes, with a specific broach type, defined feed rate, and preset cut depth.",
+      "The broached component is shaped into a gear using a Gear Shaper for 86 minutes, with a selected gear type, calculated number of teeth, and adequate shaping speed.",
+      "A shaped part is precision finished using a Wire EDM for 78 minutes, with set electrical parameters, a chosen wire type, and accurate cutting speed."
+    ]
+  },
+  {
+    "part_name": "ComplexMechanicalComponent",
+    "steps": [
+      "The sawing operation is performed using a Bandsaw for 86 minutes, cutting a metal bar with a bi-metal blade at moderate speed and a cutting width of 0.5 mm, resulting in a lathed part.",
+      "The vertical milling operation is carried out on a Vertical Milling Machine for 90 minutes, shaping the lathed part with an end mill at fast speed and a depth of cut of 2 mm, producing a milled part.",
+      "The shaping operation is executed on a Shaper for 91 minutes, processing the milled part with a single-point tool at medium speed and a stroke length of 150 mm, yielding a shaped part.",
+      "The EDM cutting operation is performed using a Wire EDM (Electrical Discharge Machine) for 69 minutes, precisely cutting the shaped part with a brass wire at fine speed and optimized electrical parameters, resulting in a precision-finished part."
+    ]
+  },
+  {
+    "part_name": "Custom Machined Component",
+    "steps": [
+      "The metal bar is turned into a lathed part using a Vertical Lathe for 24 minutes, operating at a rotation speed of 2000 RPM with an insert tool and a feed rate of 0.2 mm/rev.",
+      "The lathed part is broached into a broached component using a Broaching Machine for 91 minutes, utilizing a keyway broach with high precision.",
+      "The broached component is shaped into a spur gear with 30 teeth using a Gear Shaper for 96 minutes, with a shaping speed of 250 mm/min.",
+      "The shaped gear is further refined into a shaped part using a Shaper for 12 minutes, employing a form tool with a stroke length of 100 mm and a shaping speed of 180 m/min.",
+      "The shaped part undergoes electrical discharge machining in a Wire EDM for 51 minutes, using brass wire at a cutting speed of 0.15 mm/s to produce a precision-finished part."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Component",
+    "steps": [
+      "The Punch Press performs Punching operation for 50 minutes, using a 20 mm punch size, 120 strokes/min stroke speed, and precision-adjusted die alignment to transform sheet metal into a finished sheet metal product.",
+      "The Wire EDM (Electrical Discharge Machine) carries out EDM Cutting operation for 74 minutes, utilizing optimized electrical parameters, brass wire, and moderate cutting speed to convert a shaped part into a precision-finished part.",
+      "The Hobbing Machine executes the Hobbing operation for 34 minutes, operating at 850 RPM hobbing speed, 0.5 mm/rev feed rate, and an involute gear profile to create a hobbied gear from a broached component.",
+      "The CNC Turning Center performs Fine Turning operation for 45 minutes, running CNC Program 101 with pre-calibrated tool offsets and 1500 RPM spindle speed to turn a lathed part into a finished machined component.",
+      "The Drill Press conducts Drilling operation for 33 minutes, using a 10 mm drill size, 750 RPM spindle speed, and 0.2 mm/rev feed rate to drill holes into a metal bar and produce a drilled component."
+    ]
+  },
+  {
+    "part_name": "Metal Gear Assembly",
+    "steps": [
+      "The sheet metal is sheared into precise dimensions using a Shear (Sheet Metal) machine for 14 minutes, with a shear angle of 5 degrees, a cutting speed of 3 m/min, and a high-precision steel blade, transforming raw sheet metal into sheared sheet metal.",
+      "A Laser Cutter is used to cut the sheet metal for 27 minutes, operating at a laser power of 1500 W, a cutting speed of 5 m/min, and using nitrogen as the assist gas, resulting in precisely cut sheet metal.",
+      "A Drill Press is employed for 99 minutes to drill holes into a metal bar using a 10 mm drill bit, spinning at 1200 RPM with a feed rate of 0.2 mm/rev, producing a drilled component.",
+      "The broaching operation is performed using a Broaching Machine for 4 minutes, creating a keyway with high precision, transforming a lathed part into a broached component.",
+      "A Horizontal Lathe is utilized for 92 minutes to turn a metal bar at a rotation speed of 1000 RPM using a carbide insert tool with a feed rate of 0.3 mm/rev, shaping the metal bar into a lathed part.",
+      "The hobbing machine processes a broached component for 12 minutes at a hobbing speed of 300 RPM and a feed rate of 0.5 mm/rev, creating an involute spur gear as the output.",
+      "Grinding Machines are used for 77 minutes to refine a planed part with an aluminum oxide grinding wheel spinning at 1800 RPM and a feed rate of 0.02 mm/pass, producing a smooth ground part.",
+      "A Wire EDM (Electrical Discharge Machine) is operated for 58 minutes to achieve a precision finish on a ground part using optimal electrical parameters and a brass wire cutting at 2 mm/min, resulting in a precision-finished part."
+    ]
+  },
+  {
+    "part_name": "Machined Component",
+    "steps": [
+      "The metal bar undergoes turning using a horizontal lathe for 99 minutes, rotating at 500 RPM with a carbide tool and a feed rate of 0.1 mm/rev, resulting in a lathed part.",
+      "The lathed part is machined on a CNC turning center for 84 minutes using CNC program 'Program_01' with tool offsets of 0.02 mm and a spindle speed of 1200 RPM, producing a finished machined component.",
+      "The lathed part is milled on a vertical milling machine for 79 minutes at a milling speed of 800 RPM using an end mill tool with a depth of cut of 5 mm, resulting in a milled part.",
+      "The milled part undergoes precision milling on a Stewart platform mill for 92 minutes with a milling precision of 0.01 mm using a diamond-tipped tool and active vibration damping, producing a ground part.",
+      "The ground part is processed on a wire EDM machine for 47 minutes using electrical parameters 'Config_A,' a brass wire, and a cutting speed of 100 mm/min, resulting in a precision finished part."
+    ]
+  },
+  {
+    "part_name": "Finished Machined Component",
+    "steps": [
+      "The sheet metal is sheared using a Shear (Sheet Metal) machine for 1 minute, with a shear angle of 5 degrees, cutting speed of 100 m/min, and high-carbon steel blade, transforming raw sheet metal into sheared sheet metal.",
+      "The sheet metal is laser cut on a Laser Cutter for 63 minutes, using a laser power of 1.5 kW, cutting speed of 500 mm/s, and oxygen gas assist, producing cut sheet metal.",
+      "A lathed part undergoes CNC turning on a CNC Turning Center for 75 minutes, using CNC program A123, tool offsets of 0.1 mm, and a spindle speed of 3000 RPM, resulting in the finished machined component.",
+      "A lathed part is milled on a Vertical Milling Machine for 2 minutes, with a milling speed of 1500 RPM, end mill tool, and depth of cut of 2 mm, producing a milled part.",
+      "A metal bar is drilled on a Drill Press for 26 minutes, using a 10 mm drill, spindle speed of 1200 RPM, and feed rate of 50 mm/min, resulting in a drilled component.",
+      "A milled part is processed on a Horizontal Milling Machine for 20 minutes, with a milling speed of 1800 RPM, linear tool path, and surface finish of Ra 0.8, creating the finished machined component.",
+      "A milled part is shaped on a Shaper for 54 minutes, with a stroke length of 150 mm, shaping speed of 30 strokes/min, and single-point tool, producing a shaped part.",
+      "A shaped part undergoes precision cutting on a Wire EDM (Electrical Discharge Machine) for 73 minutes, using electrical parameters of 12 V, brass wire, and cutting speed of 30 mm/min, resulting in a precision finished part.",
+      "A lathed part is broached on a Broaching Machine for 31 minutes, using a standard broach and precision level of 0.5 mm, producing a broached component.",
+      "A metal bar is turned on a Vertical Lathe for 98 minutes, with a rotation speed of 2800 RPM, carbide tool, and feed rate of 0.3 mm/rev, creating a lathed part.",
+      "A metal bar is turned on a Horizontal Lathe for 81 minutes, with a rotation speed of 2500 RPM, high-speed steel tool, and feed rate of 0.25 mm/rev, resulting in a lathed part.",
+      "A broached component undergoes hobbing on a Hobbing Machine for 30 minutes, with a hobbing speed of 120 RPM, feed rate of 0.5 mm/rev, and spur gear profile, producing a hobbied gear.",
+      "A milled part is planed on a Planer for 57 minutes, with a planing depth of 3 mm, feed rate of 20 mm/min, and surface finish of Ra 1.6, creating a planed part.",
+      "A planed part is ground on a Grinding Machines for 25 minutes, using an alumina grinding wheel, wheel speed of 1600 RPM, and feed rate of 60 mm/min, resulting in a ground part."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Assembly",
+    "steps": [
+      "The Horizontal Lathe performs Lathe Turning for 31 minutes using a carbide cutting tool at 1200 RPM rotation speed and 0.15 mm/rev feed rate, transforming a metal bar on the conveyor belt into a lathed part on the conveyor belt.",
+      "The Broaching Machine carries out Broaching for 15 minutes using a keyway broach with high precision, converting the lathed part on the conveyor belt into a broached component on the conveyor belt.",
+      "The Gear Shaper executes Gear Shaping for 60 minutes, shaping a spur gear with 30 teeth at 500 strokes/min, turning the broached component on the conveyor belt into a shaped gear on the conveyor belt.",
+      "The Stewart Platform Mills conducts Precision Milling for 21 minutes with a 4-flute end mill and active vibration damping system, achieving a milling precision of 0.01 mm, transforming the milled part on the conveyor belt into a ground part on the conveyor belt.",
+      "The Wire EDM (Electrical Discharge Machine) performs Wire EDM Cutting for 77 minutes in fine finish mode with automatic deburring and deionized water as the dielectric fluid, turning the ground part on the conveyor belt into a precision finished part on the conveyor belt."
+    ]
+  },
+  {
+    "part_name": "Machined Component",
+    "steps": [
+      "The metal bar is sawn into a lathed part using a bandsaw for 68 minutes, with a medium saw speed, a bi-metal blade, and a cutting width of 5mm.",
+      "The metal bar is turned into a lathed part using a horizontal lathe for 69 minutes, with a rotation speed of 1200 RPM, a carbide tool, and a feed rate of 0.1 mm/rev.",
+      "The lathed part is milled into a milled part using a vertical milling machine for 47 minutes, with a milling speed of 2500 RPM, an end mill tool, and a depth of cut of 2mm.",
+      "The milled part is planed into a planed part using a planer for 12 minutes, with a planing depth of 1mm, a feed rate of 300 mm/min, and a fine surface finish.",
+      "The milled part is precision milled into a ground part using a Stewart Platform Mills for 82 minutes, with a milling precision of 0.01 mm, a multi-axis tool configuration, and active vibration damping.",
+      "The ground part is cut into a precision finished part using a wire EDM for 71 minutes, with a fine cut finishing mode, automatic deburring settings, and deionized water as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Machined Component",
+    "steps": [
+      "The Metal bar is placed on the ConveyorBelt and lathing is performed using a Horizontal Lathe for 12 minutes with a rotation speed of 1200 RPM, a carbide tool, and a feed rate of 0.2 mm/rev to produce the Lathed part.",
+      "The Lathed part is taken from the ConveyorBelt and vertical milling is performed using a Vertical Milling Machine for 60 minutes with a milling speed of 1500 RPM, an end mill tool, and a depth of cut of 2 mm to produce the Milled part.",
+      "The Milled part is taken from the ConveyorBelt and shaping is performed using a Shaper for 10 minutes with a stroke length of 120 mm, a shaping speed of 15 strokes/min, and a form tool to produce the Shaped part.",
+      "The Shaped part is taken from the ConveyorBelt and wire EDM is performed using a Wire EDM (Electrical Discharge Machine) for 18 minutes with high electrical precision, a brass wire, and a cutting speed of 0.2 mm/min to produce the Precision finished part.",
+      "The Honed cylinder is taken from the ConveyorBelt and honing is performed using a Honing Machine for 46 minutes with a honing grit size of 400, a cycle time of 30 seconds, and a bore size of 50 mm to produce the Precision finished part.",
+      "The Milled part is taken from the ConveyorBelt and horizontal milling is performed using a Horizontal Milling Machine for 22 minutes with a milling speed of 2000 RPM, a linear tool path, and a surface finish of Ra 0.4 to produce the Finished machined component."
+    ]
+  },
+  {
+    "part_name": "Complex Component Assembly",
+    "steps": [
+      "The sawing operation cuts a metal bar into a lathed part using a bandsaw for 15 minutes, with parameters including medium saw speed, a high-speed steel blade, and a cutting width of 5 mm.",
+      "Turning refines the lathed part on a horizontal lathe for 7 minutes, with parameters including a rotation speed of 1200 RPM, a carbide insert tool, and a feed rate of 0.2 mm/rev.",
+      "Roughing milling shapes the lathed part on a vertical milling machine for 59 minutes, using an end mill tool at a milling speed of 1000 RPM and a depth of cut of 2 mm.",
+      "Finishing milling produces the final machined component from the milled part on a horizontal milling machine for 84 minutes, with a complex tool path, a milling speed of 1200 RPM, and a surface finish of 0.8 Ra.",
+      "Planing smoothens the milled part on a planer for 45 minutes, with a planing depth of 0.1 mm, a feed rate of 0.5 mm/rev, and a surface finish of 1.2 Ra.",
+      "Surface grinding finishes the planed part on a grinding machine for 90 minutes, using an aluminum oxide grinding wheel at 1800 RPM and a feed rate of 0.02 mm/rev."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Assembly",
+    "steps": [
+      "The broaching operation shapes the metal bar into a broached component using a Broaching Machine for 14 minutes with a standard broach, medium feed rate, and shallow depth of cut.",
+      "The gear shaping process transforms the broached component into a shaped gear on a Gear Shaper for 33 minutes, creating a 20-tooth spur gear at a high shaping speed.",
+      "The hobbing operation processes the broached component into a hobbied gear on a Hobbing Machine for 34 minutes, using medium hobbing speed, low feed rate, and a standard gear profile.",
+      "The vertical milling operation shapes the lathed part into a milled part on a Vertical Milling Machine for 40 minutes with high milling speed, an end mill tool, and a 5 mm depth of cut.",
+      "The shaping process refines the milled part into a shaped part on a Shaper for 6 minutes with a short stroke length, fast shaping speed, and a standard tool.",
+      "The wire EDM finishing operation precisely finishes the shaped part into a precision finished part on a Wire EDM machine for 29 minutes using optimal electrical parameters, a fine wire, and a moderate cutting speed."
+    ]
+  },
+  {
+    "part_name": "Machined Component",
+    "steps": [
+      "The Laser Cutting operation cuts sheet metal using a Laser Cutter for 16 minutes with high laser power, medium cutting speed, and nitrogen gas assist, transforming sheet metal into cut sheet metal.",
+      "The Shearing operation cuts sheet metal using a Shear (Sheet Metal) for 93 minutes with a 5-degree shear angle, fast cutting speed, and a sharp blade, turning sheet metal into sheared sheet metal.",
+      "The Drilling operation drills holes into a metal bar using a Drill Press for 33 minutes with a 10 mm drill size, 1200 rpm spindle speed, and 0.1 mm/rev feed rate, converting the metal bar into a drilled component.",
+      "The Broaching operation shapes a drilled component using a Broaching Machine for 63 minutes with an internal broach type, 0.15 mm/s feed rate, and 5 mm depth of cut, transforming the drilled component into a broached component.",
+      "The Hobbing operation creates gear teeth on a broached component using a Hobbing Machine for 2 minutes with a 500 rpm hobbing speed, 0.2 mm/rev feed rate, and a spur gear profile, producing a hobbied gear.",
+      "The Milling operation refines a milled part using a Stewart Platform Mills for 88 minutes with 0.01 mm milling precision, multi-axis tool configuration, and active vibration damping, turning the milled part into a ground part.",
+      "The Grinding operation smoothes a planed part using Grinding Machines for 71 minutes with a ceramic grinding wheel, 3000 rpm wheel speed, and 0.05 mm/rev feed rate, transforming the planed part into a ground part.",
+      "The EDM Cutting operation precisely finishes a shaped part using a Wire EDM (Electrical Discharge Machine) for 56 minutes with preset 1 electrical parameters, brass wire, and slow cutting speed, converting the shaped part into a precision finished part."
+    ]
+  },
+  {
+    "part_name": "Precision Engine Component",
+    "steps": [
+      "The Broaching Machine performs the broaching operation for 42 minutes, using a standard broach with a high feed rate and a depth of cut of 2mm, transforming a metal bar into a broached component.",
+      "The Hobbing Machine carries out the hobbing operation for 73 minutes at a medium hobbing speed and a steady feed rate, creating a spur gear from the broached component.",
+      "The Vertical Lathe executes the turning operation for 24 minutes, rotating at 1200 RPM with a carbide tool and a feed rate of 0.3 mm/rev, shaping a metal bar into a lathed part.",
+      "The Vertical Milling Machine conducts the milling operation for 38 minutes at 800 RPM using an end mill tool with a depth of cut of 4 mm, refining the lathed part into a milled part.",
+      "The Shaper performs the shaping operation for 15 minutes with a stroke length of 150 mm, a fast shaping speed, and a high-speed steel tool, converting the milled part into a shaped part.",
+      "The Wire EDM (Electrical Discharge Machine) carries out the wire EDM cutting operation for 15 minutes with precision electrical parameters, a brass wire, and a cutting speed of 0.5 mm/min, finishing the shaped part into a precision finished part."
+    ]
+  },
+  {
+    "part_name": "Precision Component",
+    "steps": [
+      "The sawing operation cuts the metal bar into a lathed part using a Bandsaw for 46 minutes with a medium saw speed, a carbon steel blade, and a cutting width of 5 mm.",
+      "The roughing milling operation shapes the lathed part into a milled part using a Vertical Milling Machine for 47 minutes with a milling speed of 1000 RPM, an end mill tool, and a depth of cut of 2 mm.",
+      "The shaping operation refines the milled part into a shaped part using a Shaper for 63 minutes with a stroke length of 150 mm, a shaping speed of 50 mm/s, and a single-point tool.",
+      "The EDM finish operation precisely finishes the shaped part into a precision finished part using a Wire EDM (Electrical Discharge Machine) for 82 minutes with high precision electrical parameters, a brass wire, and a slow cutting speed."
+    ]
+  },
+  {
+    "part_name": "Custom Machined Component",
+    "steps": [
+      "The metal bar is turned into a lathed part using a horizontal lathe for 36 minutes, with parameters including a rotation speed of 1200 RPM, a carbide tool, and a feed rate of 0.1 mm/rev.",
+      "The lathed part is milled into a milled part using a vertical milling machine for 22 minutes, with parameters including a milling speed of 1500 RPM, an end mill tool, and a depth of cut of 5 mm.",
+      "The milled part is planed into a planed part using a planer for 12 minutes, with parameters including a planing depth of 2 mm, a feed rate of 0.5 mm/min, and a high surface finish.",
+      "The planed part is ground into a ground part using a grinding machine for 55 minutes, with parameters including an aluminum oxide grinding wheel, a wheel speed of 1800 RPM, and a feed rate of 0.02 mm/min.",
+      "The ground part is precision-cut into a finished part using a wire EDM machine for 62 minutes, with parameters including a fine finishing mode, automatic deburring settings, and deionized water as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Assembly",
+    "steps": [
+      "The sawing operation cuts the metal bar into a lathed part using a bandsaw for 80 minutes, with parameters including an optimal saw speed, an HSS blade type, and a standard cutting width.",
+      "The lathe turning operation shapes the lathed part into a broached component on a vertical lathe for 37 minutes, with parameters such as a rotation speed of 1200 RPM, a carbide tool type, and a moderate feed rate.",
+      "The broaching operation creates keyways in the broached component using a broaching machine for 5 minutes, with parameters including a keyway broach type, a high feed rate, and a depth of cut of 2 mm.",
+      "The gear hobbing operation shapes the broached component into a hobbied gear on a hobbing machine for 28 minutes, with parameters such as a fast hobbing speed, a consistent feed rate, and a helical gear profile.",
+      "The precision milling operation refines the hobbied gear into a precision finished part using Stewart Platform Mills for 90 minutes, with parameters including high milling precision, a multiaxis tool configuration, and active vibration damping.",
+      "The EDM finishing operation provides a fine finish to the precision finished part using a wire EDM for 28 minutes, with parameters such as fine finishing mode, complete deburring settings, and synthetic dielectric fluid type."
+    ]
+  },
+  {
+    "part_name": "Precision Gear",
+    "steps": [
+      "The Bandsaw performs sawing on a metal bar using a bi-metal blade at medium speed with a cutting width of 2mm for 63 minutes, producing a lathed part.",
+      "The Vertical Lathe turns the metal bar at a rotation speed of 1500 rpm using a carbide tool with a feed rate of 0.1 mm/rev for 9 minutes, resulting in a lathed part.",
+      "The Broaching Machine executes broaching on the lathed part using a keyway broach at a feed rate of 3 mm/min and a depth of cut of 5 mm for 78 minutes, creating a broached component.",
+      "The Hobbing Machine carries out hobbing on the broached component at a hobbing speed of 250 rpm and a feed rate of 1 mm/rev to form a spur gear profile for 24 minutes, producing a hobbied gear.",
+      "The Gear Shaper shapes the broached component into a helical gear with 30 teeth at a shaping speed of 150 strokes/min for 88 minutes, resulting in a shaped gear."
+    ]
+  },
+  {
+    "part_name": "Precision Mechanical Component",
+    "steps": [
+      "The metal bar is sawed into a lathed part using a bandsaw for 82 minutes, operating at a high saw speed with a carbide blade and a cutting width of 5 mm.",
+      "The lathed part is turned into a milled part using a vertical lathe for 51 minutes, with a rotation speed of 1500 RPM, an insert tool, and a feed rate of 0.1 mm/rev.",
+      "The milled part is further processed into a planed part using a vertical milling machine for 25 minutes, with a milling speed of 800 RPM, an end mill tool, and a depth of cut of 2 mm.",
+      "The planed part is shaped into a ground part using a planer for 10 minutes, with a planing depth of 3 mm, a feed rate of 0.2 mm/pass, and achieving a high surface finish.",
+      "The ground part is precision-finished using grinding machines for 79 minutes, with a diamond grinding wheel rotating at 2000 RPM and a feed rate of 0.01 mm/pass."
+    ]
+  },
+  {
+    "part_name": "Finished Machined Component",
+    "steps": [
+      "The metal bar undergoes turning on a horizontal lathe for 73 minutes using a carbide tool at high rotation speed and moderate feed rate, resulting in a lathed part.",
+      "The lathed part is milled on a vertical milling machine for 5 minutes with an end mill tool at standard milling speed and a depth of cut of 5 mm, producing a milled part.",
+      "The milled part is planed on a planer for 10 minutes at a low feed rate with a planing depth of 0.1 mm to achieve a smooth surface finish, yielding a planed part.",
+      "The planed part is surface ground on a grinding machine for 52 minutes using a diamond grinding wheel at high wheel speed with controlled feed rate, creating a ground part.",
+      "The ground part is precision-cut on a wire EDM machine for 95 minutes in fine finishing mode with minimal deburring settings and filtered dielectric fluid, resulting in a precision finished part.",
+      "The precision finished part is finally machined on a CNC turning center for 42 minutes using an auto CNC program with calibrated tool offsets and moderate spindle speed, producing the finished machined component."
+    ]
+  },
+  {
+    "part_name": "Precision Component",
+    "steps": [
+      "The metal bar is turned using a horizontal lathe for 6 minutes at a rotation speed of 500 RPM with a carbide insert tool and a feed rate of 0.1 mm/rev to produce the lathed part.",
+      "The lathed part is milled on a vertical milling machine for 99 minutes at a milling speed of 1200 RPM using an end mill tool with a depth of cut of 5 mm to create the milled part.",
+      "The milled part is planed on a planer for 30 minutes with a planing depth of 0.5 mm, a feed rate of 2 mm/min, and a surface finish of 0.8 Ra to produce the planed part.",
+      "The planed part is ground on a grinding machine for 16 minutes using an aluminum oxide grinding wheel at a wheel speed of 3500 RPM and a feed rate of 0.02 mm/rev to create the ground part.",
+      "The ground part undergoes electrical discharge machining on a wire EDM machine for 17 minutes in semi-finish mode with light deburring and deionized water as the dielectric fluid to achieve the precision finished part."
+    ]
+  },
+  {
+    "part_name": "Precision Component",
+    "steps": [
+      "The turning operation shapes the metal bar into a lathed part using a horizontal lathe for 45 minutes, with a rotation speed of 3000 RPM, a cutting tool, and a feed rate of 0.1 mm/rev.",
+      "The milling operation refines the lathed part into a milled part using a vertical milling machine for 68 minutes, with a milling speed of 1200 RPM, an end mill, and a depth of cut of 5 mm.",
+      "The fine milling operation further processes the milled part into a finished machined component using a horizontal milling machine for 71 minutes, with a milling speed of 1500 RPM, a linear tool path, and a surface finish of 18 µm.",
+      "The planing operation smooths the milled part into a planed part using a planer for 68 minutes, with a planing depth of 0.5 mm, a feed rate of 0.2 m/min, and a surface finish of 15 µm.",
+      "The grinding operation refines the planed part into a ground part using grinding machines for 67 minutes, with an alumina grinding wheel, a wheel speed of 2000 RPM, and a feed rate of 0.05 mm/rev.",
+      "The EDM operation finishes the ground part into a precision finished part using a wire EDM machine for 21 minutes, with fine finishing mode, automatic deburring settings, and oil as the dielectric fluid."
+    ]
+  },
+  {
+    "part_name": "Precision Gear Assembly",
+    "steps": [
+      "The metal bar is cut into a lathed part using a bandsaw for 99 minutes, with a moderate saw speed, a high-carbon steel blade, and a standard cutting width.",
+      "The metal bar is turned into a lathed part on a vertical lathe for 73 minutes, with a rotation speed of 700 RPM, a carbide tool, and a feed rate of 0.01 mm/rev.",
+      "The lathed part is milled into a milled part on a vertical milling machine for 62 minutes, with a milling speed of 1500 RPM, an end mill tool, and a depth of cut of 2 mm.",
+      "The milled part is planed into a planed part using a planer for 47 minutes, with a planing depth of 0.5 mm, a feed rate of 0.1 mm/rev, and a fine surface finish.",
+      "The planed part is ground into a ground part on a grinding machine for 5 minutes, using a ceramic grinding wheel at 2000 RPM and a feed rate of 0.005 mm/min.",
+      "The ground part is precision-finished using a wire EDM for 52 minutes, operating in fine finishing mode with minimal deburring settings and deionized water as the dielectric fluid.",
+      "The metal bar is broached into a broached component using a broaching machine for 43 minutes, with a keyway broach, a feed rate of 0.2 mm/stroke, and a depth of cut of 7 mm.",
+      "The broached component is transformed into a hobbied gear on a hobbing machine for 10 minutes, with a hobbing speed of 1200 RPM, a feed rate of 0.5 mm/rev, and a helical gear profile."
+    ]
+  },
+  {
+    "part_name": "Precision Component",
+    "steps": [
+      "The metal bar is cut into a lathed part using the bandsaw for 84 minutes with high saw speed, a bimetal blade type, and a narrow cutting width.",
+      "The lathed part undergoes turning on the horizontal lathe for 61 minutes at medium rotation speed, using a carbide tool type and a standard feed rate.",
+      "The lathed part is milled using the vertical milling machine for 77 minutes at standard milling speed, with an end mill tool type and a depth of cut of 0.5mm.",
+      "The milled part is planed on the planer for 75 minutes with a planing depth of 0.2mm, a slow feed rate, and a fine surface finish.",
+      "The planed part is ground using grinding machines for 8 minutes with a ceramic grinding wheel type, high wheel speed, and a moderate feed rate.",
+      "The ground part is precisely finished using the wire EDM for 82 minutes in fine finishing mode with distilled water as the dielectric fluid type and no deburring settings."
+    ]
+  },
+  {
+    "part_name": "Precision Finished Component",
+    "steps": [
+      "The lathe operation shapes a metal bar into a lathed part using a Vertical Lathe for 78 minutes, with optimized rotation speed, a standard lathe tool, and a feed rate suitable for the material.",
+      "The roughing milling process further refines the lathed part into a milled part with a Vertical Milling Machine for 17 minutes, employing a 500 rpm milling speed, an end mill tool, and a 5 mm depth of cut.",
+      "The planing operation smoothens the milled part into a planed part on a Planer for 48 minutes, using a 2 mm planing depth, an adjusted feed rate for a high surface finish, and achieving a precise finish.",
+      "Grinding enhances the planed part into a ground part using Grinding Machines for 20 minutes, with an abrasive grinding wheel, high wheel speed, and a fine feed rate for precise results.",
+      "Wire EDM precisely finishes the ground part into the final precision finished component using a Wire EDM machine for 57 minutes, with optimized electrical parameters, a fine wire type, and a medium cutting speed for accuracy."
+    ]
+  },
+  {
+    "part_name": "Complex Machined Component",
+    "steps": [
+      "The laser cutting operation cuts sheet metal using a Laser Cutter for 2 minutes with a laser power of 5kW, a cutting speed of 1000 mm/min, and nitrogen gas assist, transforming sheet metal into cut sheet metal.",
+      "The vertical turning operation shapes a metal bar using a Vertical Lathe for 4 minutes at a rotation speed of 1200 RPM, a carbide tool, and a feed rate of 0.2 mm/rev, resulting in a lathed part.",
+      "The horizontal turning operation processes a metal bar using a Horizontal Lathe for 38 minutes at 1500 RPM with a high-speed steel tool and a feed rate of 0.3 mm/rev, producing a lathed part.",
+      "The screwing operation creates an M8 metric thread on a lathed part using Screw Machines for 93 minutes at a production rate of 60 pcs/hour, producing a screwed component.",
+      "The broaching operation forms a high-precision keyway on a lathed part using a Broaching Machine for 94 minutes, transforming it into a broached component.",
+      "The CNC turning operation finishes machining a lathed part using a CNC Turning Center for 93 minutes with a G-code optimised program, tool offsets of 0.01 mm, and a spindle speed of 2000 RPM, resulting in a finished machined component.",
+      "The vertical milling operation contours and finishes cut sheet metal using a Vertical Milling Machine for 18 minutes with a milling pattern tolerance of 0.02 mm, producing a finished sheet metal product.",
+      "The band sawing operation cuts a metal bar using a Bandsaw for 38 minutes at a saw speed of 150 m/min with a bi-metal blade and a cutting width of 1 mm, creating a lathed part.",
+      "The EDM cutting operation precision-finishes a shaped part using a Wire EDM for 66 minutes with high precision electrical parameters, a brass wire, and a cutting speed of 40 mm/min, resulting in a precision finished part.",
+      "The shaping operation processes a milled part using a Shaper for 38 minutes with a stroke length of 150 mm, a shaping speed of 20 strokes/min, and a single-point tool, producing a shaped part.",
+      "The planing operation smoothens a milled part using a Planer for 60 minutes with a planing depth of 0.5 mm, a feed rate of 0.1 mm/rev, and a rough surface finish, resulting in a planed part.",
+      "The shearing operation cuts sheet metal using a Shear for 87 minutes with a shear angle of 3 degrees, a cutting speed of 700 mm/s, and an alloy steel blade, producing sheared sheet metal.",
+      "The grinding operation finishes a planed part using Grinding Machines for 49 minutes with a ceramic grinding wheel, a wheel speed of 1800 RPM, and a feed rate of 0.02 mm/min, resulting in a ground part.",
+      "The drilling operation creates a 10 mm hole in a metal bar using a Drill Press for 52 minutes at a spindle speed of 1200 RPM and a feed rate of 0.1 mm/rev, producing a drilled component.",
+      "The hobbing operation forms a spur gear on a broached component using a Hobbing Machine for 72 minutes at a hobbing speed of 200 RPM and a feed rate of 0.15 mm/rev, resulting in a hobbied gear.",
+      "The gear shaping operation processes a broached component into a helical gear using a Gear Shaper for 5 minutes with 48 teeth and a shaping speed of 25 strokes/min, producing a shaped gear.",
+      "The punching operation creates a 20 mm hole in sheet metal using a Punch Press for 21 minutes at a stroke speed of 50 strikes/min with high precision die alignment, resulting in a finished sheet metal product.",
+      "The mill grinding operation refines a milled part using Stewart Platform Mills for 6 minutes with a milling precision of 0.01 mm, dynamic tool configuration, and active vibration damping, producing a ground part."
+    ]
+  },
+  {
+    "part_name": "Complex Mechanical Part",
+    "steps": [
+      "The operation involves sawing a Metal Bar into a Lathed Part using a Bandsaw for 80 minutes, with key parameters including a High saw speed, an Industrial blade type, and a Medium cutting width.",
+      "The Lathed Part is subjected to rough milling using a Vertical Milling Machine for 10 minutes, with parameters set to Moderate milling speed, an End Mill tool type, and a Depth of Cut of 0.5mm, resulting in a Milled Part.",
+      "The Milled Part is planed using a Planer for 21 minutes, with key parameters such as a Planing Depth of 0.2mm, a Slow feed rate, and a Fine surface finish, producing a Planed Part.",
+      "The Milled Part undergoes shaping using a Shaper for 53 minutes, with parameters including a Stroke Length of 100mm, Medium shaping speed, and a Flat tool type, resulting in a Shaped Part.",
+      "The Shaped Part is precision-cut using a Wire EDM (Electrical Discharge Machine) for 84 minutes, with parameters set to High Precision Electrical Settings, a Brass wire type, and a Cutting Speed of 2mm/min, producing a Precision Finished Part.",
+      "The Planed Part is ground using a Grinding Machines for 63 minutes, with key parameters including a Diamond grinding wheel type, High RPM wheel speed, and a Precision feed rate, resulting in a Ground Part."
+    ]
+  }
+]

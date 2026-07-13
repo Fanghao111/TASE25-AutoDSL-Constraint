@@ -1,0 +1,157 @@
+Filtered to 2 instance(s): ['instance ta75', 'instance ta78']
+  0%|          | 0/2 [00:00<?, ?it/s]s1 extract: NL → fixed-schema JSON ...
+
+LLM calls:   0%|          | 0/100 [00:00<?, ?it/s][A
+LLM calls:   1%|          | 1/100 [00:31<52:04, 31.56s/it][A
+LLM calls:   2%|▏         | 2/100 [00:31<21:22, 13.09s/it][A
+LLM calls:   3%|▎         | 3/100 [00:32<11:59,  7.41s/it][A
+LLM calls:   4%|▍         | 4/100 [00:32<07:17,  4.56s/it][A
+LLM calls:   6%|▌         | 6/100 [00:32<03:26,  2.19s/it][A
+LLM calls:   8%|▊         | 8/100 [00:32<01:58,  1.29s/it][A
+LLM calls:   9%|▉         | 9/100 [00:33<01:38,  1.08s/it][A
+LLM calls:  10%|█         | 10/100 [00:33<01:17,  1.17it/s][A
+LLM calls:  11%|█         | 11/100 [00:33<01:02,  1.42it/s][A
+LLM calls:  12%|█▏        | 12/100 [00:33<00:48,  1.80it/s][A
+LLM calls:  14%|█▍        | 14/100 [00:34<00:34,  2.47it/s][A
+LLM calls:  15%|█▌        | 15/100 [00:34<00:28,  2.94it/s][A
+LLM calls:  18%|█▊        | 18/100 [00:34<00:16,  5.12it/s][A
+LLM calls:  22%|██▏       | 22/100 [00:34<00:09,  7.96it/s][A
+LLM calls:  24%|██▍       | 24/100 [00:35<00:09,  7.73it/s][A
+LLM calls:  26%|██▌       | 26/100 [00:35<00:09,  8.17it/s][A
+LLM calls:  28%|██▊       | 28/100 [00:35<00:07,  9.01it/s][A
+LLM calls:  30%|███       | 30/100 [00:35<00:07,  8.98it/s][A
+LLM calls:  32%|███▏      | 32/100 [00:36<00:14,  4.58it/s][A
+LLM calls:  33%|███▎      | 33/100 [00:36<00:14,  4.72it/s][A
+LLM calls:  34%|███▍      | 34/100 [00:37<00:16,  4.02it/s][A
+LLM calls:  35%|███▌      | 35/100 [00:37<00:14,  4.45it/s][A
+LLM calls:  38%|███▊      | 38/100 [00:37<00:09,  6.47it/s][A
+LLM calls:  40%|████      | 40/100 [00:37<00:08,  7.06it/s][A
+LLM calls:  41%|████      | 41/100 [00:38<00:08,  6.73it/s][A
+LLM calls:  43%|████▎     | 43/100 [00:38<00:09,  6.12it/s][A
+LLM calls:  45%|████▌     | 45/100 [00:38<00:07,  7.13it/s][A
+LLM calls:  46%|████▌     | 46/100 [00:38<00:07,  7.03it/s][A
+LLM calls:  49%|████▉     | 49/100 [00:38<00:04, 10.29it/s][A
+LLM calls:  51%|█████     | 51/100 [00:39<00:04, 10.73it/s][A
+LLM calls:  53%|█████▎    | 53/100 [00:39<00:04, 10.83it/s][A
+LLM calls:  55%|█████▌    | 55/100 [00:39<00:03, 12.52it/s][A
+LLM calls:  58%|█████▊    | 58/100 [00:39<00:03, 13.14it/s][A
+LLM calls:  60%|██████    | 60/100 [00:39<00:03, 10.77it/s][A
+LLM calls:  62%|██████▏   | 62/100 [00:40<00:03, 10.26it/s][A
+LLM calls:  64%|██████▍   | 64/100 [00:41<00:12,  2.96it/s][A
+LLM calls:  65%|██████▌   | 65/100 [00:57<01:41,  2.89s/it][A
+LLM calls:  66%|██████▌   | 66/100 [00:57<01:20,  2.36s/it][A
+LLM calls:  67%|██████▋   | 67/100 [00:57<01:02,  1.89s/it][A
+LLM calls:  68%|██████▊   | 68/100 [00:58<00:50,  1.58s/it][A
+LLM calls:  69%|██████▉   | 69/100 [00:58<00:38,  1.25s/it][A
+LLM calls:  70%|███████   | 70/100 [00:58<00:29,  1.02it/s][A
+LLM calls:  71%|███████   | 71/100 [00:59<00:22,  1.31it/s][A
+LLM calls:  73%|███████▎  | 73/100 [00:59<00:13,  2.05it/s][A
+LLM calls:  74%|███████▍  | 74/100 [00:59<00:12,  2.15it/s][A
+LLM calls:  75%|███████▌  | 75/100 [01:02<00:24,  1.03it/s][A
+LLM calls:  76%|███████▌  | 76/100 [01:02<00:19,  1.21it/s][A
+LLM calls:  77%|███████▋  | 77/100 [01:02<00:14,  1.58it/s][A
+LLM calls:  78%|███████▊  | 78/100 [01:03<00:12,  1.77it/s][A
+LLM calls:  80%|████████  | 80/100 [01:03<00:09,  2.19it/s][A
+LLM calls:  82%|████████▏ | 82/100 [01:03<00:05,  3.23it/s][A
+LLM calls:  85%|████████▌ | 85/100 [01:04<00:03,  4.76it/s][A
+LLM calls:  87%|████████▋ | 87/100 [01:04<00:02,  6.07it/s][A
+LLM calls:  89%|████████▉ | 89/100 [01:05<00:02,  4.05it/s][A
+LLM calls:  92%|█████████▏| 92/100 [01:05<00:01,  6.10it/s][A
+LLM calls:  94%|█████████▍| 94/100 [01:05<00:01,  5.43it/s][A
+LLM calls:  96%|█████████▌| 96/100 [01:06<00:00,  5.99it/s][A
+LLM calls:  98%|█████████▊| 98/100 [01:06<00:00,  7.33it/s][A
+LLM calls: 100%|██████████| 100/100 [01:06<00:00,  4.92it/s][ALLM calls: 100%|██████████| 100/100 [01:06<00:00,  1.49it/s]
+s2 verify: LLM factual verification vs NL ...
+API error (attempt 1/3): Connection error.
+
+LLM calls:   0%|          | 0/100 [00:00<?, ?it/s][A
+LLM calls:   1%|          | 1/100 [00:29<48:46, 29.56s/it][A
+LLM calls:   2%|▏         | 2/100 [00:29<20:03, 12.28s/it][A
+LLM calls:   3%|▎         | 3/100 [00:30<11:21,  7.02s/it][A
+LLM calls:   4%|▍         | 4/100 [00:30<06:54,  4.32s/it][A
+LLM calls:   5%|▌         | 5/100 [00:30<04:32,  2.87s/it][A
+LLM calls:   6%|▌         | 6/100 [00:31<03:03,  1.95s/it][A
+LLM calls:   8%|▊         | 8/100 [00:31<01:35,  1.04s/it][A
+LLM calls:   9%|▉         | 9/100 [00:31<01:13,  1.25it/s][A
+LLM calls:  11%|█         | 11/100 [00:32<00:59,  1.50it/s][A
+LLM calls:  12%|█▏        | 12/100 [00:32<00:49,  1.79it/s][A
+LLM calls:  13%|█▎        | 13/100 [00:32<00:40,  2.15it/s][A
+LLM calls:  14%|█▍        | 14/100 [00:33<00:37,  2.26it/s][A
+LLM calls:  16%|█▌        | 16/100 [00:33<00:24,  3.43it/s][A
+LLM calls:  19%|█▉        | 19/100 [00:33<00:14,  5.49it/s][A
+LLM calls:  20%|██        | 20/100 [00:33<00:14,  5.53it/s][A
+LLM calls:  22%|██▏       | 22/100 [00:33<00:12,  6.36it/s][A
+LLM calls:  23%|██▎       | 23/100 [00:34<00:12,  6.15it/s][A
+LLM calls:  24%|██▍       | 24/100 [00:34<00:12,  5.93it/s][A
+LLM calls:  25%|██▌       | 25/100 [00:34<00:14,  5.31it/s][A
+LLM calls:  26%|██▌       | 26/100 [00:34<00:13,  5.37it/s][A
+LLM calls:  27%|██▋       | 27/100 [00:35<00:23,  3.16it/s][A
+LLM calls:  28%|██▊       | 28/100 [00:36<00:30,  2.34it/s][A
+LLM calls:  29%|██▉       | 29/100 [00:36<00:25,  2.75it/s][A
+LLM calls:  30%|███       | 30/100 [00:37<00:36,  1.91it/s][A
+LLM calls:  31%|███       | 31/100 [00:37<00:35,  1.92it/s][A
+LLM calls:  32%|███▏      | 32/100 [00:38<00:28,  2.36it/s][A
+LLM calls:  33%|███▎      | 33/100 [00:38<00:27,  2.40it/s][A
+LLM calls:  36%|███▌      | 36/100 [00:38<00:14,  4.43it/s][AAPI error (attempt 1/3): Error code: 500 - {'error': {'message': 'litellm.InternalServerError: InternalServerError: OpenAIException - Connection error.. Received Model Group=qwen3-4b\nAvailable Model Group Fallbacks=None', 'type': None, 'param': None, 'code': '500'}}
+
+LLM calls:  37%|███▋      | 37/100 [00:38<00:13,  4.57it/s][A
+LLM calls:  38%|███▊      | 38/100 [00:39<00:13,  4.66it/s][A
+LLM calls:  39%|███▉      | 39/100 [00:39<00:14,  4.11it/s][A
+LLM calls:  41%|████      | 41/100 [00:39<00:13,  4.49it/s][A
+LLM calls:  42%|████▏     | 42/100 [00:39<00:12,  4.65it/s][A
+LLM calls:  43%|████▎     | 43/100 [00:40<00:12,  4.53it/s][A
+LLM calls:  44%|████▍     | 44/100 [00:40<00:13,  4.24it/s][A
+LLM calls:  45%|████▌     | 45/100 [00:40<00:11,  4.89it/s][A
+LLM calls:  46%|████▌     | 46/100 [00:40<00:10,  5.35it/s][A
+LLM calls:  49%|████▉     | 49/100 [00:40<00:06,  8.26it/s][A
+LLM calls:  52%|█████▏    | 52/100 [00:41<00:04, 11.56it/s][A
+LLM calls:  54%|█████▍    | 54/100 [00:41<00:05,  9.18it/s][A
+LLM calls:  58%|█████▊    | 58/100 [00:41<00:03, 13.64it/s][A
+LLM calls:  60%|██████    | 60/100 [00:41<00:03, 12.52it/s][A
+LLM calls:  62%|██████▏   | 62/100 [00:41<00:03, 11.39it/s][A
+LLM calls:  64%|██████▍   | 64/100 [00:42<00:05,  6.22it/s][A
+LLM calls:  66%|██████▌   | 66/100 [00:57<01:16,  2.24s/it][A
+LLM calls:  67%|██████▋   | 67/100 [00:58<01:02,  1.90s/it][A
+LLM calls:  68%|██████▊   | 68/100 [00:58<00:50,  1.59s/it][A
+LLM calls:  69%|██████▉   | 69/100 [00:58<00:39,  1.28s/it][A
+LLM calls:  70%|███████   | 70/100 [00:58<00:30,  1.01s/it][A
+LLM calls:  71%|███████   | 71/100 [00:58<00:22,  1.27it/s][A
+LLM calls:  72%|███████▏  | 72/100 [00:58<00:17,  1.59it/s][A
+LLM calls:  73%|███████▎  | 73/100 [00:59<00:13,  1.93it/s][A
+LLM calls:  78%|███████▊  | 78/100 [00:59<00:04,  4.94it/s][A
+LLM calls:  80%|████████  | 80/100 [00:59<00:04,  4.82it/s][A
+LLM calls:  81%|████████  | 81/100 [00:59<00:03,  4.95it/s][A
+LLM calls:  82%|████████▏ | 82/100 [01:00<00:03,  4.80it/s][A
+LLM calls:  85%|████████▌ | 85/100 [01:00<00:01,  7.56it/s][A
+LLM calls:  87%|████████▋ | 87/100 [01:00<00:01,  9.22it/s][A
+LLM calls:  89%|████████▉ | 89/100 [01:00<00:01,  8.16it/s][A
+LLM calls:  91%|█████████ | 91/100 [01:01<00:01,  6.71it/s][A
+LLM calls:  92%|█████████▏| 92/100 [01:01<00:01,  6.51it/s][A
+LLM calls:  93%|█████████▎| 93/100 [01:01<00:01,  6.54it/s][A
+LLM calls:  96%|█████████▌| 96/100 [01:01<00:00,  7.57it/s][A
+LLM calls:  97%|█████████▋| 97/100 [01:02<00:00,  6.51it/s][A
+LLM calls:  98%|█████████▊| 98/100 [01:02<00:00,  6.12it/s][A
+LLM calls:  99%|█████████▉| 99/100 [01:02<00:00,  5.89it/s][A
+LLM calls: 100%|██████████| 100/100 [01:02<00:00,  4.13it/s][ALLM calls: 100%|██████████| 100/100 [01:02<00:00,  1.59it/s]
+s3 format (code): applying Title/Pascal/lower casing ...
+s4 normalize: global synonym merging ...
+  Unique values: 29 machines, 135 operations, 125 types, 378 param keys
+Failed to parse JSON: {
+  "machine_groups": [
+    {"canonical": "Bandsaw", "members": ["Bandsaw", "Band Saw"]},
+    {"canonical": "Broaching Machine", "members": ["Broaching Machine", "Broaching", "Broaching Tool"]},
+    {
+Failed to parse JSON: {
+  "machine_groups": [
+    {
+      "canonical": "Gear Shaper",
+      "members": [
+        "Gear Shaper",
+        "Gear Shaper Machine"
+      ]
+    },
+    {
+      "canonical": "Grinding Machine",
+    
+s5 graph: building disjunctive graph (linear precedence) ...
+s6 solve: OR-Tools CP-SAT scheduling ...

@@ -77,13 +77,14 @@ class DSLPipeline:
         self.compile_error_num = 0
 
     def run(self):
-        self.dump_dir_path = "outputs/DSLPipeline-" + self.experiment_type + "/"+self.instance_description+"/"
+        output_prefix = os.environ.get("DSL_OUTPUT_PREFIX", f"DSLPipeline-{self.experiment_type}")
+        self.dump_dir_path = f"outputs/{output_prefix}/{self.instance_description}/"
         self.groundtruth = GroundTruth(self.instance_description)
         self.load_data()
         if self.experiment_type == "CPE_CAE_CSE-2":
             if len(self.orders) == 0:
                 raise RuntimeError(
-                    f"Missing intermediate synthetic orders at {self.dump_dir_path}orders.json. "
+                    f"Missing intermediate synthetic orders at preprocess/orders/{self.instance_description.replace('instance ', '')}/orders.json. "
                     "Please provide the intermediate orders before running dsl_pipeline."
                 )
             self.orders2dsl_program_no_batch_parallel()
@@ -110,8 +111,9 @@ class DSLPipeline:
     def load_data(self):
         if not os.path.exists(self.dump_dir_path):
             os.makedirs(self.dump_dir_path)
-        if os.path.exists(self.dump_dir_path + "orders.json"):
-            self.orders = read_json(self.dump_dir_path + "orders.json")
+        orders_path = f"preprocess/orders/{self.instance_description.replace('instance ', '')}/orders.json"
+        if os.path.exists(orders_path):
+            self.orders = read_json(orders_path)
         if os.path.exists(self.dump_dir_path + "operation_programs.json"):
             self.operation_programs = read_json(self.dump_dir_path + "operation_programs.json")
         if os.path.exists(self.dump_dir_path + "production_programs.json"):
@@ -472,6 +474,8 @@ class DSLPipeline:
                     clean_result = json.loads(result)
                 except:
                     clean_result = {}
+                if not isinstance(clean_result, dict):
+                    clean_result = {}
                 if clean_result.get("operation", "") in operation_list:
                     oper_repr[clean_result["operation"]] = self.operation_dsl[clean_result["operation"]]
                 if clean_result.get("component", "") in production_list:
@@ -488,6 +492,8 @@ class DSLPipeline:
             try:
                 clean_result = json.loads(translation_result)
             except:
+                clean_result = {}
+            if not isinstance(clean_result, dict):
                 clean_result = {}
             
             return (
@@ -677,6 +683,9 @@ class DSLPipeline:
             operation_program = operation_programs[i]
             for step in operation_program:
                 self.total_num += 1
+                if not isinstance(step, dict) or "Operation" not in step:
+                    self.compile_error_num += 1
+                    continue
                 operation = step["Operation"]
                 try:
                     machine = step["Execution"]["machine"]
@@ -707,9 +716,12 @@ class DSLPipeline:
                     ele.append(0)
                 pre_indexes = []
                 for production_unit in production_program:
+                    if not isinstance(production_unit, dict):
+                        continue
                     pred = production_unit.get("Pred", "")
                     succ = production_unit.get("Succ", "")
-                    if operation_program[j]["Operation"] == succ:
+                    op_j = operation_program[j] if isinstance(operation_program[j], dict) else {}
+                    if op_j.get("Operation") == succ:
                         for ele_2 in row:
                             if ele_2[0] in operation2machine_dict.get(pred, []):
                                 pre_indexes.append(row.index(ele_2))
@@ -750,10 +762,21 @@ class DSLPipeline:
             # Create a mapping from component_type in production_view to FlowUnit details
             production_mapping = {}
             for step in production_view:
-                component_type = step["FlowUnit"]["component_type"]
-                production_mapping[component_type] = step["FlowUnit"]
+                if not isinstance(step, dict):
+                    continue
+                flow_unit = step.get("FlowUnit")
+                if not isinstance(flow_unit, dict):
+                    continue
+                component_type = flow_unit.get("component_type")
+                if not component_type:
+                    continue
+                production_mapping[component_type] = flow_unit
 
             for operation in operation_view:
+                if not isinstance(operation, dict):
+                    continue
+                if "Operation" not in operation:
+                    continue
                 # Extract preconditions and postconditions from operation-view
                 precondition_components = operation.get("Precond", {}).get("SlotArg", [])
                 postcondition_components = operation.get("Postcond", {}).get("EmitArg", [])
@@ -769,14 +792,15 @@ class DSLPipeline:
                     "component_type": comp,
                 }) for comp in postcondition_components]
 
+                execution = operation.get("Execution", {}) if isinstance(operation.get("Execution"), dict) else {}
                 # Create the route sheet entry
                 route_sheet_entry = {
-                    "machine": operation["Execution"].get("machine", ""),
-                    "duration": operation["Execution"].get("duration", ""),
+                    "machine": execution.get("machine", ""),
+                    "duration": execution.get("duration", ""),
                     "precondition": preconditions,
                     "postcondition": postconditions,
                     "operation": operation["Operation"],
-                    "parameters": operation["Execution"].get("parameters", {})
+                    "parameters": execution.get("parameters", {})
                 }
 
                 route_sheet.append(route_sheet_entry)
@@ -826,6 +850,9 @@ class DSLPipeline:
         for i in range(len(operation_programs)):
             operation_program = operation_programs[i]
             for step in operation_program:
+                if not isinstance(step, dict) or "Operation" not in step:
+                    self.compile_error_num += 1
+                    continue
                 operation = step["Operation"]
                 try:
                     machine = step["Execution"]["machine"]
