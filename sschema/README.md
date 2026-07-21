@@ -38,11 +38,15 @@ sschema/
 Set these before running `preprocess.py` or `pipeline.py` (both call an
 OpenAI-compatible chat endpoint). `evaluate.py` doesn't need them.
 
+Defaults target the mi300 LiteLLM gateway (see
+`D:/FB/mi300/mi300_as_llm.md`); start the tunnel with
+`powershell D:/FB/mi300/tunnel.ps1` first.
+
 | Variable | Default | Purpose |
 |---|---|---|
-| `LLM_BASE_URL` | `http://localhost:4142/v1` | OpenAI-compatible endpoint |
-| `LLM_MODEL` | `gpt-4o` | Model name passed to the client |
-| `OPENAI_API_KEY` | `sk-placeholder` | API key |
+| `LLM_BASE_URL` | `http://localhost:8000/v1` | OpenAI-compatible endpoint (mi300 gateway) |
+| `LLM_MODEL` | `deepseek-v3` | Model id served by the gateway. Also: `qwen3-235b`, `qwen3-30b`, `qwen3-4b` |
+| `OPENAI_API_KEY` | `sk-mi300-local` | LiteLLM `master_key` |
 | `LLM_MAX_WORKERS` | `100` | HTTP pool size + per-stage concurrency |
 | `SKIP_ARRANGE_MAPPING` | *(unset)* | Skip the `arrange.json` remap in preprocess |
 
@@ -60,7 +64,8 @@ Run the 7-step pipeline for a single instance, reading orders from the shipped
 canonical `preprocess_out/`:
 
 ```
-LLM_MODEL=gpt-4o LLM_BASE_URL=http://localhost:4142/v1 \
+LLM_BASE_URL=http://localhost:8000/v1 LLM_MODEL=deepseek-v3 \
+  OPENAI_API_KEY=sk-mi300-local \
   python sschema/pipeline.py --instances ta71 --experiment-type full
 ```
 

@@ -1,10 +1,15 @@
 """Chat LLM client factory with HTTP keep-alive pooling. Copied and pruned from
 utils/util.py (fb-2s).
 
+Defaults target the mi300 LiteLLM gateway that D:/FB/mi300/tunnel.ps1 forwards
+to localhost:8000. See D:/FB/mi300/mi300_as_llm.md for the full topology and
+the list of models the gateway serves.
+
 Environment variables:
-  LLM_BASE_URL      OpenAI-compatible endpoint  (default http://localhost:4142/v1)
-  LLM_MODEL         model name                  (default gpt-4o)
-  OPENAI_API_KEY    api key                     (default "sk-placeholder")
+  LLM_BASE_URL      OpenAI-compatible endpoint  (default http://localhost:8000/v1)
+  LLM_MODEL         model id served by gateway  (default deepseek-v3;
+                                                 also: qwen3-235b, qwen3-30b, qwen3-4b)
+  OPENAI_API_KEY    api key                     (default "sk-mi300-local")
   LLM_MAX_WORKERS   http pool size              (default 100)
 
 Note: A single singleton OpenAI client is shared across threads so the
@@ -18,9 +23,9 @@ import httpx
 from openai import OpenAI
 
 
-LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "http://localhost:4142/v1")
-LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-4o")
-LLM_API_KEY = os.environ.get("OPENAI_API_KEY", "sk-placeholder")
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "http://localhost:8000/v1")
+LLM_MODEL = os.environ.get("LLM_MODEL", "deepseek-v3")
+LLM_API_KEY = os.environ.get("OPENAI_API_KEY", "sk-mi300-local")
 
 
 _chat_client = None
