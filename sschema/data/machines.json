@@ -1,0 +1,232 @@
+[
+    {
+        "machine": "Broaching Machine",
+        "patterns": [
+            {
+                "preconditions": "Metal bar",
+                "postconditions": "Broached component",
+                "configuration": ["Broach type", "Feed rate", "Depth of cut"]
+            },
+            {
+                "preconditions": "Lathed part",
+                "postconditions": "Broached component",
+                "configuration": ["Broach type", "Precision level"]
+            }
+        ]
+    },
+    {
+        "machine": "Drill Press",
+        "patterns": [
+            {
+                "preconditions": "Metal bar",
+                "postconditions": "Drilled component",
+                "configuration": ["Drill size", "Spindle speed", "Feed rate"]
+            },
+            {
+                "preconditions": "Broached component",
+                "postconditions": "Finished part with holes",
+                "configuration": ["Hole diameter", "Tolerance"]
+            }
+        ]
+    },
+    {
+        "machine": "Gear Shaper",
+        "patterns": [
+            {
+                "preconditions": "Broached component",
+                "postconditions": "Shaped gear",
+                "configuration": ["Gear type", "Number of teeth", "Shaping speed"]
+            }
+        ]
+    },
+    {
+        "machine": "Hobbing Machine",
+        "patterns": [
+            {
+                "preconditions": "Broached component",
+                "postconditions": "Hobbied gear",
+                "configuration": ["Hobbing speed", "Feed rate", "Gear profile"]
+            }
+        ]
+    },
+    {
+        "machine": "Laser Cutter",
+        "patterns": [
+            {
+                "preconditions": "Sheet metal",
+                "postconditions": "Cut sheet metal",
+                "configuration": ["Laser power", "Cutting speed", "Gas assist"]
+            },
+            {
+                "preconditions": "Cut sheet metal",
+                "postconditions": "Cut via Laser",
+                "configuration": ["Precision level", "Edge finish"]
+            }
+        ]
+    },
+    {
+        "machine": "Honing Machine",
+        "patterns": [
+            {
+                "preconditions": "Honed cylinder",
+                "postconditions": "Precision finished part",
+                "configuration": ["Honing grit size", "Cycle time", "Bore size"]
+            }
+        ]
+    },
+    {
+        "machine": "Vertical Lathe",
+        "patterns": [
+            {
+                "preconditions": "Metal bar",
+                "postconditions": "Lathed part",
+                "configuration": ["Rotation speed", "Tool type", "Feed rate"]
+            },
+            {
+                "preconditions": "Drilled component",
+                "postconditions": "Final drilled and shaped part",
+                "configuration": ["Toolpath", "Precision level"]
+            }
+        ]
+    },
+    {
+        "machine": "Horizontal Lathe",
+        "patterns": [
+            {
+                "preconditions": "Metal bar",
+                "postconditions": "Lathed part",
+                "configuration": ["Rotation speed", "Tool type", "Feed rate"]
+            }
+        ]
+    },
+    {
+        "machine": "Screw Machines",
+        "patterns": [
+            {
+                "preconditions": "Lathed part",
+                "postconditions": "Screwed component",
+                "configuration": ["Screw size", "Thread type", "Production rate"]
+            }
+        ]
+    },
+    {
+        "machine": "Vertical Milling Machine",
+        "patterns": [
+            {
+                "preconditions": "Lathed part",
+                "postconditions": "Milled part",
+                "configuration": ["Milling speed", "Tool type", "Depth of cut"]
+            },
+            {
+                "preconditions": "Cut sheet metal",
+                "postconditions": "Finished sheet metal product",
+                "configuration": ["Milling pattern", "Tolerance"]
+            }
+        ]
+    },
+    {
+        "machine": "Horizontal Milling Machine",
+        "patterns": [
+            {
+                "preconditions": "Milled part",
+                "postconditions": "Finished machined component",
+                "configuration": ["Milling speed", "Tool path", "Surface finish"]
+            }
+        ]
+    },
+    {
+        "machine": "Shear (Sheet Metal)",
+        "patterns": [
+            {
+                "preconditions": "Sheet metal",
+                "postconditions": "Sheared sheet metal",
+                "configuration": ["Shear angle", "Cutting speed", "Blade type"]
+            }
+        ]
+    },
+    {
+        "machine": "Shaper",
+        "patterns": [
+            {
+                "preconditions": "Milled part",
+                "postconditions": "Shaped part",
+                "configuration": ["Stroke length", "Shaping speed", "Tool type"]
+            }
+        ]
+    },
+    {
+        "machine": "Bandsaw",
+        "patterns": [
+            {
+                "preconditions": "Metal bar",
+                "postconditions": "Lathed part",
+                "configuration": ["Saw speed", "Blade type", "Cutting width"]
+            }
+        ]
+    },
+    {
+        "machine": "Planer",
+        "patterns": [
+            {
+                "preconditions": "Milled part",
+                "postconditions": "Planed part",
+                "configuration": ["Planing depth", "Feed rate", "Surface finish"]
+            }
+        ]
+    },
+    {
+        "machine": "Stewart Platform Mills",
+        "patterns": [
+            {
+                "preconditions": "Milled part",
+                "postconditions": "Ground part",
+                "configuration": ["Milling precision", "Tool configuration", "Vibration damping"]
+            }
+        ]
+    },
+    {
+        "machine": "Grinding Machines",
+        "patterns": [
+            {
+                "preconditions": "Planed part",
+                "postconditions": "Ground part",
+                "configuration": ["Grinding wheel type", "Wheel speed", "Feed rate"]
+            }
+        ]
+    },
+    {
+        "machine": "CNC Turning Center",
+        "patterns": [
+            {
+                "preconditions": "Lathed part",
+                "postconditions": "Finished machined component",
+                "configuration": ["CNC program", "Tool offsets", "Spindle speed"]
+            }
+        ]
+    },
+    {
+        "machine": "Punch Press",
+        "patterns": [
+            {
+                "preconditions": "Sheet metal",
+                "postconditions": "Finished sheet metal product",
+                "configuration": ["Punch size", "Stroke speed", "Die alignment"]
+            }
+        ]
+    },
+    {
+        "machine": "Wire EDM (Electrical Discharge Machine)",
+        "patterns": [
+            {
+                "preconditions": "Shaped part",
+                "postconditions": "Precision finished part",
+                "configuration": ["Electrical parameters", "Wire type", "Cutting speed"]
+            },
+            {
+                "preconditions": "Ground part",
+                "postconditions": "Precision finished part",
+                "configuration": ["Finishing mode", "Deburring settings", "Dielectric fluid type"]
+            }
+        ]
+    }
+]

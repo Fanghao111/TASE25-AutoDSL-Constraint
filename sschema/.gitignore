@@ -1,0 +1,12 @@
+# runtime outputs
+artifacts/
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# scratch / backups
+*.bak-*
+*.tmp
+_tmp_*

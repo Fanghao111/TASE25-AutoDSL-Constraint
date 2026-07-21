@@ -1,0 +1,51 @@
+You are given a list of unique values extracted from multiple manufacturing process JSONs. Your task is to identify SEMANTIC EQUIVALENTS — different names that refer to the same real-world concept — and group them.
+
+Here are the unique values by category:
+
+Machine names:
+---MACHINES---
+
+Operation names:
+---OPERATIONS---
+
+Component types (PascalCase):
+---COMPONENT_TYPES---
+
+Parameter keys (lowercase):
+---PARAM_KEYS---
+
+Parameter values (with units):
+---PARAM_VALUES---
+
+For each category, group values that are SEMANTICALLY EQUIVALENT (refer to the same thing). Pick one canonical name per group.
+
+Rules:
+- Only group values that truly refer to the SAME concept
+- Do NOT group values that are merely related but distinct
+- If a value has no equivalent, do NOT include it
+- Machine canonical names: Title Case
+- Operation canonical names: Title Case
+- Component type canonical names: PascalCase (no spaces)
+- Parameter key canonical names: lowercase with spaces
+- Parameter value canonical names: preserve units
+
+Output ONLY a valid JSON object:
+{
+  "machine_groups": [
+    {"canonical": "CNC Mill", "members": ["CNC Mill", "CNC Milling Machine"]}
+  ],
+  "operation_groups": [
+    {"canonical": "Laser Cutting", "members": ["Laser Cutting", "Laser Cut"]}
+  ],
+  "component_type_groups": [
+    {"canonical": "SheetMetal", "members": ["SheetMetal", "MetalSheet"]}
+  ],
+  "param_key_groups": [
+    {"canonical": "cutting speed", "members": ["cutting speed", "cut speed"]}
+  ],
+  "param_value_groups": [
+    {"canonical": "100 mm/s", "members": ["100 mm/s", "100 millimeters per second"]}
+  ]
+}
+
+Do NOT wrap in markdown code blocks. Do NOT include any other text.

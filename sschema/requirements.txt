@@ -1,0 +1,7 @@
+openai>=1.30.0
+httpx>=0.27.0
+tqdm>=4.66.0
+numpy>=1.24.0
+ortools>=9.10.0
+nltk>=3.8.0
+rouge_score>=0.1.2

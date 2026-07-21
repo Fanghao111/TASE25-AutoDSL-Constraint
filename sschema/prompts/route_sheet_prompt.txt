@@ -1,0 +1,98 @@
+You are an expert in the field of manufacturing. I will give you a series of processing steps for processing a product, and each step includes the machine used for processing, processing time, approximate input and output of the machine, machine parameters, and machine patterns. You need to supplement these information more carefully according to the actual situation and generate a Route Sheet. The Route Sheet has exactly one operation for each input step. Noting that a machine may have multiple patterns, and you only need to select one of them. You need to identify the parameters you need and their values, and describe them in a natural language description.
+
+Strict 1:1 requirement: the output "route_sheet" array MUST have the same length as the input array, in the same order. Do NOT merge, split, reorder, or skip any step. The i-th entry of "route_sheet" MUST correspond to the i-th input step and use the same "machine" name and "duration" value as the input. For "duration", ALWAYS use the plural word "minutes" (with the trailing 's'), even when the value is 1 (write "1 minutes", NOT "1 minute").
+
+The input format is:
+[
+    {
+        "machine": "xxx",
+        "patterns": [...]
+        "duration": xx
+    },
+    {
+        "machine": "xxx",
+        "patterns": [...]
+        "duration": xx
+    },
+    {
+        "machine": "xxx",
+        "patterns": [...]
+        "duration": xx
+    }
+]
+
+The format of your answer should be:
+{
+    "part_name": <STR>,
+    "route_sheet": [
+        {
+            "machine": <STR>,
+            "duration": <STR>, // A number followed by "minutes", e.g. "10 minutes" or "45 minutes". This value MUST equal the input step's "duration" (with "minutes" appended).
+            "precondition": [
+                {
+                    "component": <STR>,
+                    "component_type": <ComponentType>,
+                    "container": <Container>
+                },
+                ...
+            ],
+            "postcondition": [
+                {
+                    "component": <STR>,
+                    "component_type": <ComponentType>,
+                    "container": <Container>
+                },
+                ...
+            ],
+            "operation": <STR>,
+            "parameters": {
+                "parameter1": "value1",
+                ...
+            }
+        },
+        {
+            "machine": <STR>,
+            "duration": <STR>, // A number followed by "minutes", e.g. "10 minutes" or "45 minutes". This value MUST equal the input step's "duration" (with "minutes" appended).
+            "precondition": [
+                {
+                    "component": <STR>,
+                    "component_type": <ComponentType>,
+                    "container": <Container>
+                },
+                ...
+            ],
+            "postcondition": [
+                {
+                    "component": <STR>,
+                    "component_type": <ComponentType>,
+                    "container": <Container>
+                },
+                ...
+            ],
+            "operation": <STR>,
+            "parameters": {
+                "parameter1": "value1",
+                ...
+            }
+        },
+        ...
+    ]
+}
+
+"part_name" should be a specific product name.
+Example of "part_name": "Bolt"
+
+"operation" needs to 
+Example 1 of "operation": Sawing
+Example 2 of "operation": Roughing Milling
+
+<ComponentType> can be MetalBar | SheetMetal | Wire | BroachedComponent | DrilledComponent | ShapedGear | HobbiedGear | CutSheetMetal | HonedCylinder | LathedPart | MilledPart | PlanedPart | GroundPart | ShapedPart | ... [Other known component types]
+
+<Container> can be ConveyorBelt | MobileRobot | ... [Other known container types]
+
+Please answer the JSON string strictly according to the output format. DO NOT wrap it with code blocks Markdown syntax because I will parse your answer string directly into json. DO NOT output other content.
+
+Now my input is:
+---STEPS---
+
+Answer:
