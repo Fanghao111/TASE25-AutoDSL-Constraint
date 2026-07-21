@@ -45,6 +45,23 @@ ALL_INSTANCES = [f"ta{i}" for i in range(71, 81)]
 EXPERIMENT_TYPES = ("full", "from_gt_route_sheet", "from_gt_schedule")
 
 
+# Child-process script for s6 solve (see SchemaPipeline.solve for why isolation
+# is necessary). Uses .format() with {}-placeholders; the enclosing script has
+# no user-provided values that would clash with the doubled braces.
+_SOLVE_SCRIPT_TEMPLATE = r"""
+import sys, copy
+sys.path.insert(0, r"{sschema_dir}")
+from common.io import read_json, write_json
+from common.cpsat import schedule
+
+matrix = read_json(r"{in_path}")
+assigned_jobs, _solver, err_rate, makespan = schedule(copy.deepcopy(matrix))
+# assigned_jobs is a defaultdict[int -> list[tuple(int,int,int,int)]]; make it JSON-safe.
+serial = {{str(k): [list(t) for t in v] for k, v in assigned_jobs.items()}}
+write_json(r"{out_path}", {{"assigned_jobs": serial, "err_rate": err_rate, "makespan": makespan}})
+"""
+
+
 def _to_full(inst: str) -> str:
     return inst if inst.startswith("instance ") else f"instance {inst}"
 
@@ -515,15 +532,65 @@ class SchemaPipeline:
     # ------------------------------------------------------------------ #
 
     def solve(self):
-        print("s6 solve: OR-Tools CP-SAT scheduling ...", flush=True)
-        or_matrix = copy.deepcopy(self.or_matrix)
-        assigned_jobs, solver, err_rate, makespan = schedule(or_matrix)
-        if len(assigned_jobs) == 0:
-            print("  No solution found.")
+        """Run OR-Tools CP-SAT in an isolated subprocess with retries.
+
+        ortools==9.15.6755 non-deterministically segfaults on Windows inside
+        `CpSolver.solve()` — the crash bypasses Python exception handling and
+        can silently exit the parent (see D:/FB/mi300/mi300_as_llm.md and
+        memory: `mi300 cluster`). Running the solver in a subprocess lets us
+        detect a non-zero exit and retry.
+        """
+        print("s6 solve: OR-Tools CP-SAT scheduling (isolated subprocess) ...", flush=True)
+        os.makedirs(self.pipeline_dir, exist_ok=True)
+        or_matrix_path = os.path.join(self.pipeline_dir, "_solve_input.json")
+        result_path = os.path.join(self.pipeline_dir, "_solve_result.json")
+        write_json(or_matrix_path, self.or_matrix)
+        if os.path.exists(result_path):
+            os.remove(result_path)
+
+        script = _SOLVE_SCRIPT_TEMPLATE.format(
+            sschema_dir=_HERE.replace("\\", "\\\\"),
+            in_path=or_matrix_path.replace("\\", "\\\\"),
+            out_path=result_path.replace("\\", "\\\\"),
+        )
+
+        import subprocess
+        env = dict(os.environ)
+        result = None
+        for attempt in range(1, 4):
+            proc = subprocess.run(
+                [sys.executable, "-u", "-c", script],
+                capture_output=True, text=True, env=env,
+            )
+            if proc.returncode == 0 and os.path.exists(result_path):
+                result = read_json(result_path)
+                if attempt > 1:
+                    print(f"  solver succeeded on retry #{attempt}", flush=True)
+                break
+            tail = (proc.stderr or proc.stdout or "").strip().splitlines()[-5:]
+            print(f"  solver attempt {attempt}/3 failed (exit={proc.returncode}); "
+                  f"tail: {' | '.join(tail)}", flush=True)
+
+        if result is None:
+            print("  All solver attempts failed; recording empty schedule.", flush=True)
+            self.assigned_jobs = {}
+            err_rate = 0.0
+            makespan = -1
             self.compile_error_num += 1
         else:
-            self.assigned_jobs = assigned_jobs
-        write_json(os.path.join(self.pipeline_dir, "s6_assigned_jobs.json"), self.assigned_jobs)
+            self.assigned_jobs = {str(k): [tuple(t) for t in v]
+                                  for k, v in result["assigned_jobs"].items()}
+            err_rate = result["err_rate"]
+            makespan = result["makespan"]
+
+        for tmp in (or_matrix_path, result_path):
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
+
+        write_json(os.path.join(self.pipeline_dir, "s6_assigned_jobs.json"),
+                   {k: list(v) for k, v in self.assigned_jobs.items()})
         write_txt(os.path.join(self.pipeline_dir, "s6_err_rate.txt"), str(err_rate))
         write_txt(os.path.join(self.pipeline_dir, "s6_makespan.txt"), str(makespan))
         write_txt(os.path.join(self.pipeline_dir, "makespan.txt"), str(makespan))
